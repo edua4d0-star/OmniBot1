@@ -20,7 +20,7 @@ if (fs.existsSync('./database.json')) {
     db = JSON.parse(fs.readFileSync('./database.json', 'utf8'));
 }
 const app = express();
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // Configuração para o Express entender os dados que vêm do formulário do site
 app.use(express.urlencoded({ extended: true }));
@@ -113,11 +113,11 @@ if (command === 'daily') {
 
         // Criando o botão que leva para o site
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setLabel('Ir para o Site de Resgate')
-                .setURL('http://localhost:3000/daily') // Se estiver no PC. Se for na host, use o link da host.
-                .setStyle(ButtonStyle.Link)
-        );
+    new ButtonBuilder()
+        .setLabel('Ir para o Site de Resgate')
+        .setURL('https://omnibot-mina.onrender.com/daily') // Adicionei as aspas e o /daily no final
+        .setStyle(ButtonStyle.Link)
+);
 
         return message.reply({ embeds: [embedDaily], components: [row] });
     }
