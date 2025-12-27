@@ -170,33 +170,93 @@ app.get('/daily', (req, res) => {
 app.post('/claim', (req, res) => {
     const userId = req.body.userId;
     const agora = Date.now();
-    const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
+    const tempoEspera = 24 * 60 * 60 * 1000;
 
-    if (!userId) return res.send("❌ ID não fornecido.");
+    const renderizarTela = (titulo, mensagem, corSucesso = false) => {
+        return res.send(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resgate | OmniBot</title>
+    <style>
+        body {
+            background-color: #2f3136;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0;
+        }
+        .card {
+            background-color: #36393f;
+            width: 90%; max-width: 450px;
+            padding: 40px; border-radius: 8px;
+            text-align: center; position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .icon-circle {
+            width: 60px; height: 60px;
+            background-color: #43b581;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            margin: 0 auto 20px;
+        }
+        .icon-circle svg { width: 35px; fill: white; }
+        h1 { color: white; font-size: 24px; margin: 0 0 20px 0; }
+        p { color: #b9bbbe; font-size: 16px; line-height: 1.5; margin-bottom: 30px; }
+        .btn-close {
+            background-color: #5865f2;
+            color: white; border: none;
+            padding: 12px 24px; border-radius: 4px;
+            font-weight: bold; cursor: pointer;
+            width: 100%; transition: background 0.2s;
+            text-transform: uppercase; text-decoration: none; display: block;
+        }
+        .btn-close:hover { background-color: #4752c4; }
+        .status-bar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+            background-color: ${corSucesso ? '#43b581' : '#f04747'};
+            border-radius: 0 0 8px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-circle" style="background-color: ${corSucesso ? '#43b581' : '#f04747'}">
+            ${corSucesso 
+                ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' 
+                : '<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'}
+        </div>
+        <h1>${titulo}</h1>
+        <p>${mensagem}</p>
+        <a href="javascript:window.close();" class="btn-close" onclick="window.close();">FECHAR ESTA JANELA</a>
+        <div class="status-bar"></div>
+    </div>
+</body>
+</html>
+        `);
+    };
 
-    // Verifica se o usuário existe no db
+    if (!userId) return renderizarTela("Erro de ID", "Você precisa fornecer seu ID do Discord.");
+
     if (!db[userId]) {
-        return res.send("❌ Usuário não encontrado! Mande uma mensagem no Discord primeiro.");
+        return renderizarTela("Não Encontrado", "Seu perfil não existe. Mande um '!' no Discord antes de resgatar.");
     }
 
-    // Verifica o tempo de 24h
     if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
         const restando = tempoEspera - (agora - db[userId].lastDaily);
         const horas = Math.floor(restando / (1000 * 60 * 60));
-        const minutos = Math.floor((restando % (1000 * 60 * 60)) / (1000 * 60));
-        return res.send(`❌ Você já coletou hoje! Volte em ${horas}h ${minutos}min.`);
+        return renderizarTela("Aguarde", `Você já coletou seu prêmio. Volte em ${horas} horas.`);
     }
 
-    // Dá o dinheiro (3k a 10k)
     const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
     db[userId].money = (db[userId].money || 0) + ganho;
     db[userId].lastDaily = agora;
 
     fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
 
-    res.send(`✅ Sucesso! Você resgatou ${ganho} moedas!`);
+    return renderizarTela("Resgate Concluído!", `Você adicionou **${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
 });
-
 // Liga o servidor web
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
