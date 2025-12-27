@@ -28,38 +28,74 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // --- ROTA QUE MOSTRA A PÁGINA (O SEU HTML) ---
-app.get('/daily', (req, res) => {
-    res.send(`
+app.post('/claim', (req, res) => {
+    const userId = req.body.userId;
+    const agora = Date.now();
+    const tempoEspera = 24 * 60 * 60 * 1000;
+
+    // Função interna para enviar a página de resposta bonitona
+    const enviarResposta = (titulo, mensagem, cor, icone) => {
+        return res.send(`
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resgate Daily - OmniBot</title>
+    <title>${titulo} | OmniBot</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #2f3136; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background-color: #36393f; padding: 40px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 400px; border-bottom: 4px solid #5865f2; }
-        h1 { color: #ffffff; margin-bottom: 10px; font-size: 28px; }
-        p { color: #b9bbbe; margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #202225; background-color: #202225; color: white; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 14px; background-color: #5865f2; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 16px; }
-        button:hover { background-color: #4752c4; }
-        .footer { margin-top: 20px; font-size: 12px; color: #72767d; }
+        body {
+            margin: 0; font-family: 'Segoe UI', sans-serif;
+            background: #1a1b1e; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .card {
+            background: #25262b; border-radius: 20px; padding: 40px;
+            text-align: center; width: 90%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-top: 5px solid ${cor};
+        }
+        .icon { font-size: 60px; margin-bottom: 20px; }
+        h1 { color: white; margin: 0; font-size: 24px; }
+        p { color: #909296; margin-top: 15px; line-height: 1.5; }
+        .btn {
+            display: inline-block; margin-top: 25px; padding: 12px 25px;
+            background: ${cor}; color: white; text-decoration: none;
+            border-radius: 8px; font-weight: bold; transition: 0.3s;
+        }
+        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎁 Daily Reward</h1>
-        <p>Digite seu ID do Discord para receber suas moedas diárias.</p>
-        <form action="/claim" method="POST">
-            <input type="text" name="userId" placeholder="Ex: 852147963258..." required>
-            <button type="submit">REIVINDICAR AGORA</button>
-        </form>
-        <div class="footer">Conectado ao sistema de economia do OmniBot</div>
+    <div class="card">
+        <div class="icon">${icone}</div>
+        <h1>${titulo}</h1>
+        <p>${mensagem}</p>
+        <a href="/daily" class="btn">VOLTAR</a>
     </div>
 </body>
 </html>
-    `);
+        `);
+    };
+
+    if (!userId) return enviarResposta("Erro!", "Você precisa informar um ID válido.", "#fa5252", "⚠️");
+
+    if (!db[userId]) {
+        return enviarResposta("Não encontrado!", "Você ainda não tem um perfil. Mande um '!' no Discord primeiro!", "#fd7e14", "🔍");
+    }
+
+    if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
+        const restando = tempoEspera - (agora - db[userId].lastDaily);
+        const horas = Math.floor(restando / (1000 * 60 * 60));
+        return enviarResposta("Aguarde!", `Você já coletou seu prêmio. Volte em ${horas} horas.`, "#fab005", "⏰");
+    }
+
+    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
+    db[userId].money = (db[userId].money || 0) + ganho;
+    db[userId].lastDaily = agora;
+
+    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+    return enviarResposta("Resgate Concluído!", `Parabéns! Você recebeu **${ganho.toLocaleString('pt-BR')}** moedas em sua carteira.`, "#40c057", "✅");
 });
 
 // --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
