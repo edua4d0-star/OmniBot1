@@ -28,74 +28,142 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // --- ROTA QUE MOSTRA A PÁGINA (O SEU HTML) ---
-app.post('/claim', (req, res) => {
-    const userId = req.body.userId;
-    const agora = Date.now();
-    const tempoEspera = 24 * 60 * 60 * 1000;
-
-    // Função interna para enviar a página de resposta bonitona
-    const enviarResposta = (titulo, mensagem, cor, icone) => {
-        return res.send(`
+app.get('/daily', (req, res) => {
+    res.send(`
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${titulo} | OmniBot</title>
+    <title>Resgate Daily | OmniBot</title>
     <style>
+        /* Animação do Fundo */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif;
-            background: #1a1b1e; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        /* Container Estilo Glassmorphism (Vidro) */
         .card {
-            background: #25262b; border-radius: 20px; padding: 40px;
-            text-align: center; width: 90%; max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-top: 5px solid ${cor};
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
-        .icon { font-size: 60px; margin-bottom: 20px; }
-        h1 { color: white; margin: 0; font-size: 24px; }
-        p { color: #909296; margin-top: 15px; line-height: 1.5; }
-        .btn {
-            display: inline-block; margin-top: 25px; padding: 12px 25px;
-            background: ${cor}; color: white; text-decoration: none;
-            border-radius: 8px; font-weight: bold; transition: 0.3s;
+
+        .bot-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
+
+        h1 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            outline: none;
+            color: white;
+            font-size: 16px;
+            transition: 0.3s;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        input::placeholder { color: rgba(255, 255, 255, 0.6); }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            color: #e73c7e;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s transform, 0.3s box-shadow;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            margin-top: 25px;
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <div class="icon">${icone}</div>
-        <h1>${titulo}</h1>
-        <p>${mensagem}</p>
-        <a href="/daily" class="btn">VOLTAR</a>
+        <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Bot Avatar" class="bot-avatar">
+        
+        <h1>OmniBot Daily</h1>
+        <p>Você está prestes a resgatar suas moedas diárias! Insira seu ID abaixo para continuar.</p>
+
+        <form action="/claim" method="POST">
+            <input type="text" name="userId" placeholder="ID do Discord (ex: 852147...)" required>
+            <button type="submit">Coletar Recompensa ✨</button>
+        </form>
+
+        <div class="footer">Powered by OmniBot System</div>
     </div>
+
 </body>
 </html>
-        `);
-    };
-
-    if (!userId) return enviarResposta("Erro!", "Você precisa informar um ID válido.", "#fa5252", "⚠️");
-
-    if (!db[userId]) {
-        return enviarResposta("Não encontrado!", "Você ainda não tem um perfil. Mande um '!' no Discord primeiro!", "#fd7e14", "🔍");
-    }
-
-    if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
-        const restando = tempoEspera - (agora - db[userId].lastDaily);
-        const horas = Math.floor(restando / (1000 * 60 * 60));
-        return enviarResposta("Aguarde!", `Você já coletou seu prêmio. Volte em ${horas} horas.`, "#fab005", "⏰");
-    }
-
-    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
-    db[userId].money = (db[userId].money || 0) + ganho;
-    db[userId].lastDaily = agora;
-
-    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-
-    return enviarResposta("Resgate Concluído!", `Parabéns! Você recebeu **${ganho.toLocaleString('pt-BR')}** moedas em sua carteira.`, "#40c057", "✅");
+    `);
 });
 
 // --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
