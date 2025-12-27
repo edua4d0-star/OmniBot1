@@ -91,17 +91,21 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
+    // Ignora bots e mensagens que não começam com !
     if (message.author.bot || !message.content.startsWith('!')) return;
 
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
     const userId = message.author.id;
 
-    if (!db[userId]) db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
+    // Garante que o usuário existe no DB
+    if (!db[userId]) {
+        db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
+        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+    }
 
-  // ==================== 💰 DAILY CORRIGIDO (3K A 10K) ====================
-// --- COMANDO /DAILY ---
-    if (interaction.commandName === 'daily') {
+    // ==================== 🎁 COMANDO !DAILY ====================
+    if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setLabel('Ir para o Site de Resgate')
@@ -109,17 +113,17 @@ client.on('messageCreate', async (message) => {
                 .setStyle(ButtonStyle.Link)
         );
 
-        await interaction.reply({ 
+        await message.reply({ 
             content: '🎁 Clique no botão abaixo para ir ao site e resgatar suas moedas diárias!', 
             components: [row] 
         });
     }
 
-    // --- COMANDO /RESETDAILY ---
-    if (interaction.commandName === 'resetdaily') {
-        // Verifica se quem usou é ADM
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            return interaction.reply({ content: '❌ Apenas administradores podem usar este comando.', ephemeral: true });
+    // ==================== ⚙️ COMANDO !RESETDAILY (ADM) ====================
+    if (command === 'resetdaily') {
+        // Verifica permissão de Administrador
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return message.reply('❌ Apenas administradores podem usar este comando.');
         }
 
         // Reseta o tempo de todo mundo no banco de dados
@@ -127,12 +131,11 @@ client.on('messageCreate', async (message) => {
             db[id].lastDaily = 0;
         }
 
-        // Salva a alteração no arquivo
+        // Salva no arquivo
         fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
 
-        await interaction.reply('✅ O tempo de espera do Daily foi resetado para todos os usuários!');
+        await message.reply('✅ O tempo de espera do Daily foi resetado para todos os usuários!');
     }
-    // Dentro do seu client.on('interactionCreate', async (interaction) => {
 
 if (interaction.commandName === 'resetdaily') {
     // 1. Verifica se quem usou é Administrador
