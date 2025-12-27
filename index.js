@@ -166,13 +166,13 @@ app.get('/daily', (req, res) => {
     `);
 });
 
-// --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
 app.post('/claim', (req, res) => {
     const userId = req.body.userId;
     const agora = Date.now();
     const tempoEspera = 24 * 60 * 60 * 1000;
 
     const renderizarTela = (titulo, mensagem, corSucesso = false) => {
+        // ATENÇÃO: Aqui usamos crase (`) para envolver todo o HTML
         return res.send(`
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -229,9 +229,18 @@ app.post('/claim', (req, res) => {
     if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
         const restando = tempoEspera - (agora - db[userId].lastDaily);
         const horas = Math.floor(restando / (1000 * 60 * 60));
-        return renderizarTela("Aguarde", `Você já coletou hoje. Volte em \${horas} horas.`);
+        // IMPORTANTE: Aqui usamos crase (`) para as variáveis funcionarem
+        return renderizarTela("Aguarde", `Você já coletou hoje. Volte em ${horas} horas.`);
     }
 
+    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
+    db[userId].money = (db[userId].money || 0) + ganho;
+    db[userId].lastDaily = agora;
+    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+    // IMPORTANTE: Aqui usamos crase (`) para as variáveis funcionarem
+    return renderizarTela("Resgate Concluído!", `Você adicionou **${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
+});
     const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
     db[userId].money = (db[userId].money || 0) + ganho;
     db[userId].lastDaily = agora;
@@ -239,70 +248,10 @@ app.post('/claim', (req, res) => {
 
     // A correção está no uso da crase (`) para que o JavaScript processe o valor da variável
 return renderizarTela("Resgate Concluído!", `Você adicionou **${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
-});
-// Liga o servidor web
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-// --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
-app.post('/claim', (req, res) => {
-    const userId = req.body.userId;
-    const agora = Date.now();
-    const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
-
-    if (!userId) return res.send("❌ ID não fornecido.");
-
-    // Verifica se o usuário existe no db
-    if (!db[userId]) {
-        return res.send("❌ Usuário não encontrado! Mande uma mensagem no Discord primeiro.");
-    }
-
-    // Verifica o tempo de 24h
-    if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
-        const restando = tempoEspera - (agora - db[userId].lastDaily);
-        const horas = Math.floor(restando / (1000 * 60 * 60));
-        const minutos = Math.floor((restando % (1000 * 60 * 60)) / (1000 * 60));
-        return res.send(`❌ Você já coletou hoje! Volte em ${horas}h ${minutos}min.`);
-    }
-
-    // Dá o dinheiro (3k a 10k)
-    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
-    db[userId].money = (db[userId].money || 0) + ganho;
-    db[userId].lastDaily = agora;
-
-    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-
-    res.send(`✅ Sucesso! Você resgatou ${ganho} moedas!`);
-});
 
 // Liga o servidor web
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-// Rota que processa o clique no botão e dá o dinheiro
-app.post('/claim-daily', (req, res) => {
-    const userId = req.body.userId;
-    const now = Date.now();
-
-    // Verifica se o usuário existe no seu database.json
-    if (!db[userId]) {
-        return res.send("❌ Erro: Usuário não encontrado. Fale algo no Discord primeiro!");
-    }
-
-    // Lógica de tempo (24 horas = 86400000 ms)
-    if (now - (db[userId].lastDaily || 0) < 86400000) {
-        return res.send("❌ Você já pegou seu daily hoje! Volte amanhã.");
-    }
-
-    // Dá o dinheiro e salva
-    const ganho = Math.floor(Math.random() * 5000) + 2000;
-    db[userId].money += ganho;
-    db[userId].lastDaily = now;
-    saveDB();
-
-    res.send(`<h1>✅ Sucesso!</h1><p>Você resgatou <b>${ganho} moedas</b>!</p><a href="/daily" style="color: #5865F2;">Voltar</a>`);
 });
 
 // Inicia o servidor do site
@@ -333,12 +282,11 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-    // 1. Ignora bots
     if (message.author.bot) return;
 
     const userId = message.author.id;
 
-    // 2. Garante que o usuário existe no DB (executa para qualquer interação)
+    // 1. GARANTE QUE O USUÁRIO EXISTE (Obrigatório para o sistema de economia)
     if (!db[userId]) {
         db[userId] = { 
             money: 100, 
@@ -355,7 +303,8 @@ client.on('messageCreate', async (message) => {
         fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
     }
 
-    // 3. RESPOSTA À MENÇÃO (@OmniBot)
+    // 2. COMANDO DE MENÇÃO (@OmniBot)
+    // Ele responde quando você apenas marca o bot
     if (message.content === `<@${client.user.id}>` || message.content === `<@!${client.user.id}>`) {
         const embedMencao = new EmbedBuilder()
             .setColor('#5865f2')
@@ -371,15 +320,13 @@ client.on('messageCreate', async (message) => {
         return message.reply({ embeds: [embedMencao] });
     }
 
-    // 4. FILTRO DE PREFIXO (Ignora o que não começa com !)
+    // 3. FILTRO DE PREFIXO
     if (!message.content.startsWith('!')) return;
 
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    // --- Seus comandos (daily, work, etc) começam aqui ---
-    
-// ==================== 🎁 COMANDO !DAILY ====================
+    // 4. COMANDO !DAILY
     if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -393,7 +340,6 @@ client.on('messageCreate', async (message) => {
             components: [row] 
         });
     }
-
     // ==================== ⚙️ COMANDO !RESETDAILY ====================
     if (command === 'resetdaily') {
         // Verifica se é ADM usando o nome da permissão como texto para evitar erros
