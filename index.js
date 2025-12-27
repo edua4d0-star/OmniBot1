@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const fs = require('fs');
 
+
 dotenv.config();
 
 const client = new Client({
@@ -24,8 +25,9 @@ const PORT = process.env.PORT || 3000;
 
 // Configuração para o Express entender os dados que vêm do formulário do site
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Rota que mostra a página (o formulário)
+// --- ROTA QUE MOSTRA A PÁGINA (O SEU HTML) ---
 app.get('/daily', (req, res) => {
     res.send(`
 <!DOCTYPE html>
@@ -35,51 +37,12 @@ app.get('/daily', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resgate Daily - OmniBot</title>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #2f3136;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #36393f;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-            border-bottom: 4px solid #5865f2;
-        }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #2f3136; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background-color: #36393f; padding: 40px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 400px; border-bottom: 4px solid #5865f2; }
         h1 { color: #ffffff; margin-bottom: 10px; font-size: 28px; }
         p { color: #b9bbbe; margin-bottom: 25px; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            border: 1px solid #202225;
-            background-color: #202225;
-            color: white;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #5865f2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 16px;
-        }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #202225; background-color: #202225; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; background-color: #5865f2; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 16px; }
         button:hover { background-color: #4752c4; }
         .footer { margin-top: 20px; font-size: 12px; color: #72767d; }
     </style>
@@ -88,19 +51,87 @@ app.get('/daily', (req, res) => {
     <div class="container">
         <h1>🎁 Daily Reward</h1>
         <p>Digite seu ID do Discord para receber suas moedas diárias.</p>
-        
         <form action="/claim" method="POST">
             <input type="text" name="userId" placeholder="Ex: 852147963258..." required>
             <button type="submit">REIVINDICAR AGORA</button>
         </form>
-
-        <div class="footer">
-            Conectado ao sistema de economia do OmniBot
-        </div>
+        <div class="footer">Conectado ao sistema de economia do OmniBot</div>
     </div>
 </body>
 </html>
     `);
+});
+
+// --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
+app.post('/claim', (req, res) => {
+    const userId = req.body.userId;
+    const agora = Date.now();
+    const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
+
+    if (!userId) return res.send("❌ ID não fornecido.");
+
+    // Verifica se o usuário existe no db
+    if (!db[userId]) {
+        return res.send("❌ Usuário não encontrado! Mande uma mensagem no Discord primeiro.");
+    }
+
+    // Verifica o tempo de 24h
+    if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
+        const restando = tempoEspera - (agora - db[userId].lastDaily);
+        const horas = Math.floor(restando / (1000 * 60 * 60));
+        const minutos = Math.floor((restando % (1000 * 60 * 60)) / (1000 * 60));
+        return res.send(`❌ Você já coletou hoje! Volte em ${horas}h ${minutos}min.`);
+    }
+
+    // Dá o dinheiro (3k a 10k)
+    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
+    db[userId].money = (db[userId].money || 0) + ganho;
+    db[userId].lastDaily = agora;
+
+    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+    res.send(`✅ Sucesso! Você resgatou ${ganho} moedas!`);
+});
+
+// Liga o servidor web
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+// --- ROTA QUE PROCESSA O RESGATE (O QUE ESTAVA FALTANDO) ---
+app.post('/claim', (req, res) => {
+    const userId = req.body.userId;
+    const agora = Date.now();
+    const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
+
+    if (!userId) return res.send("❌ ID não fornecido.");
+
+    // Verifica se o usuário existe no db
+    if (!db[userId]) {
+        return res.send("❌ Usuário não encontrado! Mande uma mensagem no Discord primeiro.");
+    }
+
+    // Verifica o tempo de 24h
+    if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
+        const restando = tempoEspera - (agora - db[userId].lastDaily);
+        const horas = Math.floor(restando / (1000 * 60 * 60));
+        const minutos = Math.floor((restando % (1000 * 60 * 60)) / (1000 * 60));
+        return res.send(`❌ Você já coletou hoje! Volte em ${horas}h ${minutos}min.`);
+    }
+
+    // Dá o dinheiro (3k a 10k)
+    const ganho = Math.floor(Math.random() * (10000 - 3000 + 1)) + 3000;
+    db[userId].money = (db[userId].money || 0) + ganho;
+    db[userId].lastDaily = agora;
+
+    fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+    res.send(`✅ Sucesso! Você resgatou ${ganho} moedas!`);
+});
+
+// Liga o servidor web
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
 
 // Rota que processa o clique no botão e dá o dinheiro
@@ -168,7 +199,6 @@ client.on('messageCreate', async (message) => {
         fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
     }
 
-    // ==================== 🎁 COMANDO !DAILY ====================
 // ==================== 🎁 COMANDO !DAILY ====================
     if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
