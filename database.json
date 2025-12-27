@@ -1,0 +1,77 @@
+{
+  "users": {
+    "1203435676083822712": {
+      "xp": 300,
+      "nivel": 4,
+      "dinheirinhos": 8051,
+      "ultimoTrabalho": 1766720996906,
+      "ultimoDaily": 1766720991017
+    },
+    "1216135753180909646": {
+      "xp": 70,
+      "nivel": 3,
+      "dinheirinhos": 2074
+    },
+    "1331659023329656852": {
+      "xp": 485,
+      "nivel": 3,
+      "dinheirinhos": 13528,
+      "ultimoDaily": 1766720032139,
+      "ultimoTrabalho": 1766720957649,
+      "ultimoCrime": 1766724577150,
+      "presoAte": 1766724637150
+    },
+    "1445852249061589136": {
+      "xp": 60,
+      "nivel": 1,
+      "dinheirinhos": 12
+    }
+  },
+  "1203435676083822712": {
+    "money": 72266,
+    "inventory": [
+      "faca"
+    ],
+    "lastDaily": 1766791189294,
+    "lastWork": 1766802090666,
+    "relations": {
+      "1331659023329656852": 0
+    },
+    "lastSocial": {},
+    "marriedWith": null,
+    "contract": null,
+    "lastContract": 1766809741258,
+    "jobsDone": 2
+  },
+  "1331659023329656852": {
+    "money": 86556,
+    "inventory": [
+      "picareta",
+      "computador",
+      "faca",
+      "faca"
+    ],
+    "relations": {
+      "1203435676083822712": 0
+    },
+    "lastSocial": {},
+    "marriedWith": null,
+    "lastWork": 1766807980092,
+    "lastDaily": 1766791181418,
+    "contract": null,
+    "lastContract": 1766809743440,
+    "jobsDone": 3
+  },
+  "1303102077475622934": {
+    "money": 1499,
+    "inventory": [],
+    "lastDaily": 0,
+    "lastWork": 1766804209450,
+    "lastContract": 0,
+    "relations": {},
+    "lastSocial": {},
+    "marriedWith": null,
+    "contract": null,
+    "jobsDone": 0
+  }
+}
