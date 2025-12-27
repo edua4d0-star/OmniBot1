@@ -100,26 +100,37 @@ client.on('messageCreate', async (message) => {
     if (!db[userId]) db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
 
   // ==================== 💰 DAILY CORRIGIDO (3K A 10K) ====================
-if (command === 'daily') {
-        const embedDaily = new EmbedBuilder()
-            .setTitle("🎁 Resgate seu Daily!")
-            .setDescription("Agora você pode resgatar suas moedas diárias diretamente pelo nosso site!")
-            .setColor('#5865F2')
-            .setThumbnail(message.author.displayAvatarURL())
-            .addFields(
-                { name: '💰 Recompensa', value: 'Entre 3.000 e 10.000 moedas', inline: true },
-                { name: '🕒 Intervalo', value: 'A cada 24 horas', inline: true }
-            );
-
-        // Criando o botão que leva para o site
+// --- COMANDO /DAILY ---
+    if (interaction.commandName === 'daily') {
         const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-        .setLabel('Ir para o Site de Resgate')
-        .setURL('https://omnibot-mina.onrender.com/daily') // Adicionei as aspas e o /daily no final
-        .setStyle(ButtonStyle.Link)
-);
+            new ButtonBuilder()
+                .setLabel('Ir para o Site de Resgate')
+                .setURL('https://omnibot-mina.onrender.com/daily')
+                .setStyle(ButtonStyle.Link)
+        );
 
-        return message.reply({ embeds: [embedDaily], components: [row] });
+        await interaction.reply({ 
+            content: '🎁 Clique no botão abaixo para ir ao site e resgatar suas moedas diárias!', 
+            components: [row] 
+        });
+    }
+
+    // --- COMANDO /RESETDAILY ---
+    if (interaction.commandName === 'resetdaily') {
+        // Verifica se quem usou é ADM
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return interaction.reply({ content: '❌ Apenas administradores podem usar este comando.', ephemeral: true });
+        }
+
+        // Reseta o tempo de todo mundo no banco de dados
+        for (let id in db) {
+            db[id].lastDaily = 0;
+        }
+
+        // Salva a alteração no arquivo
+        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+        await interaction.reply('✅ O tempo de espera do Daily foi resetado para todos os usuários!');
     }
     // Dentro do seu client.on('interactionCreate', async (interaction) => {
 
