@@ -333,26 +333,52 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-    // Ignora bots e mensagens que não começam com !
-    if (message.author.bot || !message.content.startsWith('!')) return;
+    // 1. Ignora bots
+    if (message.author.bot) return;
+
+    const userId = message.author.id;
+
+    // 2. Garante que o usuário existe no DB (executa para qualquer interação)
+    if (!db[userId]) {
+        db[userId] = { 
+            money: 100, 
+            inventory: [], 
+            lastDaily: 0, 
+            lastWork: 0, 
+            lastContract: 0, 
+            relations: {}, 
+            lastSocial: {}, 
+            marriedWith: null, 
+            contract: null, 
+            jobsDone: 0 
+        };
+        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+    }
+
+    // 3. RESPOSTA À MENÇÃO (@OmniBot)
+    if (message.content === `<@${client.user.id}>` || message.content === `<@!${client.user.id}>`) {
+        const embedMencao = new EmbedBuilder()
+            .setColor('#5865f2')
+            .setAuthor({ name: 'OmniBot', iconURL: client.user.displayAvatarURL() })
+            .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+            .setDescription(`👋 Olá **${message.author.username}**!\n\nEu sou o **OmniBot**, seu assistente de economia.\n\n> Meu prefixo neste servidor é: \`!\` \n> Use \`!ajuda\` para conhecer meus comandos!`)
+            .addFields(
+                { name: '🔗 Links Úteis', value: '[Resgatar Daily](https://omnibot-mina.onrender.com/daily)' }
+            )
+            .setFooter({ text: 'Obrigado por me utilizar! ❤️' })
+            .setTimestamp();
+
+        return message.reply({ embeds: [embedMencao] });
+    }
+
+    // 4. FILTRO DE PREFIXO (Ignora o que não começa com !)
+    if (!message.content.startsWith('!')) return;
 
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
-    const userId = message.author.id;
 
-    // Garante que o usuário existe no DB
-    if (!db[userId]) {
-        db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
-        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-    }
-    // ==================== 🤖 RESPOSTA À MENÇÃO ====================
-    // Verifica se o bot foi mencionado e se não há nenhum outro texto na mensagem
-    if (message.content === `<@${client.user.id}>` || message.content === `<@!${client.user.id}>`) {
-        return message.reply({
-            content: `Olá **${message.author.username}**! Meu prefixo neste servidor é \`!\`, para ver o que eu posso fazer, use \`!ajuda\`.`
-        });
-    }
-
+    // --- Seus comandos (daily, work, etc) começam aqui ---
+    
 // ==================== 🎁 COMANDO !DAILY ====================
     if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
