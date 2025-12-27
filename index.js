@@ -64,8 +64,8 @@ app.post('/claim-daily', (req, res) => {
 });
 
 // Inicia o servidor do site
-app.listen(port, () => {
-    console.log(`🌐 Site do Daily ON em http://localhost:${port}/daily`);
+app.listen(PORT, () => {
+    console.log(`🌐 Site do Daily ON em http://localhost:${PORT}/daily`);
 });
 // FORA DE QUALQUER COMANDO
 var lojaItens = {
