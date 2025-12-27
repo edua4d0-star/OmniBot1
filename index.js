@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ComponentType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const express = require('express');
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -24,97 +24,39 @@ function saveDB() {
     fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
 }
 
+// ==================== 🛒 VARIÁVEL LOJAITENS SUBSTITUÍDA ====================
+var lojaItens = {
+    "escudo": { preco: 2000, nome: "Escudo de Energia", estoque: 2, desc: "Protege contra 1 assalto." },
+    "passaporte": { preco: 1500, nome: "Passaporte Falso", estoque: 4, desc: "Zera o tempo do trabalho." },
+    "dinamite": { preco: 1000, nome: "Dinamite", estoque: 3, desc: "Melhora o !crime." },
+    "bilhete": { preco: 500, nome: "Bilhete de Loteria", estoque: 3, desc: "Dinheiro aleatório (!usar)." },
+    "faca": { preco: 1500, nome: "Faca", estoque: 5, desc: "Melhora o !roubar." },
+    "picareta": { preco: 3000, nome: "Picareta", estoque: 3, desc: "Bônus no trabalho." },
+    "computador": { preco: 8000, nome: "Computador", estoque: 4, desc: "Bônus home office." }
+};
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// --- ROTA QUE MOSTRA A PÁGINA (O SEU HTML) ---
+// --- ROTA GET: PÁGINA DO DAILY ---
 app.get('/daily', (req, res) => {
-    res.send(`
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resgate Daily | OmniBot</title>
-    <style>
-        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradient 15s ease infinite; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 40px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); }
-        .bot-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; margin-bottom: 20px; }
-        h1 { color: white; font-size: 28px; margin-bottom: 10px; font-weight: 800; }
-        p { color: rgba(255, 255, 255, 0.9); font-size: 16px; margin-bottom: 30px; }
-        input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: white; text-align: center; }
-        button { width: 100%; margin-top: 20px; padding: 15px; background: white; color: #e73c7e; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Bot Avatar" class="bot-avatar">
-        <h1>OmniBot Daily</h1>
-        <p>Insira seu ID abaixo para resgatar suas moedas!</p>
-        <form action="/claim" method="POST">
-            <input type="text" name="userId" placeholder="ID do Discord" required>
-            <button type="submit">Coletar Recompensa ✨</button>
-        </form>
-    </div>
-</body>
-</html>`);
+    res.send(`<h1>OmniBot Daily</h1><p>Insira seu ID para resgatar.</p><form action="/claim" method="POST"><input type="text" name="userId" required><button type="submit">Coletar</button></form>`);
 });
 
-// --- ROTA QUE PROCESSA O RESGATE ---
+// --- ROTA POST: PROCESSA DAILY (MANTENDO 24H) ---
 app.post('/claim', (req, res) => {
     const userId = req.body.userId;
     const agora = Date.now();
     const tempoEspera = 24 * 60 * 60 * 1000;
 
-    const renderizarTela = (titulo, mensagem, corSucesso = false) => {
-        return res.send(`
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Resgate | OmniBot</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        body { background-color: #2f3136; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .card { background-color: #36393f; width: 90%; max-width: 450px; padding: 40px; border-radius: 8px; text-align: center; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-        h1 { color: white; font-size: 24px; }
-        p { color: #b9bbbe; font-size: 16px; margin: 20px 0; }
-        .btn-close { background-color: #5865f2; color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
-        .status-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background-color: ${corSucesso ? '#43b581' : '#f04747'}; border-radius: 0 0 8px 8px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>${titulo}</h1>
-        <p>${mensagem}</p>
-        <button class="btn-close" onclick="window.close()">FECHAR ESTA JANELA</button>
-        <div class="status-bar"></div>
-    </div>
-    <script>
-        if ("${corSucesso}" === "true") {
-            var end = Date.now() + (3 * 1000);
-            (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
-                if (Date.now() < end) { requestAnimationFrame(frame); }
-            }());
-        }
-    </script>
-</body>
-</html>`);
-    };
-
-    if (!userId) return renderizarTela("Erro de ID", "ID não fornecido.");
-    if (!db[userId]) return renderizarTela("Não Encontrado", "Mande uma mensagem no Discord primeiro!");
+    if (!userId || !db[userId]) return res.send("ID Inválido ou Perfil não encontrado!");
 
     if (agora - (db[userId].lastDaily || 0) < tempoEspera) {
         const restando = tempoEspera - (agora - db[userId].lastDaily);
         const horas = Math.floor(restando / (1000 * 60 * 60));
-        return renderizarTela("Aguarde", `Você já coletou hoje. Volte em ${horas} horas.`);
+        return res.send(`Aguarde! Faltam ${horas} horas para o próximo resgate.`);
     }
 
     const ganho = Math.floor(Math.random() * 7001) + 3000;
@@ -122,75 +64,88 @@ app.post('/claim', (req, res) => {
     db[userId].lastDaily = agora;
     saveDB();
 
-    return renderizarTela("Resgate Concluído!", `Você adicionou **${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
+    res.send(`✅ Sucesso! Você resgatou ${ganho} moedas!`);
 });
 
-// LIGA O SERVIDOR WEB (UMA VEZ)
-app.listen(PORT, () => {
-    console.log(`🌐 Servidor rodando na porta ${PORT}`);
+// --- ROTA WEBHOOK: VOTO TOP.GG ---
+app.post('/webhook/topgg', async (req, res) => {
+    const senhaTopGG = "MINHA_SENHA_SECRETA_123"; 
+    if (req.headers.authorization !== senhaTopGG) return res.status(401).send("Sem autorização");
+
+    const userId = req.body.user;
+    if (db[userId]) {
+        db[userId].money = (db[userId].money || 0) + 5000;
+        db[userId].lastVote = Date.now();
+        db[userId].voteReminded = false;
+        saveDB();
+        try {
+            const user = await client.users.fetch(userId);
+            await user.send("🚀 **Voto confirmado!** Você ganhou 5.000 moedas!");
+        } catch (e) {}
+    }
+    res.status(200).send("Voto processado!");
 });
 
-// ITENS DA LOJA
-var lojaItens = {
-    "escudo": { preco: 2000, nome: "Escudo de Energia", desc: "Protege contra 1 assalto." },
-    "picareta": { preco: 3000, nome: "Picareta", desc: "Bônus no trabalho." }
-};
-
-// FIREWALL CONTRA QUEDAS
-process.on('unhandledRejection', (reason) => console.log('🛡️ Firewall:', reason));
-process.on('uncaughtException', (err) => console.log('🛡️ Firewall:', err));
-
-client.once('ready', () => {
-    console.log(`🚀 OMNI ON: ECONOMIA E MENÇÕES ATIVAS!`);
-});
+app.listen(PORT, () => console.log(`🌐 Servidor na porta ${PORT}`));
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-
     const userId = message.author.id;
 
     if (!db[userId]) {
-        db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
+        db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastVote: 0, voteReminded: false };
         saveDB();
     }
 
-    // 1. RESPOSTA À MENÇÃO
+    // ==================== 🏷️ COMANDO DO ARROBA (MENÇÃO) ====================
     if (message.content === `<@${client.user.id}>` || message.content === `<@!${client.user.id}>`) {
         const embedMencao = new EmbedBuilder()
             .setColor('#5865f2')
-            .setAuthor({ name: 'OmniBot', iconURL: client.user.displayAvatarURL() })
-            .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
-            .setDescription(`👋 Olá **${message.author.username}**!\n\nEu sou o **OmniBot**, seu assistente de economia.\n\n> Prefixo: \`!\` \n> Use \`!ajuda\` para ver mais!`)
-            .addFields({ name: '🔗 Links', value: '[Resgatar Daily](https://omnibot-mina.onrender.com/daily)' });
-
+            .setTitle('👋 Olá! Eu sou o OmniBot')
+            .setDescription('Eu cuido da economia deste servidor!\n\n> Meu prefixo é: `!`\n> Use `!ajuda` para ver comandos.')
+            .addFields({ name: '🔗 Daily', value: '[Clique aqui](https://omnibot-mina.onrender.com/daily)' });
         return message.reply({ embeds: [embedMencao] });
     }
 
     if (!message.content.startsWith('!')) return;
-
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    // 2. COMANDO !DAILY
+// ==================== 🚀 COMANDO VOTE (COMPLETO) ====================
+    if (command === 'votar' || command === 'vote') {
+        const embedVoto = new EmbedBuilder()
+            .setColor('#ff3366')
+            .setAuthor({ name: 'Top.gg - Sistema de Votos', iconURL: 'https://cdn.discordapp.com/emojis/1083437286161485824.png' })
+            .setTitle('🚀 Ajude o OmniBot e Ganhe Recompensas!')
+            .setThumbnail(client.user.displayAvatarURL())
+            .setDescription(
+                `Votar no bot ajuda a nossa comunidade a crescer e você ainda sai ganhando!\n\n` +
+                `💰 **Recompensa:** \`5.000 moedas\`\n` +
+                `⏰ **Intervalo:** A cada \`12 horas\``
+            )
+            .addFields(
+                { name: '🔗 Link Direto', value: '[CLIQUE AQUI PARA VOTAR](https://top.gg/bot/1453894302978670604/vote)' },
+                { name: '📢 Como funciona?', value: 'Após votar, o Top.gg nos avisa e eu envio seu dinheiro e um aviso no seu PV automaticamente!' }
+            )
+            .setFooter({ text: `Solicitado por ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+            .setTimestamp();
+
+        const botaoVoto = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setLabel('Votar no Top.gg')
+                .setURL('https://top.gg/bot/ID_DO_SEU_BOT/vote')
+                .setStyle(ButtonStyle.Link)
+        );
+
+        return message.reply({ embeds: [embedVoto], components: [botaoVoto] });
+    }
+
+    // COMANDO DAILY
     if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setLabel('Ir para o Site de Resgate').setURL('https://omnibot-mina.onrender.com/daily').setStyle(ButtonStyle.Link)
+            new ButtonBuilder().setLabel('Ir para o Site').setURL('https://omnibot-mina.onrender.com/daily').setStyle(ButtonStyle.Link)
         );
-        await message.reply({ content: '🎁 Clique abaixo para resgatar suas moedas!', components: [row] });
-    }
-    // ==================== ⚙️ COMANDO !RESETDAILY ====================
-    if (command === 'resetdaily') {
-        // Verifica se é ADM usando o nome da permissão como texto para evitar erros
-        if (!message.member.permissions.has('Administrator')) {
-            return message.reply('❌ Apenas administradores podem usar este comando.');
-        }
-
-        for (let id in db) {
-            db[id].lastDaily = 0;
-        }
-
-        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-        await message.reply('✅ O tempo de espera do Daily foi resetado para todos os usuários!');
+        await message.reply({ content: '🎁 Clique para resgatar seu daily de 24h!', components: [row] });
     }
 if (command === 'trabalhar') {
         const now = Date.now();
