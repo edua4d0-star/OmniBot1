@@ -28,14 +28,78 @@ app.use(express.urlencoded({ extended: true }));
 // Rota que mostra a página (o formulário)
 app.get('/daily', (req, res) => {
     res.send(`
-        <body style="background: #2c2f33; color: white; text-align: center; padding-top: 50px; font-family: sans-serif;">
-            <h1>🎁 Resgate seu Daily no Site</h1>
-            <p>Coloque seu ID do Discord abaixo:</p>
-            <form action="/claim-daily" method="POST">
-                <input type="text" name="userId" placeholder="Seu ID numérico" required style="padding: 10px; border-radius: 5px; border: none;"><br><br>
-                <button type="submit" style="padding: 10px 20px; background: #5865F2; color: white; border: none; border-radius: 5px; cursor: pointer;">Coletar Moedas</button>
-            </form>
-        </body>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resgate Daily - OmniBot</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #2f3136;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #36393f;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border-bottom: 4px solid #5865f2;
+        }
+        h1 { color: #ffffff; margin-bottom: 10px; font-size: 28px; }
+        p { color: #b9bbbe; margin-bottom: 25px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #202225;
+            background-color: #202225;
+            color: white;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #5865f2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 16px;
+        }
+        button:hover { background-color: #4752c4; }
+        .footer { margin-top: 20px; font-size: 12px; color: #72767d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎁 Daily Reward</h1>
+        <p>Digite seu ID do Discord para receber suas moedas diárias.</p>
+        
+        <form action="/claim" method="POST">
+            <input type="text" name="userId" placeholder="Ex: 852147963258..." required>
+            <button type="submit">REIVINDICAR AGORA</button>
+        </form>
+
+        <div class="footer">
+            Conectado ao sistema de economia do OmniBot
+        </div>
+    </div>
+</body>
+</html>
     `);
 });
 
