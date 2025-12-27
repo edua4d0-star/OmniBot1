@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ComponentType } = require('discord.js');
 const express = require('express');
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -105,6 +105,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==================== 🎁 COMANDO !DAILY ====================
+// ==================== 🎁 COMANDO !DAILY ====================
     if (command === 'daily') {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -119,48 +120,20 @@ client.on('messageCreate', async (message) => {
         });
     }
 
-    // ==================== ⚙️ COMANDO !RESETDAILY (ADM) ====================
+    // ==================== ⚙️ COMANDO !RESETDAILY ====================
     if (command === 'resetdaily') {
-        // Verifica permissão de Administrador
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        // Verifica se é ADM usando o nome da permissão como texto para evitar erros
+        if (!message.member.permissions.has('Administrator')) {
             return message.reply('❌ Apenas administradores podem usar este comando.');
         }
 
-        // Reseta o tempo de todo mundo no banco de dados
         for (let id in db) {
             db[id].lastDaily = 0;
         }
 
-        // Salva no arquivo
         fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-
         await message.reply('✅ O tempo de espera do Daily foi resetado para todos os usuários!');
     }
-
-if (interaction.commandName === 'resetdaily') {
-    // 1. Verifica se quem usou é Administrador
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-        return interaction.reply({ content: '❌ Apenas administradores podem usar este comando.', ephemeral: true });
-    }
-
-    try {
-        // 2. Limpa a data do Daily para todos no banco de dados (db)
-        for (let userId in db) {
-            if (db[userId].lastDaily) {
-                db[userId].lastDaily = null;
-            }
-        }
-
-        // 3. Salva a alteração no arquivo database.json
-        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
-
-        await interaction.reply({ content: '✅ O tempo de espera do Daily foi resetado para todos os usuários!', ephemeral: false });
-
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: '❌ Erro ao tentar resetar o banco de dados.', ephemeral: true });
-    }
-}
 if (command === 'trabalhar') {
         const now = Date.now();
         const cooldown = 3600000; // 1 hora
