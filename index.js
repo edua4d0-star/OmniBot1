@@ -237,7 +237,8 @@ app.post('/claim', (req, res) => {
     db[userId].lastDaily = agora;
     fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
 
-    return renderizarTela("Resgate Concluído!", `Você adicionou **\${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
+    // A correção está no uso da crase (`) para que o JavaScript processe o valor da variável
+return renderizarTela("Resgate Concluído!", `Você adicionou **${ganho.toLocaleString('pt-BR')}** moedas à sua carteira.`, true);
 });
 // Liga o servidor web
 app.listen(PORT, () => {
@@ -343,6 +344,13 @@ client.on('messageCreate', async (message) => {
     if (!db[userId]) {
         db[userId] = { money: 100, inventory: [], lastDaily: 0, lastWork: 0, lastContract: 0, relations: {}, lastSocial: {}, marriedWith: null, contract: null, jobsDone: 0 };
         fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+    }
+    // ==================== 🤖 RESPOSTA À MENÇÃO ====================
+    // Verifica se o bot foi mencionado e se não há nenhum outro texto na mensagem
+    if (message.content === `<@${client.user.id}>` || message.content === `<@!${client.user.id}>`) {
+        return message.reply({
+            content: `Olá **${message.author.username}**! Meu prefixo neste servidor é \`!\`, para ver o que eu posso fazer, use \`!ajuda\`.`
+        });
     }
 
 // ==================== 🎁 COMANDO !DAILY ====================
