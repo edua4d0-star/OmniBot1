@@ -121,6 +121,32 @@ if (command === 'daily') {
 
         return message.reply({ embeds: [embedDaily], components: [row] });
     }
+    // Dentro do seu client.on('interactionCreate', async (interaction) => {
+
+if (interaction.commandName === 'resetdaily') {
+    // 1. Verifica se quem usou é Administrador
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: '❌ Apenas administradores podem usar este comando.', ephemeral: true });
+    }
+
+    try {
+        // 2. Limpa a data do Daily para todos no banco de dados (db)
+        for (let userId in db) {
+            if (db[userId].lastDaily) {
+                db[userId].lastDaily = null;
+            }
+        }
+
+        // 3. Salva a alteração no arquivo database.json
+        fs.writeFileSync('./database.json', JSON.stringify(db, null, 2));
+
+        await interaction.reply({ content: '✅ O tempo de espera do Daily foi resetado para todos os usuários!', ephemeral: false });
+
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: '❌ Erro ao tentar resetar o banco de dados.', ephemeral: true });
+    }
+}
 if (command === 'trabalhar') {
         const now = Date.now();
         const cooldown = 3600000; // 1 hora
