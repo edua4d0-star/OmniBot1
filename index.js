@@ -1,16 +1,16 @@
 require('dotenv').config();
+const express = require('express'); // Express no topo
 const mongoose = require('mongoose');
-const express = require('express'); // 1. Importa o Express
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Options, PermissionsBitField } = require('discord.js');
-const User = require('./models/User'); 
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.get('/', (req, res) => {
     res.send('O bot de Facção está operando com sucesso! 🌑');
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ Servidor Web ativo na porta ${PORT}`);
 });
@@ -21,6 +21,10 @@ const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado ao MongoDB!"))
     .catch(err => console.error("❌ Erro MongoDB:", err));
+
+// ==================== 📁 IMPORTAÇÃO DO MODEL ====================
+// Se der erro aqui, siga os comandos do terminal abaixo
+const User = require('./models/User'); 
 
 // ==================== 🤖 CONFIGURAÇÃO BOT ====================
 const client = new Client({
@@ -49,8 +53,7 @@ const lojaItens = {
     "dinamite": { nome: "Dinamite", preco: 10000, estoque: 5, categoria: "submundo", desc: "Sucesso no !crime e ganho x2.5 (Consumível)." },
     "arma": { nome: "Pistola 9mm", preco: 25000, estoque: 2, categoria: "submundo", desc: "Proteção total, bónus no crime e garante o !atacar." },
     "faccao": { nome: "Convite de Facção", preco: 2000000, estoque: 1, categoria: "submundo", desc: "???" }
-};
-
+}
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
