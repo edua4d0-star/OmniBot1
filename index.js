@@ -24,7 +24,8 @@ mongoose.connect(mongoURI)
 
 // ==================== 📁 IMPORTAÇÃO DO MODEL ====================
 // Se der erro aqui, siga os comandos do terminal abaixo
-const User = require('./models/User'); 
+// No seu index.js, mude para:
+const User = require('./database/User');
 
 // ==================== 🤖 CONFIGURAÇÃO BOT ====================
 const client = new Client({
