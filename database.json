@@ -25,14 +25,15 @@
       "xp": 60,
       "nivel": 1,
       "dinheirinhos": 12
-    }
+    },
+    "lastDaily": 0
   },
   "1203435676083822712": {
     "money": 72266,
     "inventory": [
       "faca"
     ],
-    "lastDaily": 1766791189294,
+    "lastDaily": 0,
     "lastWork": 1766802090666,
     "relations": {
       "1331659023329656852": 0
@@ -57,7 +58,7 @@
     "lastSocial": {},
     "marriedWith": null,
     "lastWork": 1766807980092,
-    "lastDaily": 1766791181418,
+    "lastDaily": 0,
     "contract": null,
     "lastContract": 1766809743440,
     "jobsDone": 3
