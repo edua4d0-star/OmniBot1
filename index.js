@@ -165,56 +165,90 @@ if (command === 'trabalhar' || command === 'work') {
 
     return message.reply(resposta);
 }
-// ==================== 🛠️ COMANDO SETMONEY (APENAS ADM) ====================
+// ==================== 🛠️ COMANDO SETMONEY (APENAS DONO) ====================
 if (command === 'setmoney') {
-    // Verifica se és o dono do bot (Troca pelo teu ID)
-    if (message.author.id !== '1203435676083822712') {
-        return message.reply("❌ Apenas o desenvolvedor pode usar este comando.");
+    try {
+        // 1. Verifica se é o dono do bot
+        if (message.author.id !== '1203435676083822712') {
+            return message.reply("❌ Apenas o desenvolvedor pode usar este comando.");
+        }
+
+        const targetUser = message.mentions.users.first();
+        const valor = parseInt(args[1]); // args[1] porque args[0] é a menção
+
+        // 2. Verificações de segurança
+        if (!targetUser) {
+            return message.reply("❌ Precisas marcar (@) alguém! Ex: `!setmoney @user 100`.");
+        }
+        
+        if (isNaN(valor)) {
+            return message.reply("❌ Indica um número válido após a menção.");
+        }
+
+        // 3. Busca o usuário no banco de dados ou cria se não existir
+        let targetData = await User.findOne({ userId: targetUser.id });
+        if (!targetData) {
+            targetData = await User.create({ userId: targetUser.id });
+        }
+
+        // 4. Altera e salva
+        targetData.money = valor;
+        await targetData.save();
+
+        return message.reply(`✅ O saldo de **${targetUser.username}** foi alterado para **${valor.toLocaleString()}** moedas!`);
+
+    } catch (error) {
+        console.error("Erro no comando setmoney:", error);
+        return message.reply("❌ Ocorreu um erro ao tentar alterar o dinheiro.");
     }
-
-    const valor = parseInt(args[0]);
-    if (isNaN(valor)) return message.reply("❌ Indica um número válido.");
-
-    userData.money = valor;
-    await userData.save();
-
-    return message.reply(`✅ O teu saldo foi alterado para **${valor.toLocaleString()}** moedas!`);
 }
 
-if (command === 'resetar') {
-    const meuID = "1203435676083822712"; // Coloque seu ID aqui
+// ==================== 🛠️ COMANDO RESETAR (APENAS DONO) ====================
+if (command === 'resetar' || command === 'reset') {
+    try {
+        const meuID = "1203435676083822712";
 
-    if (message.author.id !== meuID) {
-        return message.reply("❌ Apenas o meu desenvolvedor pode usar este comando!");
-    }
-
-    const alvo = message.mentions.users.first() || message.author;
-    const targetData = (alvo.id === message.author.id) ? userData : await User.findOne({ userId: alvo.id });
-
-    if (!targetData) return message.reply("❌ Usuário não encontrado no banco.");
-
-    // 1. Resetar dados no MongoDB
-    targetData.money = 5000; 
-    targetData.cargo = "Civil";
-    targetData.inventory = ['faccao']; // Devolve o convite para ele poder testar de novo
-    targetData.missionCount = 0;
-    await targetData.save();
-
-    // 2. Remover o cargo no Discord
-    const idDoCargoFaccao = "1454692749482660003"; // Coloque o ID do cargo aqui
-    const membroNoServidor = message.guild.members.cache.get(alvo.id);
-
-    if (membroNoServidor) {
-        // Verifica se o usuário tem o cargo antes de tentar remover
-        if (membroNoServidor.roles.cache.has(idDoCargoFaccao)) {
-            await membroNoServidor.roles.remove(idDoCargoFaccao).catch(err => {
-                console.error("Erro ao remover cargo:", err);
-                return message.channel.send("⚠️ Erro ao remover o cargo no Discord (verifique se o meu cargo está acima do cargo da facção).");
-            });
+        // 1. Verifica se é o desenvolvedor
+        if (message.author.id !== meuID) {
+            return message.reply("❌ Apenas o meu desenvolvedor pode usar este comando!");
         }
-    }
 
-    return message.reply(`🛠️ **[ADMIN]** Reset concluído para **${alvo.username}**!\n- Dinheiro: 5000\n- Cargo: Civil\n- Mochila: Convite Devolvido\n- Discord: Cargo removido.`);
+        const alvo = message.mentions.users.first();
+        if (!alvo) return message.reply("❌ Precisas marcar (@) alguém para resetar!");
+
+        // 2. Busca os dados no MongoDB
+        let targetData = await User.findOne({ userId: alvo.id });
+        if (!targetData) return message.reply("❌ Esse usuário não tem dados no banco.");
+
+        // 3. Reseta os dados no MongoDB
+        targetData.money = 5000; 
+        targetData.cargo = "Civil";
+        targetData.inventory = ['faccao']; // Devolve o item de facção
+        targetData.missionCount = 0;
+        targetData.workCount = 0; // Adicionei para zerar os trabalhos também
+        targetData.lastCrime = 0; // Reseta o cooldown de crime
+        
+        await targetData.save();
+
+        // 4. Lógica para remover o cargo no Discord
+        const idDoCargoFaccao = "1454692749482660003";
+        const membroNoServidor = message.guild.members.cache.get(alvo.id);
+
+        if (membroNoServidor) {
+            if (membroNoServidor.roles.cache.has(idDoCargoFaccao)) {
+                await membroNoServidor.roles.remove(idDoCargoFaccao).catch(err => {
+                    console.error("Erro ao remover cargo:", err);
+                    message.channel.send("⚠️ Não consegui remover o cargo no Discord. Verifique se meu cargo está **acima** do cargo da facção na lista de cargos!");
+                });
+            }
+        }
+
+        return message.reply(`🛠️ **[ADMIN]** Reset concluído para **${alvo.username}**!\n- Dinheiro: 5000\n- Status: Civil\n- Mochila: Item 'faccao' devolvido\n- Discord: Cargo de Facção removido.`);
+
+    } catch (error) {
+        console.error("Erro no comando resetar:", error);
+        return message.reply("❌ Ocorreu um erro crítico ao tentar resetar o usuário.");
+    }
 }
 // ==================== 💸 COMANDO PIX ====================
 if (command === 'pix') {
