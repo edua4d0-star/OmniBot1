@@ -1581,7 +1581,7 @@ if (command === 'avaliar' || command === 'rate') {
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
 
-// ==================== 👤 COMANDO PERFIL ====================
+// ==================== 👤 COMANDO PERFIL (ATUALIZADO) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
         const alvo = message.mentions.users.first() || message.author;
@@ -1595,6 +1595,19 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
                 dadosPerfil = await User.create({ userId: alvo.id });
             }
         }
+
+        // --- LÓGICA DE CARREIRA (Para exibir a profissão no perfil) ---
+        const totalTrabalhos = dadosPerfil.workCount || 0;
+        const isFaccao = dadosPerfil.cargo === "Membro da Facção";
+        let profissaoNome = "";
+
+        const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
+        const profsCivil = ["Estagiário", "Auxiliar", "Vendedor Júnior", "Analista Pleno", "Supervisor", "Gerente de Setor", "Gerente Regional", "Diretor Executivo", "Vice-Presidente", "Sócio-Fundador", "CEO 💎"];
+        const profsFaccao = ["Olheiro", "Aviãozinho", "Vendedor de Carga", "Segurança do Morro", "Cobrador", "Gerente de Boca", "Fornecedor", "Conselheiro", "Braço Direito", "Sub-Chefe", "Líder da Facção 🏴‍☠️"];
+        
+        const listaProf = isFaccao ? profsFaccao : profsCivil;
+        let index = metas.findIndex(m => totalTrabalhos < m);
+        profissaoNome = index === -1 ? listaProf[10] : listaProf[index];
 
         // --- LÓGICA DE DADOS ---
         const inventory = dadosPerfil.inventory || [];
@@ -1621,28 +1634,28 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setColor(corEmbed)
             .setTitle(`${emojiStatus} Perfil de ${alvo.username}`)
             .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
-            .setDescription(`**Status Social:** \`${cargo}\`\n**Saldo Total:** 💰 \`${total.toLocaleString()} moedas\``)
+            .setDescription(`**Cargo:** \`${cargo}\`\n**Profissão:** \`${profissaoNome}\`\n**Saldo Total:** 💰 \`${total.toLocaleString()} moedas\``)
             .addFields(
                 {
                     name: "💳 Economia",
-                    value: `**Carteira:** \`${carteira.toLocaleString()}\`\n**Banco:** \`${banco.toLocaleString()}\`\n**Trabalhos:** \`${dadosPerfil.workCount || 0}\``,
+                    value: `**Carteira:** \`${carteira.toLocaleString()}\`\n**Banco:** \`${banco.toLocaleString()}\`\n**Trabalhos:** \`${totalTrabalhos}\``,
                     inline: true
                 },
                 {
-                    name: "🎯 Operações",
+                    name: "🎯 Estatísticas",
                     value: `**Missões:** \`${dadosPerfil.missionCount || 0}\`\n**Serviços:** \`${dadosPerfil.jobsDone || 0}\``,
                     inline: true
                 },
                 {
-                    name: "🎒 Mochila",
+                    name: "backpack Mochila",
                     value: itensFormatados,
                     inline: false
                 }
             )
-            .setFooter({ text: `ID: ${alvo.id}` })
+            .setFooter({ text: `ID: ${alvo.id} • Use !background para mudar o fundo` })
             .setTimestamp();
 
-        // SE O USUÁRIO TIVER UM BACKGROUND COMPRADO, ELE APARECE AQUI:
+        // --- APLICAÇÃO DO BACKGROUND ---
         if (dadosPerfil.bg) {
             embed.setImage(dadosPerfil.bg);
         }
@@ -1697,40 +1710,69 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ COMANDO BACKGROUND ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS (EDIÇÃO COMPLETA) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
-        "1": { nome: "Noite Estelar", preco: 50000, url: "https://i.imgur.com/4P7V6S0.jpg" },
-        "2": { nome: "Cidade Cyberpunk", preco: 150000, url: "https://i.imgur.com/GxM4E6K.jpg" },
-        "3": { nome: "Submundo Escuro", preco: 500000, url: "https://i.imgur.com/8Q9S6zH.jpg" }
+        // ... (Seus fundos anteriores do 1 ao 21 continuam aqui) ...
+        "1": { nome: "Itadori Yuji", preco: 40000, url: "https://i.imgur.com/8W77uRE.jpg" },
+        "2": { nome: "Gojo Satoru", preco: 100000, url: "https://i.imgur.com/39S5R5m.jpg" },
+        "3": { nome: "Sukuna", preco: 80000, url: "https://i.imgur.com/fMvC8uG.jpg" },
+        "4": { nome: "Denji (Chainsaw)", preco: 45000, url: "https://i.imgur.com/vHq0qHl.jpg" },
+        "5": { nome: "Makima", preco: 90000, url: "https://i.imgur.com/k6bK1w0.jpg" },
+        "6": { nome: "Power", preco: 50000, url: "https://i.imgur.com/XGfR1fL.jpg" },
+        "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://i.imgur.com/o2kGv5G.jpg" },
+        "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://i.imgur.com/0vKzX7u.jpg" },
+        "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://i.imgur.com/YvVjV6L.jpg" },
+        "10": { nome: "Jinx", preco: 60000, url: "https://i.imgur.com/mOqWn8V.jpg" },
+        "11": { nome: "Vi", preco: 60000, url: "https://i.imgur.com/2P6S7vS.jpg" },
+        "12": { nome: "Ekko", preco: 55000, url: "https://i.imgur.com/v8p0mXp.jpg" },
+        "13": { nome: "Eleven (Onze)", preco: 75000, url: "https://i.imgur.com/9v6QW8b.jpg" },
+        "14": { nome: "Eddie Munson", preco: 70000, url: "https://i.imgur.com/8Q9S6zH.jpg" },
+        "15": { nome: "Vecna", preco: 95000, url: "https://i.imgur.com/U8C1S3M.jpg" },
+        "16": { nome: "Steve & Alex", preco: 30000, url: "https://i.imgur.com/E1i37zT.jpg" },
+        "17": { nome: "Creeper", preco: 35000, url: "https://i.imgur.com/Gj8vR4u.jpg" },
+        "18": { nome: "Enderman", preco: 40000, url: "https://i.imgur.com/Xw0zB5Z.jpg" },
+        "19": { nome: "CR7 (Real Madrid)", preco: 200000, url: "https://i.imgur.com/O6Sj9m3.jpg" },
+        "20": { nome: "CR7 (Portugal)", preco: 250000, url: "https://i.imgur.com/U7vVjK8.jpg" },
+        "21": { nome: "CR7 (Siiiii)", preco: 500000, url: "https://i.imgur.com/pYVjK9m.jpg" },
+        
+        // --- DEVIL MAY CRY (Novos!) ---
+        "22": { nome: "Dante", preco: 110000, url: "https://i.imgur.com/qU3H6W1.jpg" },
+        "23": { nome: "Vergil (Motivation)", preco: 130000, url: "https://i.imgur.com/wP8yU8S.jpg" },
+        "24": { nome: "Nero", preco: 80000, url: "https://i.imgur.com/HqP3P3D.jpg" }
     };
 
     const opcao = args[0];
 
-    // Se não digitar nada, mostra a loja de fundos
     if (!opcao) {
         const embedLoja = new EmbedBuilder()
-            .setTitle("🖼️ Loja de Planos de Fundo")
-            .setColor("#f39c12")
-            .setDescription("Personalize o seu `!perfil` com imagens exclusivas!\nUse `!fundo [número]` para comprar e equipar.")
+            .setTitle("🖼️ Galeria de Backgrounds do Omni")
+            .setColor("#FF0000")
+            .setDescription("Use `!fundo [id]` para comprar seu fundo exclusivo!")
             .addFields(
-                { name: "1️⃣ Noite Estelar", value: "💰 50.000 moedas", inline: true },
-                { name: "2️⃣ Cidade Cyberpunk", value: "💰 150.000 moedas", inline: true },
-                { name: "3️⃣ Submundo Escuro", value: "💰 500.000 moedas", inline: true }
+                { name: "🏮 Jujutsu", value: "`1` Yuji | `2` Gojo | `3` Sukuna", inline: true },
+                { name: "🪚 Chainsaw", value: "`4` Denji | `5` Makima | `6` Power", inline: true },
+                { name: "🏴‍☠️ One Piece", value: "`7` Luffy | `8` Zoro | `9` Ace", inline: true },
+                { name: "🧪 Arcane", value: "`10` Jinx | `11` Vi | `12` Ekko", inline: true },
+                { name: "🚲 Stranger", value: "`13` Onze | `14` Eddie | `15` Vecna", inline: true },
+                { name: "🟩 Minecraft", value: "`16` Steve | `17` Creeper | `18` Ender", inline: true },
+                { name: "⚽ CR7", value: "`19` Real | `20` Portugal | `21` LENDA", inline: true },
+                { name: "😈 Devil May Cry", value: "`22` Dante | `23` Vergil | `24` Nero", inline: true }
             )
-            .setFooter({ text: "O fundo aparecerá no seu comando !perfil" });
+            .setFooter({ text: "O fundo será aplicado no seu !perfil" });
 
         return message.reply({ embeds: [embedLoja] });
     }
 
     const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Essa opção não existe na loja.");
+    if (!fundoEscolhido) return message.reply("❌ Código inválido! Use os números da loja.");
 
-    // Verifica se tem dinheiro (Soma Carteira + Banco)
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem moedas suficientes (contando banco e carteira).");
+    if (saldoTotal < fundoEscolhido.preco) {
+        return message.reply(`❌ Você precisa de **${fundoEscolhido.preco.toLocaleString()} moedas** no total.`);
+    }
 
-    // Cobra o valor (priorizando a carteira, depois o banco)
+    // Lógica de Pagamento
     if (userData.money >= fundoEscolhido.preco) {
         userData.money -= fundoEscolhido.preco;
     } else {
@@ -1742,7 +1784,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     userData.bg = fundoEscolhido.url;
     await userData.save();
 
-    return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**! Veja no seu \`!perfil\`.`);
+    return message.reply(`✅ Estilo SSS! Fundo **${fundoEscolhido.nome}** equipado.`);
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
