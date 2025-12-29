@@ -99,22 +99,21 @@ client.on('messageCreate', async (message) => {
         return message.reply(`🎁 Ganhaste **${ganho.toLocaleString()}** moedas!`);
     }
 
-// ==================== 🔨 COMANDO TRABALHAR (COM RESET DE PASSAPORTE) ====================
+// ==================== 🔨 COMANDO TRABALHAR (PROFISSÕES + ITENS + PASSAPORTE) ====================
 if (command === 'trabalhar' || command === 'work') {
     const now = Date.now();
     const cooldown = 3600000; // 1 hora
     const lastWork = userData.lastWork || 0;
     const inventory = userData.inventory || [];
+    const totalTrabalhos = userData.workCount || 0;
+    const isFaccao = userData.cargo === "Membro da Facção";
 
     // 1. Verificação de Cooldown com lógica de Passaporte
     if (now - lastWork < cooldown) {
-        // Verifica se ele tem o passaporte para resetar
         if (inventory.includes('passaporte')) {
-            // Remove o passaporte do inventário (consome o item)
             const index = userData.inventory.indexOf('passaporte');
             userData.inventory.splice(index, 1);
             userData.markModified('inventory'); 
-            // Não retornamos aqui, o código segue para o trabalho abaixo
         } else {
             const restante = cooldown - (now - lastWork);
             const minutos = Math.ceil(restante / 60000);
@@ -122,12 +121,28 @@ if (command === 'trabalhar' || command === 'work') {
         }
     }
 
-    // 2. Cálculo do Ganho Base
-    let ganho = Math.floor(Math.random() * 5001) + 1000; 
+    // 2. Lógica de Profissão e Ganho Base
+    let ganhoBase = 0;
+    let nomeProfissao = "";
+
+    if (isFaccao) {
+        if (totalTrabalhos < 50) { ganhoBase = Math.floor(Math.random() * 500) + 500; nomeProfissao = "Olheiro"; }
+        else if (totalTrabalhos < 150) { ganhoBase = Math.floor(Math.random() * 1000) + 1000; nomeProfissao = "Aviãozinho"; }
+        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 2000) + 2000; nomeProfissao = "Vendedor"; }
+        else if (totalTrabalhos < 600) { ganhoBase = Math.floor(Math.random() * 4000) + 4000; nomeProfissao = "Gerente de Boca"; }
+        else { ganhoBase = Math.floor(Math.random() * 8000) + 7000; nomeProfissao = "Líder da Facção"; }
+    } else {
+        if (totalTrabalhos < 50) { ganhoBase = Math.floor(Math.random() * 400) + 400; nomeProfissao = "Estagiário"; }
+        else if (totalTrabalhos < 150) { ganhoBase = Math.floor(Math.random() * 900) + 900; nomeProfissao = "Vendedor"; }
+        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 1800) + 1800; nomeProfissao = "Gerente"; }
+        else if (totalTrabalhos < 600) { ganhoBase = Math.floor(Math.random() * 3500) + 3500; nomeProfissao = "Diretor"; }
+        else { ganhoBase = Math.floor(Math.random() * 7000) + 6000; nomeProfissao = "CEO"; }
+    }
+
+    // 3. Verificação de Bônus da Mochila (Soma ao ganho da profissão)
     let bonusTotal = 0;
     let extras = [];
 
-    // 3. Verificação de Bônus da Mochila
     if (inventory.includes('picareta')) {
         bonusTotal += 800;
         extras.push("⛏️ Picareta (+800)");
@@ -137,25 +152,23 @@ if (command === 'trabalhar' || command === 'work') {
         extras.push("💻 Computador (+1.500)");
     }
 
-    const totalFinal = ganho + bonusTotal;
+    const totalFinal = ganhoBase + bonusTotal;
 
     // 4. Atualização dos Dados
     userData.money += totalFinal;
     userData.lastWork = now;
     userData.workCount = (userData.workCount || 0) + 1;
 
-    // 5. Salva no MongoDB
     await userData.save();
 
-    // 6. Resposta Visual
+    // 5. Resposta Visual
     let resposta = "";
     
-    // Se ele usou o passaporte, avisamos na mensagem
     if (now - lastWork < cooldown) {
         resposta += "🎫 **PASSAPORTE USADO!** O teu tempo de espera foi resetado ilegalmente.\n";
     }
 
-    resposta += `🔨 Trabalhaste arduamente e ganhaste **${totalFinal.toLocaleString()} moedas**!`;
+    resposta += `🔨 Trabalhaste como **${nomeProfissao}** e ganhaste **${totalFinal.toLocaleString()} moedas**!`;
     
     if (extras.length > 0) {
         resposta += `\n> **Bônus aplicados:** ${extras.join(' e ')}`;
@@ -207,6 +220,40 @@ if (command === 'setmoney') {
         console.error("Erro no comando setmoney:", error);
         return message.reply("❌ Ocorreu um erro ao tentar alterar o dinheiro.");
     }
+}
+// ==================== 💼 COMANDO TRABALHOS (INFO) ====================
+if (command === 'trabalhos' || command === 'jobs' || command === 'empregos') {
+    const totalTrabalhos = userData.workCount || 0;
+    const isFaccao = userData.cargo === "Membro da Facção";
+
+    let profissaoAtual = "";
+    let proxProfissao = "";
+
+    if (isFaccao) {
+        if (totalTrabalhos < 50) { profissaoAtual = "Olheiro"; proxProfissao = "Aviãozinho (50 trab.)"; }
+        else if (totalTrabalhos < 150) { profissaoAtual = "Aviãozinho"; proxProfissao = "Vendedor (150 trab.)"; }
+        else if (totalTrabalhos < 300) { profissaoAtual = "Vendedor"; proxProfissao = "Gerente de Boca (300 trab.)"; }
+        else if (totalTrabalhos < 600) { profissaoAtual = "Gerente de Boca"; proxProfissao = "Braço Direito (600 trab.)"; }
+        else { profissaoAtual = "Líder da Facção 👑"; proxProfissao = "Nível Máximo!"; }
+    } else {
+        if (totalTrabalhos < 50) { profissaoAtual = "Estagiário"; proxProfissao = "Vendedor (50 trab.)"; }
+        else if (totalTrabalhos < 150) { profissaoAtual = "Vendedor"; proxProfissao = "Gerente (150 trab.)"; }
+        else if (totalTrabalhos < 300) { profissaoAtual = "Gerente"; proxProfissao = "Diretor (300 trab.)"; }
+        else if (totalTrabalhos < 600) { profissaoAtual = "Diretor"; proxProfissao = "Sócio (600 trab.)"; }
+        else { profissaoAtual = "CEO 💎"; proxProfissao = "Nível Máximo!"; }
+    }
+
+    const embed = new EmbedBuilder()
+        .setTitle(`💼 Carreira de ${message.author.username}`)
+        .setColor(isFaccao ? "#2b2d31" : "#00ff00")
+        .setDescription(`Você já trabalhou **${totalTrabalhos}** vezes.`)
+        .addFields(
+            { name: 'Sua Profissão:', value: `\`${profissaoAtual}\``, inline: true },
+            { name: 'Próximo Nível:', value: `\`${proxProfissao}\``, inline: true }
+        )
+        .setFooter({ text: "Quanto maior o nível, maior o salário no !trabalhar" });
+
+    return message.reply({ embeds: [embed] });
 }
 // ==================== 🛠️ COMANDO RESETAR (APENAS DONO) ====================
 if (command === 'resetar' || command === 'reset') {
@@ -474,18 +521,47 @@ if (command === 'investir' || command === 'stock') {
     return message.reply({ embeds: [embed] });
 }
 
-    // ==================== 🏆 COMANDO TOP ====================
-    if (command === 'top') {
-        const topRicos = await User.find().sort({ money: -1 }).limit(10);
-        let lista = topRicos.map((u, i) => `**${i + 1}.** <@${u.userId}> — ${u.money.toLocaleString()} moedas`).join('\n');
-        
-        const embed = new EmbedBuilder()
-            .setTitle('🏆 TOP 10 RICOS')
-            .setColor('#FFD700')
-            .setDescription(lista || "Ninguém ainda.");
-        return message.reply({ embeds: [embed] });
-    }
+// ==================== 🏆 COMANDO TOP (LOCAL & GLOBAL) ====================
+if (command === 'top') {
+    try {
+        const isGlobal = args[0]?.toLowerCase() === 'global';
+        let topRicos;
 
+        if (isGlobal) {
+            // Busca os 10 mais ricos de TODO o banco de dados
+            topRicos = await User.find()
+                .sort({ money: -1, bank: -1 }) // Ordena por quem tem mais no total
+                .limit(10);
+        } else {
+            // TOP LOCAL: Pega os IDs de todos os membros do servidor atual
+            const membrosIds = (await message.guild.members.fetch()).map(m => m.id);
+            
+            // Busca no banco apenas os usuários que estão nesta lista de IDs
+            topRicos = await User.find({ userId: { $in: membrosIds } })
+                .sort({ money: -1, bank: -1 })
+                .limit(10);
+        }
+
+        const lista = topRicos.map((u, i) => {
+            const total = (u.money || 0) + (u.bank || 0);
+            return `**${i + 1}.** <@${u.userId}> — 💰 \`${total.toLocaleString()}\``;
+        }).join('\n');
+
+        const embed = new EmbedBuilder()
+            .setTitle(isGlobal ? '🌎 TOP 10 RICOS (GLOBAL)' : `🏙️ TOP 10 RICOS (${message.guild.name})`)
+            .setColor('#FFD700')
+            .setThumbnail('https://cdn-icons-png.flaticon.com/512/2583/2583344.png')
+            .setDescription(lista || "Ninguém neste servidor começou sua jornada ainda.")
+            .setFooter({ text: isGlobal ? "Use !top para ver o ranking deste servidor" : "Use !top global para ver o ranking mundial" })
+            .setTimestamp();
+
+        return message.reply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Erro no comando top:", error);
+        return message.reply("❌ Erro ao processar o ranking. Tente novamente mais tarde.");
+    }
+}
 // ==================== 🚀 COMANDO VOTE (COMPLETO) ====================
     if (command === 'votar' || command === 'vote') {
         const embedVoto = new EmbedBuilder()
@@ -2138,7 +2214,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
                 name: '💰 ECONOMIA & RANKING', 
 
-                value: '`!perfil`: Teus dados e mochila.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top`: Os mais ricos do servidor.' 
+                value: '`!perfil`: Teus dados e mochila.\n`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
 
             },
 
