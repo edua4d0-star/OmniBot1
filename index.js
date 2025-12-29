@@ -1095,99 +1095,107 @@ if (command === 'missao' || command === 'mission') {
 
     return message.reply(`🎯 **MISSÃO CONCLUÍDA: ${missaoSorteada.nome}**\n> ${missaoSorteada.desc}\n💰 Recompensa: **${missaoSorteada.ganho.toLocaleString()} moedas**.`);
 }
-// ==================== 🌑 COMANDO CRIME (VERSÃO OMNI - ARMA INTEGRADA) ====================
-    if (command === 'crime') {
-        const now = Date.now();
-        const cooldown = 1800000; // 30 minutos
-        const lastCrime = userData.lastCrime || 0;
+// ==================== 🌑 COMANDO CRIME (VERSÃO OMNI - COM TIMER DE 24H PARA FACÇÃO) ====================
+if (command === 'crime') {
+    const now = Date.now();
+    const myInv = userData.inventory || [];
+    
+    // Identificação dos itens/status
+    const indexDinamite = myInv.indexOf('dinamite');
+    const temDinamite = indexDinamite !== -1;
+    const temFaccao = myInv.includes('faccao');
+    const temArma = myInv.includes('arma');
 
-        // 1. Verificação de Cooldown
-        if (now - lastCrime < cooldown) {
-            const restante = cooldown - (now - lastCrime);
-            const minutos = Math.ceil(restante / 60000);
+    // 1. Definição do Cooldown Dinâmico
+    // Se tem facção: 24 horas (86.400.000 ms). Se não: 30 minutos (1.800.000 ms).
+    const cooldown = temFaccao ? 86400000 : 1800000; 
+    const lastCrime = userData.lastCrime || 0;
+
+    // Verificação de Cooldown
+    if (now - lastCrime < cooldown) {
+        const restante = cooldown - (now - lastCrime);
+        const horas = Math.floor(restante / 3600000);
+        const minutos = Math.floor((restante % 3600000) / 60000);
+        
+        if (temFaccao) {
+            return message.reply(`⏳ Como você é de uma **Facção**, a segurança está reforçada! Espere **${horas}h e ${minutos}m** para o próximo grande golpe.`);
+        } else {
             return message.reply(`⏳ A polícia ainda está à tua procura! Espera **${minutos} minutos**.`);
         }
-
-        const myInv = userData.inventory || [];
-        
-        // Verificação de itens no inventário
-        const indexDinamite = myInv.indexOf('dinamite');
-        const temDinamite = indexDinamite !== -1;
-        const temFaccao = myInv.includes('faccao');
-        const temArma = myInv.includes('arma');
-
-        let chanceSucesso = 0.45; // 45% base
-        let multiplicador = 1;
-
-        // --- LÓGICA DE BÔNUS (PRIORIDADE) ---
-        
-        // Bônus da Pistola (Melhoria leve e permanente)
-        if (temArma) {
-            chanceSucesso = 0.60; 
-            multiplicador = 1.5;
-        }
-
-        // Bônus da Dinamite (Melhoria alta, mas consome o item)
-        if (temDinamite) {
-            chanceSucesso = 0.75; 
-            multiplicador = 2.5;
-        }
-
-        // Bônus da Facção (Poder Supremo)
-        if (temFaccao) {
-            chanceSucesso = 0.90; 
-            multiplicador = 125;
-        }
-
-        // 2. Execução
-        const sorteio = Math.random();
-
-        if (sorteio < chanceSucesso) {
-            const ganhoBase = Math.floor(Math.random() * 3001) + 2000; 
-            const ganhoFinal = Math.floor(ganhoBase * multiplicador);
-
-            userData.money += ganhoFinal;
-            userData.lastCrime = now;
-
-            // Lógica de consumo: Só gasta a dinamite se o jogador NÃO tiver Facção
-            if (temDinamite && !temFaccao) {
-                userData.inventory.splice(indexDinamite, 1);
-                userData.markModified('inventory');
-            }
-
-            await userData.save();
-
-            let msg = `🥷 **O golpe foi um sucesso!** `;
-            
-            if (temFaccao) {
-                msg += `Dominaste a cidade com a tua **Facção** e lucraste **${ganhoFinal.toLocaleString()} moedas**! 🏴`;
-            } else if (temDinamite) {
-                msg += `A **Dinamite** abriu o cofre! Lucraste **${ganhoFinal.toLocaleString()} moedas**! 🧨`;
-            } else if (temArma) {
-                msg += `Com a tua **Pistola**, rendeste os guardas e levaste **${ganhoFinal.toLocaleString()} moedas**! 🔫`;
-            } else {
-                msg += `Conseguiste escapar com **${ganhoFinal.toLocaleString()} moedas**! 💰`;
-            }
-            
-            return message.reply(msg);
-
-        } else {
-            // Falha
-            let multa = 1500;
-            if (temFaccao) multa = 0; // Facção tem proteção contra multas
-            else if (temArma) multa = 750; // Arma intimida a polícia, multa menor
-
-            userData.money = Math.max(0, userData.money - multa);
-            userData.lastCrime = now;
-            await userData.save();
-
-            if (temFaccao) {
-                return message.reply(`👮 **A polícia cercou o local!** Mas os teus contatos na Facção tiraram-te de lá antes de seres multado.`);
-            }
-
-            return message.reply(`👮 **A casa caiu!** Tiveste de pagar uma "taxa" de **${multa.toLocaleString()} moedas** para não ires preso.`);
-        }
     }
+
+    let chanceSucesso = 0.45; // 45% base
+    let multiplicador = 1;
+
+    // --- LÓGICA DE BÔNUS (PRIORIDADE) ---
+    
+    // Bônus da Pistola
+    if (temArma) {
+        chanceSucesso = 0.60; 
+        multiplicador = 1.5;
+    }
+
+    // Bônus da Dinamite
+    if (temDinamite) {
+        chanceSucesso = 0.75; 
+        multiplicador = 2.5;
+    }
+
+    // Bônus da Facção (Poder Supremo e multiplicador de 125x)
+    if (temFaccao) {
+        chanceSucesso = 0.90; 
+        multiplicador = 125;
+    }
+
+    // 2. Execução
+    const sorteio = Math.random();
+
+    if (sorteio < chanceSucesso) {
+        const ganhoBase = Math.floor(Math.random() * 3001) + 2000; 
+        const ganhoFinal = Math.floor(ganhoBase * multiplicador);
+
+        userData.money += ganhoFinal;
+        userData.lastCrime = now;
+
+        // Lógica de consumo: Só gasta a dinamite se o jogador NÃO tiver Facção
+        if (temDinamite && !temFaccao) {
+            userData.inventory.splice(indexDinamite, 1);
+            userData.markModified('inventory');
+        }
+
+        await userData.save();
+
+        let msg = `🥷 **O golpe foi um sucesso!** `;
+        
+        if (temFaccao) {
+            msg += `Dominaste a cidade com a tua **Facção** e lucraste **${ganhoFinal.toLocaleString()} moedas**! 🏴`;
+        } else if (temDinamite) {
+            msg += `A **Dinamite** abriu o cofre! Lucraste **${ganhoFinal.toLocaleString()} moedas**! 🧨`;
+        } else if (temArma) {
+            msg += `Com a tua **Pistola**, rendeste os guardas e levaste **${ganhoFinal.toLocaleString()} moedas**! 🔫`;
+        } else {
+            msg += `Conseguiste escapar com **${ganhoFinal.toLocaleString()} moedas**! 💰`;
+        }
+        
+        return message.reply(msg);
+
+    } else {
+        // Falha
+        let multa = 1500;
+        if (temFaccao) multa = 0; 
+        else if (temArma) multa = 750; 
+
+        userData.money = Math.max(0, userData.money - multa);
+        userData.lastCrime = now;
+        await userData.save();
+
+        if (temFaccao) {
+            return message.reply(`👮 **A polícia cercou o local!** Mas os teus contatos na Facção tiraram-te de lá antes de seres multado.`);
+        }
+
+        return message.reply(`👮 **A casa caiu!** Tiveste de pagar uma "taxa" de **${multa.toLocaleString()} moedas** para não ires preso.`);
+    }
+}
 // ==================== 📢 COMANDO ANÚNCIO (OTIMIZADO) ====================
     if (command === 'anuncio' || command === 'broadcast') {
         // 1. Verificação de Permissão (Apenas Administradores)
@@ -1252,50 +1260,58 @@ if (command === 'missao' || command === 'mission') {
         }
     }
 
-// ==================== 👤 COMANDO PERFIL (OTIMIZADO) ====================
+// ==================== 👤 COMANDO PERFIL (COM STACK - SEM PODER) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
-    const inventory = userData.inventory || [];
-    const cargo = userData.cargo || "Civil"; // Padrão é Civil se não tiver cargo
-    
-    // Configuração visual baseada no cargo
-    const corEmbed = cargo === "Membro da Facção" ? "#2f3136" : "#0099ff";
-    const emojiStatus = cargo === "Membro da Facção" ? "🏴‍☠️" : " citizen_emoji "; // Use um emoji de cidadão aqui
-    const banner = cargo === "Membro da Facção" 
-        ? "https://i.imgur.com/8pP2B7u.png" // Imagem temática de facção
-        : "https://i.imgur.com/X4z3vX7.png"; // Imagem temática civil
+    try {
+        const inventory = userData.inventory || [];
+        const cargo = userData.cargo || "Civil"; 
+        
+        // --- LÓGICA DE STACK (AGRUPAR ITENS IGUAIS) ---
+        const contagemItens = {};
+        inventory.forEach(item => {
+            contagemItens[item] = (contagemItens[item] || 0) + 1;
+        });
 
-    // Formatação do Inventário
-    let itensFormatados = inventory.length > 0 
-        ? inventory.map(item => `\`${item}\``).join(', ') 
-        : "Nenhum item";
+        // Transforma o objeto { arma: 2 } em "`arma x2`"
+        const itensFormatados = Object.keys(contagemItens).length > 0 
+            ? Object.entries(contagemItens).map(([nome, qtd]) => `\`${nome} x${qtd}\``).join(', ') 
+            : "Nenhum item";
 
-    const embed = {
-        color: parseInt(corEmbed.replace('#', ''), 16),
-        title: `${emojiStatus} Perfil de ${message.author.username}`,
-        thumbnail: { url: message.author.displayAvatarURL({ dynamic: true }) },
-        description: `**Status Social:** \`${cargo}\``,
-        fields: [
-            {
-                name: "💰 Economia",
-                value: `**Saldo:** ${userData.money.toLocaleString()} moedas\n**Trabalhos:** \`${userData.workCount || 0}\``,
-                inline: true
-            },
-            {
-                name: "🎯 Operações",
-                value: `**Missões:** \`${userData.missionCount || 0}\`\n**Poder:** ${inventory.includes('arma') ? '🔥 Alto' : '⚖️ Médio'}`,
-                inline: true
-            },
-            {
-                name: "🎒 Mochila",
-                value: itensFormatados,
-                inline: false
-            }
-        ],
-        footer: { text: `ID: ${message.author.id}` },
-        timestamp: new Date()
-    };
+        // Configuração visual baseada no cargo
+        const corEmbed = cargo === "Membro da Facção" ? "#2f3136" : "#0099ff";
+        const emojiStatus = cargo === "Membro da Facção" ? "🏴‍☠️" : "🏙️"; 
 
-    return message.reply({ embeds: [embed] });
+        const embed = new EmbedBuilder()
+            .setColor(corEmbed)
+            .setTitle(`${emojiStatus} Perfil de ${message.author.username}`)
+            .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+            .setDescription(`**Status Social:** \`${cargo}\``)
+            .addFields(
+                {
+                    name: "💰 Economia",
+                    value: `**Saldo:** ${userData.money.toLocaleString()} moedas\n**Trabalhos:** \`${userData.workCount || 0}\``,
+                    inline: true
+                },
+                {
+                    name: "🎯 Operações",
+                    value: `**Missões:** \`${userData.missionCount || 0}\``,
+                    inline: true
+                },
+                {
+                    name: "🎒 Mochila",
+                    value: itensFormatados,
+                    inline: false
+                }
+            )
+            .setFooter({ text: `ID: ${message.author.id}` })
+            .setTimestamp();
+
+        return message.reply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Erro no comando perfil:", error);
+        return message.reply("❌ Erro ao carregar o perfil.");
+    }
 }
 // ==================== 🏪 COMANDO !LOJA (VERSÃO COM RESUMOS) ====================
 if (command === 'loja' || command === 'shop') {
@@ -1730,7 +1746,7 @@ if (command === 'comprar' || command === 'buy') {
                 },
                 { 
                     name: '💖 SOCIAL & CASAMENTO', 
-                    value: '`!ship @user @user`: Calcula a compatibilidade.\n`!casar @user`: Inicia um casamento (25k).\n`!vercasamento`: Status da relação e afinidade.\n`!cartinha @user`: Envia pontos de afinidade (7.5k).\n`!beijar`, `!abracar`, `!cafune`: Interações de afeto.\n`!divorciar`: Finaliza a relação atual.\n`!tapa`, `!atacar`: Interações agressivas.'  
+                    value: '`!divorciar`', value: 'Termina o seu casamento atual imediatamente.\n`!ship @user @user`: Calcula a compatibilidade.\n`!casar @user`: Inicia um casamento (25k).\n`!vercasamento`: Status da relação e afinidade.\n`!cartinha @user`: Envia pontos de afinidade (7.5k).\n`!beijar`, `!abracar`, `!cafune`: Interações de afeto.\n`!divorciar`: Finaliza a relação atual.\n`!tapa`, `!atacar`: Interações agressivas.'  
                 },
                 { 
                     name: '🌑 SUBMUNDO', 
