@@ -270,6 +270,63 @@ if (command === 'resetar' || command === 'reset') {
         return message.reply("❌ Ocorreu um erro crítico ao tentar resetar.");
     }
 }
+// ==================== 🏦 SISTEMA DE BANCO ====================
+
+// COMANDO DEPOSITAR
+if (command === 'depositar' || command === 'dep') {
+    const valorStr = args[0];
+    let valorParaDepositar;
+
+    if (!valorStr) return message.reply("❌ Diz quanto queres depositar ou usa `!dep all`.");
+
+    if (valorStr.toLowerCase() === 'all') {
+        valorParaDepositar = userData.money;
+    } else {
+        valorParaDepositar = parseInt(valorStr);
+    }
+
+    if (isNaN(valorParaDepositar) || valorParaDepositar <= 0) return message.reply("❌ Valor inválido.");
+    if (userData.money < valorParaDepositar) return message.reply("❌ Não tens esse dinheiro todo na mão.");
+
+    userData.money -= valorParaDepositar;
+    userData.bank += valorParaDepositar;
+    await userData.save();
+
+    const embedDep = new EmbedBuilder()
+        .setColor('#00ff00')
+        .setTitle('🏦 Depósito Concluído')
+        .setDescription(`Depositaste **${valorParaDepositar.toLocaleString()} moedas** no banco.\n🛡️ Agora estão protegidas de roubos!`);
+    
+    return message.reply({ embeds: [embedDep] });
+}
+
+// COMANDO SACAR
+if (command === 'sacar' || command === 'saque') {
+    const valorStr = args[0];
+    let valorParaSacar;
+
+    if (!valorStr) return message.reply("❌ Diz quanto queres sacar ou usa `!sacar all`.");
+
+    if (valorStr.toLowerCase() === 'all') {
+        valorParaSacar = userData.bank;
+    } else {
+        valorParaSacar = parseInt(valorStr);
+    }
+
+    if (isNaN(valorParaSacar) || valorParaSacar <= 0) return message.reply("❌ Valor inválido.");
+    if (userData.bank < valorParaSacar) return message.reply("❌ Não tens esse dinheiro no banco.");
+
+    userData.bank -= valorParaSacar;
+    userData.money += valorParaSacar;
+    await userData.save();
+
+    const embedSaque = new EmbedBuilder()
+        .setColor('#ffcc00')
+        .setTitle('🏦 Saque Concluído')
+        .setDescription(`Sacaste **${valorParaSacar.toLocaleString()} moedas** para a tua mão.`);
+    
+    return message.reply({ embeds: [embedSaque] });
+}
 // ==================== 💸 COMANDO PIX ====================
 if (command === 'pix') {
     try {
@@ -1363,28 +1420,29 @@ https://discord.gg/WbdkRy9JCM
         }
     }
 
-// ==================== 👤 COMANDO PERFIL (VER O PRÓPRIO OU DE OUTRO) ====================
+// ==================== 👤 COMANDO PERFIL ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
-        // 1. Identifica o alvo: Se marcar alguém, usa o marcado. Se não, usa quem mandou a mensagem.
         const alvo = message.mentions.users.first() || message.author;
 
-        // 2. Busca os dados do alvo no banco. Se for você mesmo, usa o userData que já existe.
         let dadosPerfil;
         if (alvo.id === message.author.id) {
             dadosPerfil = userData;
         } else {
             dadosPerfil = await User.findOne({ userId: alvo.id });
-            // Se o alvo nunca usou o bot, criamos um perfil vazio para ele não dar erro
             if (!dadosPerfil) {
                 dadosPerfil = await User.create({ userId: alvo.id });
             }
         }
 
+        // --- LÓGICA DE DADOS ---
         const inventory = dadosPerfil.inventory || [];
         const cargo = dadosPerfil.cargo || "Civil"; 
+        const carteira = dadosPerfil.money || 0;
+        const banco = dadosPerfil.bank || 0;
+        const total = carteira + banco;
         
-        // --- LÓGICA DE STACK (AGRUPAR ITENS IGUAIS) ---
+        // Agrupar itens da mochila
         const contagemItens = {};
         inventory.forEach(item => {
             contagemItens[item] = (contagemItens[item] || 0) + 1;
@@ -1394,24 +1452,24 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             ? Object.entries(contagemItens).map(([nome, qtd]) => `\`${nome} x${qtd}\``).join(', ') 
             : "Nenhum item";
 
-        // Configuração visual baseada no cargo do perfil visualizado
+        // Estética baseada no cargo
         const corEmbed = cargo === "Membro da Facção" ? "#2f3136" : "#0099ff";
         const emojiStatus = cargo === "Membro da Facção" ? "🏴‍☠️" : "🏙️"; 
 
         const embed = new EmbedBuilder()
             .setColor(corEmbed)
-            .setTitle(`${emojiStatus} Perfil de ${alvo.username}`) // Nome do alvo
-            .setThumbnail(alvo.displayAvatarURL({ dynamic: true })) // Avatar do alvo
-            .setDescription(`**Status Social:** \`${cargo}\``)
+            .setTitle(`${emojiStatus} Perfil de ${alvo.username}`)
+            .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
+            .setDescription(`**Status Social:** \`${cargo}\`\n**Saldo Total:** 💰 \`${total.toLocaleString()} moedas\``)
             .addFields(
                 {
-                    name: "💰 Economia",
-                    value: `**Saldo:** ${dadosPerfil.money.toLocaleString()} moedas\n**Trabalhos:** \`${dadosPerfil.workCount || 0}\``,
+                    name: "💳 Economia",
+                    value: `**Carteira:** \`${carteira.toLocaleString()}\`\n**Banco:** \`${banco.toLocaleString()}\`\n**Trabalhos:** \`${dadosPerfil.workCount || 0}\``,
                     inline: true
                 },
                 {
                     name: "🎯 Operações",
-                    value: `**Missões:** \`${dadosPerfil.missionCount || 0}\``,
+                    value: `**Missões:** \`${dadosPerfil.missionCount || 0}\`\n**Serviços:** \`${dadosPerfil.jobsDone || 0}\``,
                     inline: true
                 },
                 {
@@ -1423,12 +1481,107 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setFooter({ text: `ID: ${alvo.id}` })
             .setTimestamp();
 
+        // SE O USUÁRIO TIVER UM BACKGROUND COMPRADO, ELE APARECE AQUI:
+        if (dadosPerfil.bg) {
+            embed.setImage(dadosPerfil.bg);
+        }
+
         return message.reply({ embeds: [embed] });
 
     } catch (error) {
         console.error("Erro no comando perfil:", error);
         return message.reply("❌ Erro ao carregar o perfil.");
     }
+}
+// ==================== 🏆 COMANDO CONQUISTAS ====================
+if (command === 'conquistas' || command === 'achievements' || command === 'badges') {
+    try {
+        const totalDinheiro = (userData.money || 0) + (userData.bank || 0);
+        const conquistas = [];
+
+        // --- LÓGICA DE VERIFICAÇÃO ---
+        
+        // Conquistas de Economia
+        if (totalDinheiro >= 100000) conquistas.push("💰 **Iniciante Rico:** Acumulou 100k moedas.");
+        if (totalDinheiro >= 1000000) conquistas.push("💎 **Milionário:** Acumulou 1 milhão de moedas.");
+        if (totalDinheiro >= 10000000) conquistas.push("🏰 **Magnata:** Acumulou 10 milhões de moedas.");
+
+        // Conquistas de Trabalho/Missões
+        if ((userData.workCount || 0) >= 50) conquistas.push("⚒️ **Proletário:** Trabalhou 50 vezes.");
+        if ((userData.missionCount || 0) >= 20) conquistas.push("🎖️ **Operador:** Concluiu 20 missões de elite.");
+
+        // Conquistas de Relacionamento
+        if (userData.marriedWith) conquistas.push("💍 **Casado:** Encontrou a sua cara metade.");
+        if ((userData.affinity || 0) >= 500) conquistas.push("❤️ **Amor Eterno:** Chegou a 500 de afinidade.");
+
+        // Conquistas de Crime/Submundo
+        if ((userData.jobsDone || 0) >= 10) conquistas.push("🎯 **Assassino:** Concluiu 10 contratos com sucesso.");
+        if (userData.cargo === "Membro da Facção") conquistas.push("🏴‍☠️ **Criminoso:** Entrou oficialmente para o submundo.");
+
+        // --- CONSTRUÇÃO DA EMBED ---
+        const embed = new EmbedBuilder()
+            .setTitle(`🏆 Conquistas de ${message.author.username}`)
+            .setColor('#f1c40f')
+            .setThumbnail('https://cdn-icons-png.flaticon.com/512/190/190411.png') // Ícone de troféu
+            .setDescription(conquistas.length > 0 
+                ? `Você já desbloqueou **${conquistas.length}** conquistas!\n\n${conquistas.join('\n')}` 
+                : "Você ainda não desbloqueou nenhuma conquista. Continue jogando!")
+            .setFooter({ text: 'Continue evoluindo para ganhar mais medalhas!' })
+            .setTimestamp();
+
+        return message.reply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Erro no comando conquistas:", error);
+        return message.reply("❌ Erro ao carregar as tuas conquistas.");
+    }
+}
+// ==================== 🖼️ COMANDO BACKGROUND ====================
+if (command === 'background' || command === 'fundo' || command === 'bg') {
+    const fundos = {
+        "1": { nome: "Noite Estelar", preco: 50000, url: "https://i.imgur.com/4P7V6S0.jpg" },
+        "2": { nome: "Cidade Cyberpunk", preco: 150000, url: "https://i.imgur.com/GxM4E6K.jpg" },
+        "3": { nome: "Submundo Escuro", preco: 500000, url: "https://i.imgur.com/8Q9S6zH.jpg" }
+    };
+
+    const opcao = args[0];
+
+    // Se não digitar nada, mostra a loja de fundos
+    if (!opcao) {
+        const embedLoja = new EmbedBuilder()
+            .setTitle("🖼️ Loja de Planos de Fundo")
+            .setColor("#f39c12")
+            .setDescription("Personalize o seu `!perfil` com imagens exclusivas!\nUse `!fundo [número]` para comprar e equipar.")
+            .addFields(
+                { name: "1️⃣ Noite Estelar", value: "💰 50.000 moedas", inline: true },
+                { name: "2️⃣ Cidade Cyberpunk", value: "💰 150.000 moedas", inline: true },
+                { name: "3️⃣ Submundo Escuro", value: "💰 500.000 moedas", inline: true }
+            )
+            .setFooter({ text: "O fundo aparecerá no seu comando !perfil" });
+
+        return message.reply({ embeds: [embedLoja] });
+    }
+
+    const fundoEscolhido = fundos[opcao];
+    if (!fundoEscolhido) return message.reply("❌ Essa opção não existe na loja.");
+
+    // Verifica se tem dinheiro (Soma Carteira + Banco)
+    const saldoTotal = (userData.money || 0) + (userData.bank || 0);
+    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem moedas suficientes (contando banco e carteira).");
+
+    // Cobra o valor (priorizando a carteira, depois o banco)
+    if (userData.money >= fundoEscolhido.preco) {
+        userData.money -= fundoEscolhido.preco;
+    } else {
+        const restante = fundoEscolhido.preco - userData.money;
+        userData.money = 0;
+        userData.bank -= restante;
+    }
+
+    userData.bg = fundoEscolhido.url;
+    await userData.save();
+
+    return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**! Veja no seu \`!perfil\`.`);
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
@@ -1895,8 +2048,7 @@ if (command === 'comprar' || command === 'buy') {
             console.error("ERRO NO TIMEOUT:", error);
             return message.reply('❌ Erro ao silenciar! Verifica se o meu cargo está no topo da lista de cargos.');
         }
-    }
-// ==================== 📖 AJUDA OTIMIZADA (CATEGORIAS EXPANDIDAS) ====================
+    }// ==================== 📖 AJUDA OTIMIZADA (ATUALIZADA) ====================
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
     
     let avisoIdioma = '';
@@ -1910,39 +2062,35 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
         .setDescription(`${avisoIdioma}${avisoIdioma ? '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : ''}Seja bem-vindo! Explore minhas funcionalidades abaixo:`)
         .addFields(
             { 
-                name: '💰 ECONOMIA & RANKING', 
-                value: '`!perfil`: Teus dados e mochila.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top`: Os mais ricos do servidor.' 
+                name: '💰 ECONOMIA & BANCO', 
+                value: '`!perfil`: Ver perfil e mochila.\n`!top`: Ranking dos mais ricos.\n`!daily`: Resgatar prêmio diário.\n`!dep <valor>`: Guardar no banco.\n`!sacar <valor>`: Retirar do banco.\n`!pix @user [valor]`: Enviar moedas.' 
+            },
+            { 
+                name: '⚒️ TRABALHO & PROGRESSO', 
+                value: '`!trabalhar`: Ganhar moedas.\n`!conquistas`: Ver teus marcos e medalhas.\n`!background`: Loja de fundos para o perfil.' 
             },
             { 
                 name: '🎰 CASSINO & SORTE', 
-                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: Cara ou Coroa PvP.\n`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
+                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: PvP.\n`!dado [1 ou 2] [valor]`: Apostar.' 
             },
             { 
                 name: '💍 RELACIONAMENTOS', 
-                value: '`!casar @user`: Iniciar casamento (25k).\n`!vercasamento`: Status e afinidade.\n`!cartinha @user`: Pontos de afeto.\n`!divorciar`: Terminar relação.\n`!ship @user @user`: Compatibilidade.' 
-            },
-            { 
-                name: '🎭 INTERAÇÕES SOCIAIS', 
-                value: '`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
+                value: '`!casar @user`: Casamento (25k).\n`!vercasamento`: Status.\n`!ship @user @user`: Afinidade.' 
             },
             { 
                 name: '🌑 SUBMUNDO ILEGAL', 
-                value: '`!submundo`: Loja proibida.\n`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto (10%).\n`!contrato`: Aceitar alvo.\n`!concluir`: Receber prêmio.\n`!entrar`: Virar Membro da Facção.\n`!traficar`: Rota de lucro.\n`!missao`: Operações da elite.\n`!assaltodupla`: Golpe em casal.' 
+                value: '`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto.\n`!missao`: Operações de elite.\n`!traficar`: Rota de lucro.' 
             },
             { 
-                name: '🛍️ MERCADO GLOBAL', 
-                value: '`!loja`: Ver estoque atual.\n`!comprar [item]`: Comprar produto.\n`!mochila`: Atalho para inventário.' 
+                name: '🛍️ MERCADOS & ITENS', 
+                value: '`!loja`: Ver estoque.\n`!comprar [item]`: Comprar.\n`!dar @user [item]`: Enviar item.' 
             },
             { 
-                name: '🛡️ MODERAÇÃO & STAFF', 
-                value: '`!matar @user`: Timeout (1 min).\n`!clear [nº]`: Limpar chat.\n`!kick`/`!ban`: Expulsar/Banir.\n`!anuncio`: Mensagem oficial.\n`!falar`: Repetir texto.' 
-            },
-            { 
-                name: '⚙️ CONFIGURAÇÕES & INFO', 
-                value: '`!stats`: Dados técnicos e Uptime.\n`!info`: Créditos do desenvolvedor.\n`!renovar`: Resetar estoque da loja.\n`!resetar @user`: Limpar dados (Dono).' 
+                name: '🛡️ ADMINISTRAÇÃO & INFO', 
+                value: '`!stats`: Uptime e dados.\n`!info`: Links e convite.\n`!clear [nº]`: Limpar chat.\n`!anuncio`: Mensagem oficial.' 
             }
         )
-        .setFooter({ text: 'Dica: Digite o comando corretamente para evitar erros.' })
+        .setFooter({ text: 'Dica: O dinheiro no Banco está protegido contra roubos!' })
         .setTimestamp();
 
     return message.reply({ embeds: [embedAjuda] });
