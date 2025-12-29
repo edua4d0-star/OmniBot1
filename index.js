@@ -99,16 +99,29 @@ client.on('messageCreate', async (message) => {
         return message.reply(`🎁 Ganhaste **${ganho.toLocaleString()}** moedas!`);
     }
 
-// ==================== 🔨 COMANDO TRABALHAR (PROFISSÕES + ITENS + PASSAPORTE) ====================
+// ==================== 🔨 COMANDO TRABALHAR (PROGRESSÃO 1K) ====================
 if (command === 'trabalhar' || command === 'work') {
     const now = Date.now();
-    const cooldown = 3600000; // 1 hora
-    const lastWork = userData.lastWork || 0;
     const inventory = userData.inventory || [];
     const totalTrabalhos = userData.workCount || 0;
     const isFaccao = userData.cargo === "Membro da Facção";
+    const lastWork = userData.lastWork || 0;
 
-    // 1. Verificação de Cooldown com lógica de Passaporte
+    // 1. Definição Dinâmica de Cooldown (11 Níveis até 60min)
+    let cooldown;
+    if (totalTrabalhos < 30) cooldown = 600000;          // 10 min
+    else if (totalTrabalhos < 70) cooldown = 900000;     // 15 min
+    else if (totalTrabalhos < 130) cooldown = 1200000;   // 20 min
+    else if (totalTrabalhos < 200) cooldown = 1500000;   // 25 min
+    else if (totalTrabalhos < 300) cooldown = 1800000;   // 30 min
+    else if (totalTrabalhos < 420) cooldown = 2100000;   // 35 min
+    else if (totalTrabalhos < 550) cooldown = 2400000;   // 40 min
+    else if (totalTrabalhos < 700) cooldown = 2700000;   // 45 min
+    else if (totalTrabalhos < 850) cooldown = 3000000;   // 50 min
+    else if (totalTrabalhos < 1000) cooldown = 3300000;  // 55 min
+    else cooldown = 3600000;                             // 60 min (Nível Máximo)
+
+    // 2. Verificação de Cooldown / Passaporte
     if (now - lastWork < cooldown) {
         if (inventory.includes('passaporte')) {
             const index = userData.inventory.indexOf('passaporte');
@@ -117,64 +130,59 @@ if (command === 'trabalhar' || command === 'work') {
         } else {
             const restante = cooldown - (now - lastWork);
             const minutos = Math.ceil(restante / 60000);
-            return message.reply(`⏳ Estás cansado! Volta em **${minutos} minutos**.\n💡 *Dica: Um **Passaporte Falso** pode resetar este tempo instantaneamente!*`);
+            return message.reply(`⏳ Estás cansado! Volta em **${minutos} minutos**.\n💡 *Dica: O **Passaporte Falso** reseta o tempo instantaneamente!*`);
         }
     }
 
-    // 2. Lógica de Profissão e Ganho Base
+    // 3. Lógica de Profissões e Ganhos (11 Níveis)
     let ganhoBase = 0;
     let nomeProfissao = "";
 
     if (isFaccao) {
-        if (totalTrabalhos < 50) { ganhoBase = Math.floor(Math.random() * 500) + 500; nomeProfissao = "Olheiro"; }
-        else if (totalTrabalhos < 150) { ganhoBase = Math.floor(Math.random() * 1000) + 1000; nomeProfissao = "Aviãozinho"; }
-        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 2000) + 2000; nomeProfissao = "Vendedor"; }
-        else if (totalTrabalhos < 600) { ganhoBase = Math.floor(Math.random() * 4000) + 4000; nomeProfissao = "Gerente de Boca"; }
-        else { ganhoBase = Math.floor(Math.random() * 8000) + 7000; nomeProfissao = "Líder da Facção"; }
+        if (totalTrabalhos < 30) { ganhoBase = Math.floor(Math.random() * 500) + 1000; nomeProfissao = "Olheiro"; }
+        else if (totalTrabalhos < 70) { ganhoBase = Math.floor(Math.random() * 1000) + 2000; nomeProfissao = "Aviãozinho"; }
+        else if (totalTrabalhos < 130) { ganhoBase = Math.floor(Math.random() * 1500) + 3500; nomeProfissao = "Vendedor de Carga"; }
+        else if (totalTrabalhos < 200) { ganhoBase = Math.floor(Math.random() * 2000) + 5500; nomeProfissao = "Segurança do Morro"; }
+        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 3000) + 8000; nomeProfissao = "Cobrador"; }
+        else if (totalTrabalhos < 420) { ganhoBase = Math.floor(Math.random() * 4000) + 11000; nomeProfissao = "Gerente de Boca"; }
+        else if (totalTrabalhos < 550) { ganhoBase = Math.floor(Math.random() * 5000) + 15000; nomeProfissao = "Fornecedor"; }
+        else if (totalTrabalhos < 700) { ganhoBase = Math.floor(Math.random() * 6000) + 20000; nomeProfissao = "Conselheiro"; }
+        else if (totalTrabalhos < 850) { ganhoBase = Math.floor(Math.random() * 8000) + 24000; nomeProfissao = "Braço Direito"; }
+        else if (totalTrabalhos < 1000) { ganhoBase = Math.floor(Math.random() * 10000) + 27000; nomeProfissao = "Sub-Chefe"; }
+        else { ganhoBase = Math.floor(Math.random() * 15000) + 30000; nomeProfissao = "Líder da Facção 🏴‍☠️"; }
     } else {
-        if (totalTrabalhos < 50) { ganhoBase = Math.floor(Math.random() * 400) + 400; nomeProfissao = "Estagiário"; }
-        else if (totalTrabalhos < 150) { ganhoBase = Math.floor(Math.random() * 900) + 900; nomeProfissao = "Vendedor"; }
-        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 1800) + 1800; nomeProfissao = "Gerente"; }
-        else if (totalTrabalhos < 600) { ganhoBase = Math.floor(Math.random() * 3500) + 3500; nomeProfissao = "Diretor"; }
-        else { ganhoBase = Math.floor(Math.random() * 7000) + 6000; nomeProfissao = "CEO"; }
+        if (totalTrabalhos < 30) { ganhoBase = Math.floor(Math.random() * 500) + 1000; nomeProfissao = "Estagiário"; }
+        else if (totalTrabalhos < 70) { ganhoBase = Math.floor(Math.random() * 800) + 1800; nomeProfissao = "Auxiliar"; }
+        else if (totalTrabalhos < 130) { ganhoBase = Math.floor(Math.random() * 1000) + 2800; nomeProfissao = "Vendedor Júnior"; }
+        else if (totalTrabalhos < 200) { ganhoBase = Math.floor(Math.random() * 1500) + 4000; nomeProfissao = "Analista Pleno"; }
+        else if (totalTrabalhos < 300) { ganhoBase = Math.floor(Math.random() * 2000) + 5500; nomeProfissao = "Supervisor"; }
+        else if (totalTrabalhos < 420) { ganhoBase = Math.floor(Math.random() * 2500) + 7000; nomeProfissao = "Gerente de Setor"; }
+        else if (totalTrabalhos < 550) { ganhoBase = Math.floor(Math.random() * 3000) + 8500; nomeProfissao = "Gerente Regional"; }
+        else if (totalTrabalhos < 700) { ganhoBase = Math.floor(Math.random() * 4000) + 10000; nomeProfissao = "Diretor Executivo"; }
+        else if (totalTrabalhos < 850) { ganhoBase = Math.floor(Math.random() * 5000) + 11500; nomeProfissao = "Vice-Presidente"; }
+        else if (totalTrabalhos < 1000) { ganhoBase = Math.floor(Math.random() * 6000) + 13000; nomeProfissao = "Sócio-Fundador"; }
+        else { ganhoBase = Math.floor(Math.random() * 10000) + 15000; nomeProfissao = "CEO da Empresa 💎"; }
     }
 
-    // 3. Verificação de Bônus da Mochila (Soma ao ganho da profissão)
+    // 4. Bônus de Itens e Atualização
     let bonusTotal = 0;
     let extras = [];
-
-    if (inventory.includes('picareta')) {
-        bonusTotal += 800;
-        extras.push("⛏️ Picareta (+800)");
-    }
-    if (inventory.includes('computador')) {
-        bonusTotal += 1500;
-        extras.push("💻 Computador (+1.500)");
-    }
+    if (inventory.includes('picareta')) { bonusTotal += 1200; extras.push("⛏️ Picareta (+1.2k)"); }
+    if (inventory.includes('computador')) { bonusTotal += 3000; extras.push("💻 Computador (+3k)"); }
 
     const totalFinal = ganhoBase + bonusTotal;
-
-    // 4. Atualização dos Dados
     userData.money += totalFinal;
     userData.lastWork = now;
     userData.workCount = (userData.workCount || 0) + 1;
-
     await userData.save();
 
     // 5. Resposta Visual
-    let resposta = "";
-    
-    if (now - lastWork < cooldown) {
-        resposta += "🎫 **PASSAPORTE USADO!** O teu tempo de espera foi resetado ilegalmente.\n";
-    }
-
+    let resposta = (now - lastWork < cooldown) ? "🎫 **PASSAPORTE USADO!** O tempo foi resetado.\n" : "";
     resposta += `🔨 Trabalhaste como **${nomeProfissao}** e ganhaste **${totalFinal.toLocaleString()} moedas**!`;
     
-    if (extras.length > 0) {
-        resposta += `\n> **Bônus aplicados:** ${extras.join(' e ')}`;
-    }
+    if (extras.length > 0) resposta += `\n> **Bônus:** ${extras.join(' e ')}`;
     
-    resposta += `\n📊 Total de turnos realizados: \`${userData.workCount}\``;
+    resposta += `\n📊 Nível: \`${userData.workCount}\` | ⏳ Próximo descanso: \`${Math.ceil(cooldown/60000)}min\``;
 
     return message.reply(resposta);
 }
@@ -221,7 +229,7 @@ if (command === 'setmoney') {
         return message.reply("❌ Ocorreu um erro ao tentar alterar o dinheiro.");
     }
 }
-// ==================== 💼 COMANDO TRABALHOS (INFO) ====================
+// ==================== 💼 COMANDO TRABALHOS (MÁXIMO 1K) ====================
 if (command === 'trabalhos' || command === 'jobs' || command === 'empregos') {
     const totalTrabalhos = userData.workCount || 0;
     const isFaccao = userData.cargo === "Membro da Facção";
@@ -229,29 +237,47 @@ if (command === 'trabalhos' || command === 'jobs' || command === 'empregos') {
     let profissaoAtual = "";
     let proxProfissao = "";
 
-    if (isFaccao) {
-        if (totalTrabalhos < 50) { profissaoAtual = "Olheiro"; proxProfissao = "Aviãozinho (50 trab.)"; }
-        else if (totalTrabalhos < 150) { profissaoAtual = "Aviãozinho"; proxProfissao = "Vendedor (150 trab.)"; }
-        else if (totalTrabalhos < 300) { profissaoAtual = "Vendedor"; proxProfissao = "Gerente de Boca (300 trab.)"; }
-        else if (totalTrabalhos < 600) { profissaoAtual = "Gerente de Boca"; proxProfissao = "Braço Direito (600 trab.)"; }
-        else { profissaoAtual = "Líder da Facção 👑"; proxProfissao = "Nível Máximo!"; }
+    // 1. As 10 metas para chegar ao nível 11 (O último nível é após 1000)
+    const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
+
+    // 2. Listas de nomes para os 11 níveis
+    const profsCivil = [
+        "Estagiário", "Auxiliar", "Vendedor Júnior", "Analista Pleno", 
+        "Supervisor", "Gerente de Setor", "Gerente Regional", 
+        "Diretor Executivo", "Vice-Presidente", "Sócio-Fundador", "CEO da Empresa 💎"
+    ];
+
+    const profsFaccao = [
+        "Olheiro", "Aviãozinho", "Vendedor de Carga", "Segurança do Morro", 
+        "Cobrador", "Gerente de Boca", "Fornecedor", 
+        "Conselheiro", "Braço Direito", "Sub-Chefe", "Líder da Facção 🏴‍☠️"
+    ];
+
+    const lista = isFaccao ? profsFaccao : profsCivil;
+    
+    // 3. Lógica para encontrar o cargo atual baseado no workCount
+    let index = metas.findIndex(m => totalTrabalhos < m);
+
+    if (index === -1) {
+        // Se não encontrou (ou seja, passou de 1000)
+        profissaoAtual = lista[10];
+        proxProfissao = "Nível Máximo Alcançado! 🏆";
     } else {
-        if (totalTrabalhos < 50) { profissaoAtual = "Estagiário"; proxProfissao = "Vendedor (50 trab.)"; }
-        else if (totalTrabalhos < 150) { profissaoAtual = "Vendedor"; proxProfissao = "Gerente (150 trab.)"; }
-        else if (totalTrabalhos < 300) { profissaoAtual = "Gerente"; proxProfissao = "Diretor (300 trab.)"; }
-        else if (totalTrabalhos < 600) { profissaoAtual = "Diretor"; proxProfissao = "Sócio (600 trab.)"; }
-        else { profissaoAtual = "CEO 💎"; proxProfissao = "Nível Máximo!"; }
+        profissaoAtual = lista[index];
+        proxProfissao = `${lista[index + 1]} (${metas[index]} trab.)`;
     }
 
     const embed = new EmbedBuilder()
         .setTitle(`💼 Carreira de ${message.author.username}`)
         .setColor(isFaccao ? "#2b2d31" : "#00ff00")
-        .setDescription(`Você já trabalhou **${totalTrabalhos}** vezes.`)
+        .setThumbnail(message.author.displayAvatarURL())
+        .setDescription(`Você completou **${totalTrabalhos}** turnos de trabalho.`)
         .addFields(
-            { name: 'Sua Profissão:', value: `\`${profissaoAtual}\``, inline: true },
-            { name: 'Próximo Nível:', value: `\`${proxProfissao}\``, inline: true }
+            { name: '📍 Profissão Atual:', value: `\`${profissaoAtual}\``, inline: true },
+            { name: '🚀 Próxima Promoção:', value: `\`${proxProfissao}\``, inline: true }
         )
-        .setFooter({ text: "Quanto maior o nível, maior o salário no !trabalhar" });
+        .setFooter({ text: "O tempo de espera aumenta conforme você é promovido!" })
+        .setTimestamp();
 
     return message.reply({ embeds: [embed] });
 }
