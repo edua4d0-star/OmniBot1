@@ -1586,7 +1586,7 @@ if (command === 'avaliar' || command === 'rate') {
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
 
-// ==================== 👤 COMANDO PERFIL (VERSÃO FINAL) ====================
+// ==================== 👤 COMANDO PERFIL ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
         const alvo = message.mentions.users.first() || message.author;
@@ -1601,7 +1601,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             }
         }
 
-        // --- LÓGICA DE CARREIRA (Sincronizada com o limite de 1k) ---
+        // --- LÓGICA DE CARREIRA ---
         const totalTrabalhos = dadosPerfil.workCount || 0;
         const isFaccao = dadosPerfil.cargo === "Membro da Facção";
         let profissaoNome = "";
@@ -1629,19 +1629,35 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             : "Vazia";
 
         // --- ESTÉTICA ---
-        const corEmbed = isFaccao ? "#2b2d31" : "#00ff00";
+        const corEmbed = isFaccao ? "#2b2d31" : "#0099ff";
 
         const embed = new EmbedBuilder()
-    .setColor(corEmbed)
-    .setTitle(`👤 Perfil de ${alvo.username}`)
-    // ... (campos de dinheiro, mochila, etc)
+            .setColor(corEmbed)
+            .setTitle(`👤 Perfil de ${alvo.username}`)
+            .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
+            .setDescription(`**Status:** \`${dadosPerfil.cargo || "Civil"}\`\n**Profissão:** \`${profissaoNome}\``)
+            .addFields(
+                { name: "💰 Saldo Total", value: `\`${totalMoedas.toLocaleString()} moedas\``, inline: false },
+                { name: "💳 Carteira", value: `\`${carteira.toLocaleString()}\``, inline: true },
+                { name: "🏦 Banco", value: `\`${banco.toLocaleString()}\``, inline: true },
+                { name: "🔨 Trabalhos", value: `\`${totalTrabalhos}\``, inline: true },
+                { name: "🎒 Mochila", value: itensFormatados, inline: false }
+            )
+            .setFooter({ text: "Use !fundo para comprar planos de fundo!" })
+            .setTimestamp();
 
-// ESTA PARTE É A QUE FAZ O FUNDO APARECER:
-if (dadosPerfil.bg && dadosPerfil.bg !== "") {
-    embed.setImage(dadosPerfil.bg); 
+        // --- BACKGROUND ---
+        if (dadosPerfil.bg && dadosPerfil.bg !== "") {
+            embed.setImage(dadosPerfil.bg);
+        }
+
+        return message.reply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Erro no perfil:", error);
+        return message.reply("❌ Erro ao carregar dados do perfil.");
+    }
 }
-
-return message.reply({ embeds: [embed] });
 // ==================== 🏆 COMANDO CONQUISTAS ====================
 if (command === 'conquistas' || command === 'achievements' || command === 'badges') {
     try {
