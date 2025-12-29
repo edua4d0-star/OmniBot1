@@ -1,7 +1,10 @@
 require('dotenv').config();
-const express = require('express'); // Express no topo
+const express = require('express'); 
 const mongoose = require('mongoose');
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Options, PermissionsBitField } = require('discord.js');
+// Adicionado AttachmentBuilder aqui embaixo:
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, Options, PermissionsBitField } = require('discord.js');
+const { RankCardBuilder } = require('canvacord'); 
+const path = require('path'); 
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
@@ -1585,30 +1588,28 @@ if (command === 'avaliar' || command === 'rate') {
 
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
-// ==================== 👤 COMANDO PERFIL (FINAL CORRIGIDO) ====================
+// ==================== 👤 COMANDO PERFIL com CANVAS ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
+    // Aviso inicial para o usuário saber que a imagem está sendo gerada
+    const aguarde = await message.reply("🎨 Gerando seu perfil personalizado...");
+
     try {
         const alvo = message.mentions.users.first() || message.author;
 
-        // BUSCA OS DADOS MAIS ATUAIS NO BANCO DE DADOS
         let dadosPerfil = await User.findOne({ userId: alvo.id });
-        
         if (!dadosPerfil) {
             dadosPerfil = await User.create({ userId: alvo.id });
         }
 
-        // --- LÓGICA DE CARREIRA ---
+        // --- LÓGICA DE PROFISSÃO ---
         const totalTrabalhos = dadosPerfil.workCount || 0;
         const isFaccao = dadosPerfil.cargo === "Membro da Facção";
-        let profissaoNome = "";
-
-        const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
-        const profsCivil = ["Estagiário", "Auxiliar", "Vendedor Júnior", "Analista Pleno", "Supervisor", "Gerente de Setor", "Gerente Regional", "Diretor Executivo", "Vice-Presidente", "Sócio-Fundador", "CEO 💎"];
+        const profsCivil = ["Estagiário", "Auxiliar", "Vendedor Júnior", "Analista Pleno", "Supervisor", "Gerente", "Diretor", "Vice-Presidente", "Sócio", "CEO 💎"];
         const profsFaccao = ["Olheiro", "Aviãozinho", "Vendedor de Carga", "Segurança do Morro", "Cobrador", "Gerente de Boca", "Fornecedor", "Conselheiro", "Braço Direito", "Sub-Chefe", "Líder da Facção 🏴‍☠️"];
-        
+        const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
         const listaProf = isFaccao ? profsFaccao : profsCivil;
         let index = metas.findIndex(m => totalTrabalhos < m);
-        profissaoNome = index === -1 ? listaProf[10] : listaProf[index];
+        let profissaoNome = index === -1 ? listaProf[9] : listaProf[index];
 
         // --- DADOS FINANCEIROS ---
         const carteira = dadosPerfil.money || 0;
@@ -1617,43 +1618,48 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         
         // --- MOCHILA ---
         const inventory = dadosPerfil.inventory || [];
-        const contagemItens = {};
-        inventory.forEach(item => { contagemItens[item] = (contagemItens[item] || 0) + 1; });
-
-        const itensFormatados = Object.keys(contagemItens).length > 0 
-            ? Object.entries(contagemItens).map(([nome, qtd]) => `\`${nome} x${qtd}\``).join(', ') 
+        const itensFormatados = inventory.length > 0 
+            ? inventory.slice(0, 2).join(', ') + (inventory.length > 2 ? `...` : '')
             : "Vazia";
 
-        // --- ESTÉTICA ---
-        const corEmbed = isFaccao ? "#2b2d31" : "#0099ff";
+        // --- CONFIGURAÇÃO DO CARD (CANVACORD) ---
+        // Usando links seguros (Imgur) para evitar erro de avaliação do Discord
+        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpg";
+        const fundoFinal = (dadosPerfil.bg && dadosPerfil.bg.startsWith("http")) ? dadosPerfil.bg : fundoPadrao;
 
-        const embed = new EmbedBuilder()
-            .setColor(corEmbed)
-            .setTitle(`👤 Perfil de ${alvo.username}`)
-            .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
-            .setDescription(`**Status:** \`${dadosPerfil.cargo || "Civil"}\`\n**Profissão:** \`${profissaoNome}\``)
-            .addFields(
-                { name: "💰 Saldo Total", value: `\`${totalMoedas.toLocaleString()} moedas\``, inline: false },
-                { name: "💳 Carteira", value: `\`${carteira.toLocaleString()}\``, inline: true },
-                { name: "🏦 Banco", value: `\`${banco.toLocaleString()}\``, inline: true },
-                { name: "🔨 Trabalhos", value: `\`${totalTrabalhos}\``, inline: true },
-                { name: "🎒 Mochila", value: itensFormatados, inline: false }
-            )
-            .setTimestamp();
+        const rankCard = new RankCardBuilder()
+            .setAvatar(alvo.displayAvatarURL({ extension: 'png', size: 256 }))
+            .setDisplayName(alvo.username)
+            .setCurrentExperience(totalTrabalhos)
+            .setRequiredExperience(metas[index] || 1200)
+            .setLevel(index + 1, "NÍVEL")
+            .setRank(1, "RANK", false) // Oculta o rank se não tiver sistema global
+            .setBackground(fundoFinal)
+            .setOverlay(0.7) // Transparência preta por cima do fundo (0.7 = 70%)
+            .setStyles({
+                progressbar: {
+                    thumb: {
+                        style: {
+                            backgroundColor: "#00FFFF" // Cor da barra (Ciano)
+                        }
+                    }
+                }
+            });
 
-        // --- VERIFICAÇÃO E EXIBIÇÃO DO BACKGROUND ---
-        if (dadosPerfil.bg && typeof dadosPerfil.bg === 'string' && dadosPerfil.bg.length > 5) {
-            embed.setImage(dadosPerfil.bg);
-            embed.setFooter({ text: "Use !fundo para trocar seu plano de fundo!" });
-        } else {
-            embed.setFooter({ text: "Você ainda não tem um fundo! Use !fundo para comprar." });
-        }
+        // Gerando a imagem
+        const image = await rankCard.build();
+        const attachment = new AttachmentBuilder(image, { name: 'perfil.png' });
 
-        return message.reply({ embeds: [embed] });
+        // Apaga o "Aguarde" e envia o perfil
+        await aguarde.delete().catch(() => {});
+        return message.reply({ 
+            content: `📊 **Perfil de ${alvo.username}**\n💰 **Total:** ${totalMoedas.toLocaleString()} moedas\n💼 **Profissão:** ${profissaoNome}\n🎒 **Mochila:** ${itensFormatados}`,
+            files: [attachment] 
+        });
 
     } catch (error) {
-        console.error("Erro no perfil:", error);
-        return message.reply("❌ Erro ao carregar dados do perfil.");
+        console.error("Erro ao gerar perfil com Canvas:", error);
+        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. Verifique se o link do seu fundo é válido.");
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
@@ -2362,7 +2368,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
             { 
                 name: "👤 Perfil & Status", 
-                value: "`!perfil` - Veja seu dinheiro, profissão e fundo.\n`!meusfundos` - Veja sua coleção e equipe fundos comprados." 
+                value: '`!perfil` - Veja seu dinheiro e profissão.'
             },
 
             { 
@@ -2398,7 +2404,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
             },
             { 
                 name: '⚒️ TRABALHO & PROGRESSO', 
-                value: '`!conquistas`: Ver teus marcos e medalhas.\n`!background`: Loja de fundos para o perfil.' 
+                value: '`!conquistas`: Ver teus marcos e medalhas.' 
             },
 
             { 
