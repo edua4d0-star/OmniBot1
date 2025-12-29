@@ -216,34 +216,49 @@ if (command === 'resetar') {
 
     return message.reply(`🛠️ **[ADMIN]** Reset concluído para **${alvo.username}**!\n- Dinheiro: 5000\n- Cargo: Civil\n- Mochila: Convite Devolvido\n- Discord: Cargo removido.`);
 }
-    // ==================== 💸 COMANDO PIX ====================
-    if (command === 'pix') {
+// ==================== 💸 COMANDO PIX ====================
+if (command === 'pix') {
+    try {
         const targetUser = message.mentions.users.first();
-        const quantia = parseInt(args[1]); // args[1] porque args[0] é a menção
+        const quantia = parseInt(args[1]);
 
         if (!targetUser) return message.reply('❌ Precisas de marcar (@) alguém!');
-        if (targetUser.id === userId) return message.reply('❌ Não podes enviar para ti próprio!');
+        if (targetUser.id === message.author.id) return message.reply('❌ Não podes enviar para ti próprio!');
         if (isNaN(quantia) || quantia <= 0) return message.reply('❌ Quantia inválida!');
-        if (userData.money < quantia) return message.reply(`❌ Saldo insuficiente!`);
 
+        // Garante que o userData (quem envia) existe
+        let senderData = await User.findOne({ userId: message.author.id });
+        if (!senderData || senderData.money < quantia) {
+            return message.reply(`❌ Saldo insuficiente ou conta não encontrada!`);
+        }
+
+        // Garante que o targetData (quem recebe) existe
         let targetData = await User.findOne({ userId: targetUser.id });
-        if (!targetData) targetData = await User.create({ userId: targetUser.id });
+        if (!targetData) {
+            targetData = await User.create({ userId: targetUser.id });
+        }
 
-        userData.money -= quantia;
+        // Realiza a transação
+        senderData.money -= quantia;
         targetData.money += quantia;
 
-        await userData.save();
+        await senderData.save();
         await targetData.save();
 
         const embed = new EmbedBuilder()
             .setTitle('💸 PIX Realizado!')
             .setColor('#2ecc71')
             .setDescription(`${message.author} enviou dinheiro para ${targetUser}!`)
-            .addFields({ name: '💰 Valor', value: `R$ ${quantia.toLocaleString()}` });
+            .addFields({ name: '💰 Valor', value: `R$ ${quantia.toLocaleString()}` })
+            .setTimestamp();
 
         return message.reply({ embeds: [embed] });
-    }
 
+    } catch (error) {
+        console.error("Erro no comando PIX:", error);
+        return message.reply("❌ Ocorreu um erro interno ao realizar o PIX.");
+    }
+}
     // ==================== 🪙 COMANDO CASSINO ====================
     if (command === 'cassino' || command === 'caraoucoroa') {
         const targetUser = message.mentions.users.first();
