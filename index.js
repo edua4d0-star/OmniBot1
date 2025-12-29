@@ -173,64 +173,82 @@ if (command === 'setmoney') {
             return message.reply("❌ Apenas o desenvolvedor pode usar este comando.");
         }
 
-        const targetUser = message.mentions.users.first();
-        const valor = parseInt(args[1]); // args[1] porque args[0] é a menção
-
-        // 2. Verificações de segurança
-        if (!targetUser) {
-            return message.reply("❌ Precisas marcar (@) alguém! Ex: `!setmoney @user 100`.");
-        }
+        // 2. Define o alvo e o valor
+        const targetUser = message.mentions.users.first() || message.author;
         
+        // Se houver menção, o valor está no args[1]. Se não houver, está no args[0].
+        const valorString = message.mentions.users.first() ? args[1] : args[0];
+        const valor = parseInt(valorString);
+
+        // 3. Verificações de segurança
         if (isNaN(valor)) {
-            return message.reply("❌ Indica um número válido após a menção.");
+            return message.reply("❌ Indica um número válido! Ex: `!setmoney @user 100` ou `!setmoney 100`.");
         }
 
-        // 3. Busca o usuário no banco de dados ou cria se não existir
-        let targetData = await User.findOne({ userId: targetUser.id });
-        if (!targetData) {
-            targetData = await User.create({ userId: targetUser.id });
+        // 4. Busca os dados (se for você, usa userData, se for outro, busca no banco)
+        let targetData;
+        if (targetUser.id === message.author.id) {
+            targetData = userData;
+        } else {
+            targetData = await User.findOne({ userId: targetUser.id });
+            if (!targetData) {
+                targetData = await User.create({ userId: targetUser.id });
+            }
         }
 
-        // 4. Altera e salva
+        // 5. Altera e salva
         targetData.money = valor;
         await targetData.save();
 
-        return message.reply(`✅ O saldo de **${targetUser.username}** foi alterado para **${valor.toLocaleString()}** moedas!`);
+        const msgQuem = targetUser.id === message.author.id ? "Seu saldo foi" : `O saldo de **${targetUser.username}** foi`;
+        return message.reply(`✅ ${msgQuem} alterado para **${valor.toLocaleString()}** moedas!`);
 
     } catch (error) {
         console.error("Erro no comando setmoney:", error);
         return message.reply("❌ Ocorreu um erro ao tentar alterar o dinheiro.");
     }
 }
-
 // ==================== 🛠️ COMANDO RESETAR (APENAS DONO) ====================
 if (command === 'resetar' || command === 'reset') {
     try {
         const meuID = "1203435676083822712";
 
-        // 1. Verifica se é o desenvolvedor
+        // 1. Verifica se quem enviou é o dono do bot
         if (message.author.id !== meuID) {
             return message.reply("❌ Apenas o meu desenvolvedor pode usar este comando!");
         }
 
-        const alvo = message.mentions.users.first();
-        if (!alvo) return message.reply("❌ Precisas marcar (@) alguém para resetar!");
+        // 2. Define o alvo: quem foi marcado OU você mesmo (se não houver menção)
+        const alvo = message.mentions.users.first() || message.author;
 
-        // 2. Busca os dados no MongoDB
-        let targetData = await User.findOne({ userId: alvo.id });
-        if (!targetData) return message.reply("❌ Esse usuário não tem dados no banco.");
+        // 3. Busca os dados no MongoDB (se for você, usa userData, se for outro, busca no banco)
+        let targetData;
+        if (alvo.id === message.author.id) {
+            targetData = userData;
+        } else {
+            targetData = await User.findOne({ userId: alvo.id });
+        }
 
-        // 3. Reseta os dados no MongoDB
+        if (!targetData) return message.reply("❌ Este usuário não possui dados registrados.");
+
+        // 4. Reseta os dados no MongoDB
         targetData.money = 5000; 
         targetData.cargo = "Civil";
-        targetData.inventory = ['faccao']; // Devolve o item de facção
+        
+        // Remove o item 'faccao' se ele existir no inventário
+        if (targetData.inventory) {
+            targetData.inventory = targetData.inventory.filter(item => item !== 'faccao');
+        } else {
+            targetData.inventory = [];
+        }
+
         targetData.missionCount = 0;
-        targetData.workCount = 0; // Adicionei para zerar os trabalhos também
-        targetData.lastCrime = 0; // Reseta o cooldown de crime
+        targetData.workCount = 0; 
+        targetData.lastCrime = 0; 
         
         await targetData.save();
 
-        // 4. Lógica para remover o cargo no Discord
+        // 5. Lógica para remover o cargo no Discord
         const idDoCargoFaccao = "1454692749482660003";
         const membroNoServidor = message.guild.members.cache.get(alvo.id);
 
@@ -238,16 +256,18 @@ if (command === 'resetar' || command === 'reset') {
             if (membroNoServidor.roles.cache.has(idDoCargoFaccao)) {
                 await membroNoServidor.roles.remove(idDoCargoFaccao).catch(err => {
                     console.error("Erro ao remover cargo:", err);
-                    message.channel.send("⚠️ Não consegui remover o cargo no Discord. Verifique se meu cargo está **acima** do cargo da facção na lista de cargos!");
+                    message.channel.send("⚠️ Erro ao remover o cargo no Discord (Hierarquia de cargos baixa).");
                 });
             }
         }
 
-        return message.reply(`🛠️ **[ADMIN]** Reset concluído para **${alvo.username}**!\n- Dinheiro: 5000\n- Status: Civil\n- Mochila: Item 'faccao' devolvido\n- Discord: Cargo de Facção removido.`);
+        const msgQuem = alvo.id === message.author.id ? "Seu próprio perfil foi resetado" : `O perfil de **${alvo.username}** foi resetado`;
+
+        return message.reply(`🛠️ **[ADMIN]** ${msgQuem} com sucesso!\n- Dinheiro: 5000\n- Status: Civil\n- Mochila: Item 'faccao' removido\n- Discord: Cargo de Facção removido.`);
 
     } catch (error) {
         console.error("Erro no comando resetar:", error);
-        return message.reply("❌ Ocorreu um erro crítico ao tentar resetar o usuário.");
+        return message.reply("❌ Ocorreu um erro crítico ao tentar resetar.");
     }
 }
 // ==================== 💸 COMANDO PIX ====================
