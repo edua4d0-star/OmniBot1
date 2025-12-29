@@ -1632,32 +1632,16 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         const corEmbed = isFaccao ? "#2b2d31" : "#00ff00";
 
         const embed = new EmbedBuilder()
-            .setColor(corEmbed)
-            .setTitle(`👤 Perfil de ${alvo.username}`)
-            .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
-            .setDescription(`**Status:** \`${dadosPerfil.cargo || "Civil"}\`\n**Profissão:** \`${profissaoNome}\``)
-            .addFields(
-                { name: "💰 Saldo Total", value: `\`${totalMoedas.toLocaleString()} moedas\``, inline: false },
-                { name: "💳 Carteira", value: `\`${carteira.toLocaleString()}\``, inline: true },
-                { name: "🏦 Banco", value: `\`${banco.toLocaleString()}\``, inline: true },
-                { name: "🔨 Trabalhos", value: `\`${totalTrabalhos}\``, inline: true },
-                { name: "🎒 Mochila", value: itensFormatados, inline: false }
-            )
-            .setFooter({ text: "Use !fundo para comprar planos de fundo!" })
-            .setTimestamp();
+    .setColor(corEmbed)
+    .setTitle(`👤 Perfil de ${alvo.username}`)
+    // ... (campos de dinheiro, mochila, etc)
 
-        // --- O PULO DO GATO: ADICIONAR O BACKGROUND COMPRADO ---
-        if (dadosPerfil.bg) {
-            embed.setImage(dadosPerfil.bg);
-        }
-
-        return message.reply({ embeds: [embed] });
-
-    } catch (error) {
-        console.error("Erro no perfil:", error);
-        return message.reply("❌ Erro ao carregar dados do perfil.");
-    }
+// ESTA PARTE É A QUE FAZ O FUNDO APARECER:
+if (dadosPerfil.bg && dadosPerfil.bg !== "") {
+    embed.setImage(dadosPerfil.bg); 
 }
+
+return message.reply({ embeds: [embed] });
 // ==================== 🏆 COMANDO CONQUISTAS ====================
 if (command === 'conquistas' || command === 'achievements' || command === 'badges') {
     try {
@@ -1701,38 +1685,30 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS (COM PREÇOS NA LISTA) ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS ORGANIZADA ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
-        // --- JUJUTSU KAISEN ---
         "1": { nome: "Itadori Yuji", preco: 40000, url: "https://images6.alphacoders.com/112/1129532.jpg" },
         "2": { nome: "Gojo Satoru", preco: 100000, url: "https://images2.alphacoders.com/114/1143851.jpg" },
         "3": { nome: "Sukuna", preco: 80000, url: "https://images5.alphacoders.com/112/1129113.jpg" },
-        // --- CHAINSAW MAN ---
         "4": { nome: "Denji (Chainsaw)", preco: 45000, url: "https://images8.alphacoders.com/121/1218987.jpg" },
         "5": { nome: "Makima", preco: 90000, url: "https://images2.alphacoders.com/121/1218991.jpg" },
         "6": { nome: "Power", preco: 50000, url: "https://images5.alphacoders.com/121/1219000.jpg" },
-        // --- ONE PIECE ---
         "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://images7.alphacoders.com/132/1321742.png" },
         "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://images2.alphacoders.com/115/1154564.jpg" },
         "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://images4.alphacoders.com/606/606311.jpg" },
-        // --- ARCANE ---
         "10": { nome: "Jinx", preco: 60000, url: "https://images3.alphacoders.com/119/1191595.jpg" },
         "11": { nome: "Vi", preco: 60000, url: "https://images6.alphacoders.com/118/1189448.jpg" },
         "12": { nome: "Ekko", preco: 55000, url: "https://images2.alphacoders.com/119/1193325.jpg" },
-        // --- STRANGER THINGS ---
-        "13": { nome: "Eleven (Onze)", preco: 75000, url: "https://images.alphacoders.com/123/1230113.jpg" },
+        "13": { nome: "Eleven", preco: 75000, url: "https://images.alphacoders.com/123/1230113.jpg" },
         "14": { nome: "Eddie Munson", preco: 70000, url: "https://images7.alphacoders.com/123/1239922.jpg" },
         "15": { nome: "Vecna", preco: 95000, url: "https://images6.alphacoders.com/123/1234703.jpg" },
-        // --- MINECRAFT ---
         "16": { nome: "Steve & Alex", preco: 30000, url: "https://images3.alphacoders.com/105/1052601.jpg" },
         "17": { nome: "Creeper", preco: 35000, url: "https://images7.alphacoders.com/101/1014569.jpg" },
         "18": { nome: "Enderman", preco: 40000, url: "https://images4.alphacoders.com/101/1014574.jpg" },
-        // --- CRISTIANO RONALDO ---
         "19": { nome: "CR7 Real Madrid", preco: 200000, url: "https://images4.alphacoders.com/133/1337494.jpeg" },
         "20": { nome: "CR7 Portugal", preco: 250000, url: "https://images.alphacoders.com/129/1294817.jpg" },
         "21": { nome: "CR7 LENDA", preco: 500000, url: "https://images5.alphacoders.com/133/1337497.jpeg" },
-        // --- DEVIL MAY CRY ---
         "22": { nome: "Dante", preco: 110000, url: "https://images8.alphacoders.com/956/956463.jpg" },
         "23": { nome: "Vergil", preco: 130000, url: "https://images2.alphacoders.com/109/1096753.jpg" },
         "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" }
@@ -1740,49 +1716,42 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 
     const opcao = args[0];
 
-    // --- EXIBIÇÃO DA LOJA ---
     if (!opcao) {
+        // Criando a lista de forma que mostre: [NÚMERO] Nome - Preço
+        let listaFormatada = "";
+        for (const id in fundos) {
+            listaFormatada += `\`[${id}]\` ${fundos[id].nome} — 💰 ${fundos[id].preco.toLocaleString()}\n`;
+        }
+
         const embedLoja = new EmbedBuilder()
-            .setTitle("🖼️ Galeria de Backgrounds Omni")
+            .setTitle("🖼️ Loja de Planos de Fundo")
             .setColor("#00FFFF")
-            .setDescription("Use `!fundo [id]` para comprar e equipar no seu `!perfil`.\n\n" +
-                "**🏮 Jujutsu:** `1` (40k) | `2` (100k) | `3` (80k)\n" +
-                "**🪚 Chainsaw:** `4` (45k) | `5` (90k) | `6` (50k)\n" +
-                "**🏴‍☠️ One Piece:** `7` (120k) | `8` (85k) | `9` (70k)\n" +
-                "**🧪 Arcane:** `10` (60k) | `11` (60k) | `12` (55k)\n" +
-                "**🚲 Stranger:** `13` (75k) | `14` (70k) | `15` (95k)\n" +
-                "**🟩 Minecraft:** `16` (30k) | `17` (35k) | `18` (40k)\n" +
-                "**⚽ CR7:** `19` (200k) | `20` (250k) | `21` (500k)\n" +
-                "**😈 DMC:** `22` (110k) | `23` (130k) | `24` (80k)")
-            .setFooter({ text: "Imagens corrigidas! Se uma não carregar, avise a staff." });
+            .setDescription("Digite `!fundo [número]` para comprar!\n\n" + listaFormatada)
+            .setFooter({ text: "O fundo aparecerá no seu !perfil" });
 
         return message.reply({ embeds: [embedLoja] });
     }
 
     const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Código de fundo inválido! Verifique os números na loja.");
+    if (!fundoEscolhido) return message.reply("❌ Esse número não existe na loja!");
 
-    // Verifica saldo total
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) {
-        return message.reply(`❌ Você não tem moedas suficientes! Esse fundo custa **${fundoEscolhido.preco.toLocaleString()} moedas**.`);
-    }
+    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente!");
 
-    // Lógica de Pagamento
+    // Cobrança
     if (userData.money >= fundoEscolhido.preco) {
         userData.money -= fundoEscolhido.preco;
     } else {
-        const restante = fundoEscolhido.preco - userData.money;
+        const resto = fundoEscolhido.preco - userData.money;
         userData.money = 0;
-        userData.bank -= restante;
+        userData.bank -= resto;
     }
 
-    // Salva e Equipa
-    userData.bg = fundoEscolhido.url;
+    userData.bg = fundoEscolhido.url; // Salva o link no banco
     await userData.save();
 
-    return message.reply(`✅ Você comprou e equipou **${fundoEscolhido.nome}** por **${fundoEscolhido.preco.toLocaleString()} moedas**! Veja o resultado no seu \`!perfil\`.`);
-} 
+    return message.reply(`✅ Você comprou o fundo **${fundoEscolhido.nome}**! Use \`!perfil\` para ver.`);
+}
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
     try {
