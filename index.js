@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express'); // Express no topo
 const mongoose = require('mongoose');
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Options, PermissionsBitField } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Options, PermissionsBitField } = require('discord.js');
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
@@ -1586,7 +1586,7 @@ if (command === 'avaliar' || command === 'rate') {
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
 
-// ==================== 👤 COMANDO PERFIL ====================
+// ==================== 👤 COMANDO PERFIL (FINAL E SEGURO) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
         const alvo = message.mentions.users.first() || message.author;
@@ -1646,6 +1646,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setTimestamp();
 
         // --- VERIFICAÇÃO E EXIBIÇÃO DO BACKGROUND ---
+        // Adicionada verificação extra de segurança para dadosPerfil.bg
         if (dadosPerfil.bg && typeof dadosPerfil.bg === 'string' && dadosPerfil.bg.startsWith("http")) {
             embed.setImage(dadosPerfil.bg);
             embed.setFooter({ text: "Use !fundo para trocar seu plano de fundo!" });
@@ -1703,7 +1704,7 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS COM INVENTÁRIO ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS ATUALIZADA ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
         "1": { nome: "Itadori Yuji", preco: 40000, url: "https://images6.alphacoders.com/112/1129532.jpg" },
@@ -1724,12 +1725,16 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         "16": { nome: "Steve & Alex", preco: 30000, url: "https://images3.alphacoders.com/105/1052601.jpg" },
         "17": { nome: "Creeper", preco: 35000, url: "https://images7.alphacoders.com/101/1014569.jpg" },
         "18": { nome: "Enderman", preco: 40000, url: "https://images4.alphacoders.com/101/1014574.jpg" },
-        "19": { nome: "CR7 Real Madrid", preco: 200000, url: "https://images4.alphacoders.com/133/1337494.jpeg" },
-        "20": { nome: "CR7 Portugal", preco: 250000, url: "https://images.alphacoders.com/129/1294817.jpg" },
-        "21": { nome: "CR7 LENDA", preco: 500000, url: "https://images5.alphacoders.com/133/1337497.jpeg" },
+        "19": { nome: "CR7 Real Madrid", preco: 80000, url: "https://images4.alphacoders.com/133/1337494.jpeg" },
+        "20": { nome: "CR7 Portugal", preco: 90000, url: "https://images.alphacoders.com/129/1294817.jpg" },
+        "21": { nome: "CR7 LENDA", preco: 150000, url: "https://images5.alphacoders.com/133/1337497.jpeg" },
         "22": { nome: "Dante", preco: 110000, url: "https://images8.alphacoders.com/956/956463.jpg" },
         "23": { nome: "Vergil", preco: 130000, url: "https://images2.alphacoders.com/109/1096753.jpg" },
-        "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" }
+        "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" },
+        // --- JOJO INDIVIDUAIS ---
+        "25": { nome: "Joseph Joestar", preco: 15000, url: "https://images.alphacoders.com/609/609338.jpg" },
+        "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://images5.alphacoders.com/609/609340.jpg" },
+        "27": { nome: "Iggy (JoJo)", preco: 15000, url: "https://images2.alphacoders.com/609/609341.jpg" }
     };
 
     const opcao = args[0];
@@ -1742,26 +1747,24 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         const embedLoja = new EmbedBuilder()
             .setTitle("🖼️ Loja de Planos de Fundo")
             .setColor("#00FFFF")
-            .setDescription("Para comprar: `!fundo [número]`\nPara ver os seus: `!meusfundos`\n\n" + listaFormatada)
-            .setFooter({ text: "O fundo será aplicado no seu !perfil" });
+            .setDescription("Para comprar: `!fundo [número]`\n\n" + listaFormatada)
+            .setFooter({ text: "Use !meusfundos para ver sua coleção!" });
 
         return message.reply({ embeds: [embedLoja] });
     }
 
     const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Código inválido!");
+    if (!fundoEscolhido) return message.reply("❌ Código não encontrado na loja.");
 
-    // --- NOVA LÓGICA: VERIFICA SE JÁ POSSUI ---
+    // Verifica se já tem o fundo
     if (userData.bgInventory && userData.bgInventory.includes(opcao)) {
         userData.bg = fundoEscolhido.url;
         await userData.save();
-        return message.reply(`✨ Você já possui **${fundoEscolhido.nome}**! Ele foi equipado novamente.`);
+        return message.reply(`✨ Você já tem **${fundoEscolhido.nome}**! Ele foi equipado.`);
     }
 
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) {
-        return message.reply(`❌ Saldo insuficiente! Preço: **${fundoEscolhido.preco.toLocaleString()}**.`);
-    }
+    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente.");
 
     // Cobrança
     if (userData.money >= fundoEscolhido.preco) {
@@ -1772,88 +1775,95 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         userData.bank -= restante;
     }
 
-    // SALVAMENTO (Equipa e Adiciona ao Histórico)
+    // Salva
     userData.bg = fundoEscolhido.url;
-    
     if (!userData.bgInventory) userData.bgInventory = [];
     userData.bgInventory.push(opcao);
-
     await userData.save();
 
-    return message.reply(`✅ Compra realizada! **${fundoEscolhido.nome}** agora faz parte da sua coleção e está equipado.`);
+    return message.reply(`✅ Você comprou o fundo **${fundoEscolhido.nome}**!`);
 }
+// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO ====================
 if (command === 'meusfundos' || command === 'bgs') {
-    const fundos = {
-        "1": { nome: "Itadori Yuji", url: "https://images6.alphacoders.com/112/1129532.jpg" },
-        "2": { nome: "Gojo Satoru", url: "https://images2.alphacoders.com/114/1143851.jpg" },
-        "3": { nome: "Sukuna", url: "https://images5.alphacoders.com/112/1129113.jpg" },
-        "4": { nome: "Denji (Chainsaw)", url: "https://images8.alphacoders.com/121/1218987.jpg" },
-        "5": { nome: "Makima", url: "https://images2.alphacoders.com/121/1218991.jpg" },
-        "6": { nome: "Power", url: "https://images5.alphacoders.com/121/1219000.jpg" },
-        "7": { nome: "Luffy Gear 5", url: "https://images7.alphacoders.com/132/1321742.png" },
-        "8": { nome: "Roronoa Zoro", url: "https://images2.alphacoders.com/115/1154564.jpg" },
-        "9": { nome: "Portgas D. Ace", url: "https://images4.alphacoders.com/606/606311.jpg" },
-        "10": { nome: "Jinx", url: "https://images3.alphacoders.com/119/1191595.jpg" },
-        "11": { nome: "Vi", url: "https://images6.alphacoders.com/118/1189448.jpg" },
-        "12": { nome: "Ekko", url: "https://images2.alphacoders.com/119/1193325.jpg" },
-        "13": { nome: "Eleven", url: "https://images.alphacoders.com/123/1230113.jpg" },
-        "14": { nome: "Eddie Munson", url: "https://images7.alphacoders.com/123/1239922.jpg" },
-        "15": { nome: "Vecna", url: "https://images6.alphacoders.com/123/1234703.jpg" },
-        "16": { nome: "Steve & Alex", url: "https://images3.alphacoders.com/105/1052601.jpg" },
-        "17": { nome: "Creeper", url: "https://images7.alphacoders.com/101/1014569.jpg" },
-        "18": { nome: "Enderman", url: "https://images4.alphacoders.com/101/1014574.jpg" },
-        "19": { nome: "CR7 Real Madrid", url: "https://images4.alphacoders.com/133/1337494.jpeg" },
-        "20": { nome: "CR7 Portugal", url: "https://images.alphacoders.com/129/1294817.jpg" },
-        "21": { nome: "CR7 LENDA", url: "https://images5.alphacoders.com/133/1337497.jpeg" },
-        "22": { nome: "Dante", url: "https://images8.alphacoders.com/956/956463.jpg" },
-        "23": { nome: "Vergil", url: "https://images2.alphacoders.com/109/1096753.jpg" },
-        "24": { nome: "Nero", url: "https://images.alphacoders.com/990/990391.jpg" }
-    };
+    try {
+        // ESSA LISTA DEVE SER IGUAL À DA LOJA PARA FUNCIONAR TUDO BEM
+        const fundos = {
+            "1": { nome: "Itadori Yuji", url: "https://images6.alphacoders.com/112/1129532.jpg" },
+            "2": { nome: "Gojo Satoru", url: "https://images2.alphacoders.com/114/1143851.jpg" },
+            "3": { nome: "Sukuna", url: "https://images5.alphacoders.com/112/1129113.jpg" },
+            "4": { nome: "Denji (Chainsaw)", url: "https://images8.alphacoders.com/121/1218987.jpg" },
+            "5": { nome: "Makima", url: "https://images2.alphacoders.com/121/1218991.jpg" },
+            "6": { nome: "Power", url: "https://images5.alphacoders.com/121/1219000.jpg" },
+            "7": { nome: "Luffy Gear 5", url: "https://images7.alphacoders.com/132/1321742.png" },
+            "8": { nome: "Roronoa Zoro", url: "https://images2.alphacoders.com/115/1154564.jpg" },
+            "9": { nome: "Portgas D. Ace", url: "https://images4.alphacoders.com/606/606311.jpg" },
+            "10": { nome: "Jinx", url: "https://images3.alphacoders.com/119/1191595.jpg" },
+            "11": { nome: "Vi", url: "https://images6.alphacoders.com/118/1189448.jpg" },
+            "12": { nome: "Ekko", url: "https://images2.alphacoders.com/119/1193325.jpg" },
+            "13": { nome: "Eleven", url: "https://images.alphacoders.com/123/1230113.jpg" },
+            "14": { nome: "Eddie Munson", url: "https://images7.alphacoders.com/123/1239922.jpg" },
+            "15": { nome: "Vecna", url: "https://images6.alphacoders.com/123/1234703.jpg" },
+            "16": { nome: "Steve & Alex", url: "https://images3.alphacoders.com/105/1052601.jpg" },
+            "17": { nome: "Creeper", url: "https://images7.alphacoders.com/101/1014569.jpg" },
+            "18": { nome: "Enderman", url: "https://images4.alphacoders.com/101/1014574.jpg" },
+            "19": { nome: "CR7 Real Madrid", url: "https://images4.alphacoders.com/133/1337494.jpeg" },
+            "20": { nome: "CR7 Portugal", url: "https://images.alphacoders.com/129/1294817.jpg" },
+            "21": { nome: "CR7 LENDA", url: "https://images5.alphacoders.com/133/1337497.jpeg" },
+            "22": { nome: "Dante", url: "https://images8.alphacoders.com/956/956463.jpg" },
+            "23": { nome: "Vergil", url: "https://images2.alphacoders.com/109/1096753.jpg" },
+            "24": { nome: "Nero", url: "https://images.alphacoders.com/990/990391.jpg" },
+            "25": { nome: "Joseph Joestar", url: "https://images.alphacoders.com/609/609338.jpg" },
+            "26": { nome: "Jean Pierre Polnareff", url: "https://images5.alphacoders.com/609/609340.jpg" },
+            "27": { nome: "Iggy (JoJo)", url: "https://images2.alphacoders.com/609/609341.jpg" }
+        };
 
-    const bgsComprados = userData.bgInventory || [];
+        const bgsComprados = userData.bgInventory || [];
 
-    if (bgsComprados.length === 0) {
-        return message.reply("❌ Ainda não compraste nenhum plano de fundo! Usa `!fundo`.");
+        if (bgsComprados.length === 0) {
+            return message.reply("❌ Não tens nenhum fundo na tua coleção! Compra um na loja usando `!fundo`.");
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle("🖼️ Tua Coleção de Backgrounds")
+            .setColor("#00FF00")
+            .setDescription("Escolhe um fundo no menu abaixo para equipares no teu perfil.");
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('selecionar_fundo')
+            .setPlaceholder('Seleciona o fundo para equipar...')
+            .addOptions(
+                bgsComprados.map(id => ({
+                    label: fundos[id] ? fundos[id].nome : `Fundo #${id}`,
+                    value: id,
+                }))
+            );
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        const msg = await message.reply({ embeds: [embed], components: [row] });
+
+        const filter = i => i.customId === 'selecionar_fundo' && i.user.id === message.author.id;
+        const collector = msg.createMessageComponentCollector({ filter, time: 30000 });
+
+        collector.on('collect', async i => {
+            const selecionado = i.values[0];
+            const infoFundo = fundos[selecionado];
+
+            if (infoFundo) {
+                userData.bg = infoFundo.url;
+                await userData.save();
+                await i.update({ content: `✅ Equipaste o fundo: **${infoFundo.nome}**!`, embeds: [], components: [] });
+            }
+        });
+
+        collector.on('end', collected => {
+            if (collected.size === 0) msg.edit({ components: [] }).catch(() => {});
+        });
+
+    } catch (error) {
+        console.error("Erro no comando meusfundos:", error);
+        message.reply("❌ Ocorreu um erro ao abrir a tua coleção.");
     }
-
-    // Criar a lista de nomes para a Embed
-    const listaNomes = bgsComprados.map(id => `\`${id}\` - ${fundos[id]?.nome || "Desconhecido"}`).join("\n");
-
-    const embed = new EmbedBuilder()
-        .setTitle("🖼️ Teus Planos de Fundo")
-        .setColor("#00FF00")
-        .setDescription("Clica no botão correspondente ao ID para equipar!\n\n" + listaNomes);
-
-    // Criar Botões (Máximo 5 por linha, vamos criar para os primeiros 5 comprados como exemplo)
-    // Se tiveres muitos, o ideal é usar um StringSelectMenu (Menu de Seleção)
-    const row = new ActionRowBuilder();
-    
-    // Vamos usar um Menu de Seleção que é melhor para muitos itens
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('select_bg')
-        .setPlaceholder('Escolhe um fundo para equipar...')
-        .addOptions(
-            bgsComprados.map(id => ({
-                label: `${id} - ${fundos[id]?.nome || "Fundo"}`,
-                value: id,
-            }))
-        );
-
-    row.addComponents(selectMenu);
-
-    const msg = await message.reply({ embeds: [embed], components: [row] });
-
-    // Coletor para o Menu
-    const filter = i => i.customId === 'select_bg' && i.user.id === message.author.id;
-    const collector = msg.createMessageComponentCollector({ filter, time: 30000 });
-
-    collector.on('collect', async i => {
-        const idEscolhido = i.values[0];
-        userData.bg = fundos[idEscolhido].url;
-        await userData.save();
-
-        await i.update({ content: `✅ Equipaste o fundo: **${fundos[idEscolhido].nome}**!`, embeds: [], components: [] });
-    });
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
@@ -2354,7 +2364,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 value: '`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
 
             },
-            
+
             { 
                 name: "👤 Perfil & Status", 
                 value: "`!perfil` - Veja seu dinheiro, profissão e fundo.\n`!meusfundos` - Veja sua coleção e equipe fundos comprados." 
