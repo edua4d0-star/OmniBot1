@@ -1323,7 +1323,9 @@ if (command === 'info' || command === 'bot') {
             { name: '🛰️ Host', value: `\`Render (Brasil/EUA)\``, inline: true },
             { 
                 name: '🔗 Links Úteis', 
-                value: `[Top.gg](https://top.gg/bot/${client.user.id}) | [Suporte](TEU_LINK_AQUI) | [Adicionar](https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=8&scope=bot)` 
+                value: `[Top.gg](https://top.gg/bot/${client.user.id}) | [Suporte](https://discord.gg/
+https://discord.gg/WbdkRy9JCM
+) | [Adicionar](https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=8&scope=bot)` 
             }
         )
         .setFooter({ text: 'Obrigado por usares o OmniBot!' })
