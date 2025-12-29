@@ -1,37 +1,38 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-    // ID único do utilizador no Discord
+    // ==================== 👤 IDENTIFICAÇÃO ====================
     userId: { type: String, required: true, unique: true },
 
-    // Economia Básica e Apostas
-    money: { type: Number, default: 0 },
-    lastWork: { type: Number, default: 0 }, // Timestamp do último !trabalhar
-    workCount: { type: Number, default: 0 }, // Total de vezes que trabalhou
-    lastInvest: { type: Number, default: 0 }, // Cooldown para o !investir
+    // ==================== 💰 ECONOMIA & BANCO ====================
+    money: { type: Number, default: 0 },       // Dinheiro na mão
+    bank: { type: Number, default: 0 },        // Dinheiro no banco
+    lastWork: { type: Number, default: 0 },    
+    workCount: { type: Number, default: 0 },   
+    lastInvest: { type: Number, default: 0 },  
+    lastDaily: { type: Number, default: 0 },   
 
-    // Inventário
-    inventory: { type: Array, default: [] },
+    // ==================== 🎒 INVENTÁRIO & ESTÉTICA ====================
+    inventory: { type: Array, default: [] },   
+    bg: { type: String, default: null },       // LINK DA IMAGEM DE FUNDO (NOVO)
 
-    // === SISTEMA DE FACÇÃO ===
+    // ==================== 🌑 SISTEMA DE FACÇÃO ====================
     cargo: { type: String, default: "Civil" }, 
     missionCount: { type: Number, default: 0 }, 
     lastTrafico: { type: Number, default: 0 }, 
     lastMission: { type: Number, default: 0 }, 
 
-    // === SISTEMA DE RELACIONAMENTO & CRIME EM DUPLA ===
+    // ==================== 💖 RELACIONAMENTO ====================
     marriedWith: { type: String, default: null }, 
     affinity: { type: Number, default: 0 }, 
-    lastAssaltoDupla: { type: Number, default: 0 }, // NOVO: Cooldown para o !assaltodupla
+    lastAssaltoDupla: { type: Number, default: 0 }, 
 
-    // Sistema de Assassino / Contratos
+    // ==================== 🎯 CONTRATOS & CRIMES ====================
     contract: { type: String, default: null }, 
     lastContract: { type: Number, default: 0 }, 
     jobsDone: { type: Number, default: 0 }, 
-    
-    // Sistema de Combate / Roubo Individual
     lastKill: { type: Number, default: 0 }, 
-    lastRob: { type: Number, default: 0 }, // Cooldown para o !crime ou !roubar individual
+    lastRob: { type: Number, default: 0 },    
     lastCrime: { type: Number, default: 0 }
 });
 
