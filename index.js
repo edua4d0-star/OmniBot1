@@ -1294,11 +1294,26 @@ if (command === 'crime') {
         }
     }
 
-// ==================== 👤 COMANDO PERFIL (COM STACK - SEM PODER) ====================
+// ==================== 👤 COMANDO PERFIL (VER O PRÓPRIO OU DE OUTRO) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
-        const inventory = userData.inventory || [];
-        const cargo = userData.cargo || "Civil"; 
+        // 1. Identifica o alvo: Se marcar alguém, usa o marcado. Se não, usa quem mandou a mensagem.
+        const alvo = message.mentions.users.first() || message.author;
+
+        // 2. Busca os dados do alvo no banco. Se for você mesmo, usa o userData que já existe.
+        let dadosPerfil;
+        if (alvo.id === message.author.id) {
+            dadosPerfil = userData;
+        } else {
+            dadosPerfil = await User.findOne({ userId: alvo.id });
+            // Se o alvo nunca usou o bot, criamos um perfil vazio para ele não dar erro
+            if (!dadosPerfil) {
+                dadosPerfil = await User.create({ userId: alvo.id });
+            }
+        }
+
+        const inventory = dadosPerfil.inventory || [];
+        const cargo = dadosPerfil.cargo || "Civil"; 
         
         // --- LÓGICA DE STACK (AGRUPAR ITENS IGUAIS) ---
         const contagemItens = {};
@@ -1306,29 +1321,28 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             contagemItens[item] = (contagemItens[item] || 0) + 1;
         });
 
-        // Transforma o objeto { arma: 2 } em "`arma x2`"
         const itensFormatados = Object.keys(contagemItens).length > 0 
             ? Object.entries(contagemItens).map(([nome, qtd]) => `\`${nome} x${qtd}\``).join(', ') 
             : "Nenhum item";
 
-        // Configuração visual baseada no cargo
+        // Configuração visual baseada no cargo do perfil visualizado
         const corEmbed = cargo === "Membro da Facção" ? "#2f3136" : "#0099ff";
         const emojiStatus = cargo === "Membro da Facção" ? "🏴‍☠️" : "🏙️"; 
 
         const embed = new EmbedBuilder()
             .setColor(corEmbed)
-            .setTitle(`${emojiStatus} Perfil de ${message.author.username}`)
-            .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+            .setTitle(`${emojiStatus} Perfil de ${alvo.username}`) // Nome do alvo
+            .setThumbnail(alvo.displayAvatarURL({ dynamic: true })) // Avatar do alvo
             .setDescription(`**Status Social:** \`${cargo}\``)
             .addFields(
                 {
                     name: "💰 Economia",
-                    value: `**Saldo:** ${userData.money.toLocaleString()} moedas\n**Trabalhos:** \`${userData.workCount || 0}\``,
+                    value: `**Saldo:** ${dadosPerfil.money.toLocaleString()} moedas\n**Trabalhos:** \`${dadosPerfil.workCount || 0}\``,
                     inline: true
                 },
                 {
                     name: "🎯 Operações",
-                    value: `**Missões:** \`${userData.missionCount || 0}\``,
+                    value: `**Missões:** \`${dadosPerfil.missionCount || 0}\``,
                     inline: true
                 },
                 {
@@ -1337,7 +1351,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
                     inline: false
                 }
             )
-            .setFooter({ text: `ID: ${message.author.id}` })
+            .setFooter({ text: `ID: ${alvo.id}` })
             .setTimestamp();
 
         return message.reply({ embeds: [embed] });
@@ -1345,6 +1359,61 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
     } catch (error) {
         console.error("Erro no comando perfil:", error);
         return message.reply("❌ Erro ao carregar o perfil.");
+    }
+}
+// ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
+if (command === 'dar') {
+    try {
+        const alvo = message.mentions.users.first();
+        const itemNome = args[1]?.toLowerCase(); // O nome do item (ex: dinamite)
+        const quantidade = parseInt(args[2]) || 1; // A quantidade (ex: 1)
+
+        // 1. Verificações Básicas
+        if (!alvo) return message.reply("❌ Precisas marcar (@) alguém para dar um item.");
+        if (alvo.id === message.author.id) return message.reply("❌ Não podes dar itens a ti mesmo.");
+        if (!itemNome) return message.reply("❌ Escreve o nome do item. Ex: `!dar @user dinamite 1`.");
+        if (quantidade <= 0) return message.reply("❌ A quantidade deve ser pelo menos 1.");
+
+        // 2. Verifica se o remetente tem o item e a quantidade
+        const inventoryAutor = userData.inventory || [];
+        const possuiQuantidade = inventoryAutor.filter(i => i === itemNome).length;
+
+        if (possuiQuantidade < quantidade) {
+            return message.reply(`❌ Não tens \`${itemNome}\` suficiente (Tens: ${possuiQuantidade}).`);
+        }
+
+        // 3. Busca/Cria os dados do alvo no banco
+        let targetData = await User.findOne({ userId: alvo.id });
+        if (!targetData) {
+            targetData = await User.create({ userId: alvo.id });
+        }
+
+        // 4. Lógica de Troca (Remover de um e dar ao outro)
+        
+        // Remove a quantidade exata do seu inventário
+        for (let i = 0; i < quantidade; i++) {
+            const index = inventoryAutor.indexOf(itemNome);
+            if (index > -1) {
+                inventoryAutor.splice(index, 1);
+            }
+        }
+        userData.inventory = inventoryAutor;
+
+        // Adiciona ao inventário do alvo
+        if (!targetData.inventory) targetData.inventory = [];
+        for (let i = 0; i < quantidade; i++) {
+            targetData.inventory.push(itemNome);
+        }
+
+        // 5. Salva ambos no banco de dados
+        await userData.save();
+        await targetData.save();
+
+        return message.reply(`✅ Entregaste \`${itemNome} x${quantidade}\` para **${alvo.username}** com sucesso!`);
+
+    } catch (error) {
+        console.error("Erro no comando dar:", error);
+        return message.reply("❌ Ocorreu um erro ao tentar transferir o item.");
     }
 }
 // ==================== 🏪 COMANDO !LOJA (VERSÃO COM RESUMOS) ====================
@@ -1780,7 +1849,7 @@ if (command === 'comprar' || command === 'buy') {
                 },
                 { 
                     name: '💖 SOCIAL & CASAMENTO', 
-                    value: '`!divorciar`', value: 'Termina o seu casamento atual imediatamente.\n`!ship @user @user`: Calcula a compatibilidade.\n`!casar @user`: Inicia um casamento (25k).\n`!vercasamento`: Status da relação e afinidade.\n`!cartinha @user`: Envia pontos de afinidade (7.5k).\n`!beijar`, `!abracar`, `!cafune`: Interações de afeto.\n`!divorciar`: Finaliza a relação atual.\n`!tapa`, `!atacar`: Interações agressivas.'  
+                    value: '`!dar @usuário <item> <qtd>`', value: 'Envia itens da sua mochila para outro jogador.\n`!divorciar`', value: 'Termina o seu casamento atual imediatamente.\n`!ship @user @user`: Calcula a compatibilidade.\n`!casar @user`: Inicia um casamento (25k).\n`!vercasamento`: Status da relação e afinidade.\n`!cartinha @user`: Envia pontos de afinidade (7.5k).\n`!beijar`, `!abracar`, `!cafune`: Interações de afeto.\n`!divorciar`: Finaliza a relação atual.\n`!tapa`, `!atacar`: Interações agressivas.'  
                 },
                 { 
                     name: '🌑 SUBMUNDO', 
