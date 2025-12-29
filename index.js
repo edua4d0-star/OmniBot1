@@ -1284,6 +1284,53 @@ if (command === 'crime') {
             return message.reply('❌ Não consegui enviar a mensagem. Verifica se eu tenho permissão de ver esse canal!');
         }
     }
+    // ==================== 📊 COMANDO STATS ====================
+if (command === 'stats' || command === 'botinfo') {
+    const uptime = process.uptime();
+    const horas = Math.floor(uptime / 3600);
+    const minutos = Math.floor((uptime % 3600) / 60);
+    const segundos = Math.floor(uptime % 60);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`📊 Estatísticas do OmniBot`)
+        .setColor('#00ff00')
+        .setThumbnail(client.user.displayAvatarURL())
+        .addFields(
+            { name: '⏳ Tempo Online', value: `\`${horas}h ${minutos}m ${segundos}s\``, inline: true },
+            { name: '🏠 Servidores', value: `\`${client.guilds.cache.size}\``, inline: true },
+            { name: '👥 Usuários', value: `\`${client.users.cache.size}\``, inline: true },
+            { name: '⚙️ Memória RAM', value: `\`${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB\``, inline: true },
+            { name: '👑 Desenvolvedor', value: `<@1203435676083822712>`, inline: true }
+        )
+        .setFooter({ text: 'Hospedado via Render.com' })
+        .setTimestamp();
+
+    return message.reply({ embeds: [embed] });
+}
+// ==================== ℹ️ COMANDO INFO ====================
+if (command === 'info' || command === 'bot') {
+    const embed = new EmbedBuilder()
+        .setTitle(`ℹ️ Informações do OmniBot`)
+        .setColor('#5865F2') // Cor Blurple do Discord
+        .setThumbnail(client.user.displayAvatarURL())
+        .setDescription(
+            `Olá! Eu sou o **OmniBot**, um bot focado em economia, diversão e interação social.\n\n` +
+            `Fui criado para tornar os servidores mais dinâmicos com sistemas de crimes, facções e uma economia ativa.`
+        )
+        .addFields(
+            { name: '👑 Desenvolvedor', value: `<@1203435676083822712>`, inline: true },
+            { name: '💻 Tecnologia', value: `\`Node.js & MongoDB\``, inline: true },
+            { name: '🛰️ Host', value: `\`Render (Brasil/EUA)\``, inline: true },
+            { 
+                name: '🔗 Links Úteis', 
+                value: `[Top.gg](https://top.gg/bot/${client.user.id}) | [Suporte](TEU_LINK_AQUI) | [Adicionar](https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=8&scope=bot)` 
+            }
+        )
+        .setFooter({ text: 'Obrigado por usares o OmniBot!' })
+        .setTimestamp();
+
+    return message.reply({ embeds: [embed] });
+}
 
 // ==================== 🗣️ COMANDO FALAR (OTIMIZADO) ====================
     if (command === 'falar' || command === 'say') {
@@ -1847,48 +1894,57 @@ if (command === 'comprar' || command === 'buy') {
             return message.reply('❌ Erro ao silenciar! Verifica se o meu cargo está no topo da lista de cargos.');
         }
     }
-// ==================== 📖 AJUDA OTIMIZADA ====================
-    if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
-        
-        let avisoIdioma = '';
-        if (command === 'help') avisoIdioma = '🌐 **Note:** This bot is originally in Portuguese.';
-        if (command === 'ayuda') avisoIdioma = '🌐 **Nota:** Este bot es originalmente en Portugués.';
+// ==================== 📖 AJUDA OTIMIZADA (CATEGORIAS EXPANDIDAS) ====================
+if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
+    
+    let avisoIdioma = '';
+    if (command === 'help') avisoIdioma = '🌐 **Note:** This bot is originally in Portuguese.';
+    if (command === 'ayuda') avisoIdioma = '🌐 **Nota:** Este bot es originalmente en Portugués.';
 
-        const embedAjuda = new EmbedBuilder()
-            .setTitle('📖 Central de Comandos OmniBot')
-            .setColor('#5865F2')
-            .setDescription(`${avisoIdioma}${avisoIdioma ? '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : ''}Confira abaixo as ações disponíveis para interagir no servidor:`)
-            .addFields(
-                { 
-                    name: '💰 ECONOMIA', 
-                    value: '`!perfil`: Vê teus dados e saldo.\n`!money`: Atalho para ver saldo.\n`!trabalhar`: Ganha moedas legalmente.\n`!daily`: Resgata sua recompensa diária.\n`!pix @user [valor]`: Transfere moedas.\n`!top`: Ranking dos mais ricos.' 
-                },
-                { 
-                    name: '🎰 JOGOS & CASSINO', 
-                    value: '`!investir <valor>** - Arrisca na bolsa (lucro ou perda variável).\n`!cassino @user [valor]`: Desafio PvP de Cara ou Coroa.\n`!dado [1 ou 2] [valor]`: Aposta contra a banca.' 
-                },
-                { 
-                    name: '💖 SOCIAL & CASAMENTO', 
-                    value: '`!dar @usuário <item> <qtd>`', value: 'Envia itens da sua mochila para outro jogador.\n`!divorciar`', value: 'Termina o seu casamento atual imediatamente.\n`!ship @user @user`: Calcula a compatibilidade.\n`!casar @user`: Inicia um casamento (25k).\n`!vercasamento`: Status da relação e afinidade.\n`!cartinha @user`: Envia pontos de afinidade (7.5k).\n`!beijar`, `!abracar`, `!cafune`: Interações de afeto.\n`!divorciar`: Finaliza a relação atual.\n`!tapa`, `!atacar`: Interações agressivas.'  
-                },
-                { 
-                    name: '🌑 SUBMUNDO', 
-                    value: '`!submundo`: Loja de itens ilegais.\n`!crime`: Assalto arriscado.\n`!roubar`: Furtar moedas.\n`!contrato`: Caçar alvos.\n`!entrar`: Virar Membro.\n`!traficar`: Rota de lucro.\n`!missao`: Operações da elite.\n`!assaltodupla`: Grande golpe (Requer Casamento).\n`!roubar @user`: Tenta furtar 10% de alguém.\n`!contrato`: Aceita um alvo para eliminar.\n`!concluir`: Finaliza o serviço e recebe o prêmio.\n`!tapa`, `!atacar`: Interações agressivas.' 
-                },
-                { 
-                    name: '🛡️ STAFF', 
-                    value: '`!matar @user`: Aplica 1 min de silêncio (Timeout).\n`!clear [nº]`: Limpa até 100 mensagens.\n`!kick`/`!ban`: Expulsa ou bane membros.\n`!anuncio [#canal] [texto]`: Envia uma Embed oficial.\n`!falar [texto]`: O bot repete sua mensagem.\n`!renovar`: Restaura o stock da loja.' 
-                },
-                { 
-                    name: '🛍️ MERCADO', 
-                    value: '`!loja`: Itens disponíveis e stock.\n`!comprar [item]`: Adquire um item.\n`!mochila`: Vê o que guardaste no inventário.' 
-                }
-            )
-            .setFooter({ text: 'Use o prefixo ! antes de cada comando.' })
-            .setTimestamp();
+    const embedAjuda = new EmbedBuilder()
+        .setTitle('📖 Central de Comandos OmniBot')
+        .setColor('#5865F2')
+        .setThumbnail(client.user.displayAvatarURL())
+        .setDescription(`${avisoIdioma}${avisoIdioma ? '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : ''}Seja bem-vindo! Explore minhas funcionalidades abaixo:`)
+        .addFields(
+            { 
+                name: '💰 ECONOMIA & RANKING', 
+                value: '`!perfil`: Teus dados e mochila.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top`: Os mais ricos do servidor.' 
+            },
+            { 
+                name: '🎰 CASSINO & SORTE', 
+                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: Cara ou Coroa PvP.\n`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
+            },
+            { 
+                name: '💍 RELACIONAMENTOS', 
+                value: '`!casar @user`: Iniciar casamento (25k).\n`!vercasamento`: Status e afinidade.\n`!cartinha @user`: Pontos de afeto.\n`!divorciar`: Terminar relação.\n`!ship @user @user`: Compatibilidade.' 
+            },
+            { 
+                name: '🎭 INTERAÇÕES SOCIAIS', 
+                value: '`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
+            },
+            { 
+                name: '🌑 SUBMUNDO ILEGAL', 
+                value: '`!submundo`: Loja proibida.\n`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto (10%).\n`!contrato`: Aceitar alvo.\n`!concluir`: Receber prêmio.\n`!entrar`: Virar Membro da Facção.\n`!traficar`: Rota de lucro.\n`!missao`: Operações da elite.\n`!assaltodupla`: Golpe em casal.' 
+            },
+            { 
+                name: '🛍️ MERCADO GLOBAL', 
+                value: '`!loja`: Ver estoque atual.\n`!comprar [item]`: Comprar produto.\n`!mochila`: Atalho para inventário.' 
+            },
+            { 
+                name: '🛡️ MODERAÇÃO & STAFF', 
+                value: '`!matar @user`: Timeout (1 min).\n`!clear [nº]`: Limpar chat.\n`!kick`/`!ban`: Expulsar/Banir.\n`!anuncio`: Mensagem oficial.\n`!falar`: Repetir texto.' 
+            },
+            { 
+                name: '⚙️ CONFIGURAÇÕES & INFO', 
+                value: '`!stats`: Dados técnicos e Uptime.\n`!info`: Créditos do desenvolvedor.\n`!renovar`: Resetar estoque da loja.\n`!resetar @user`: Limpar dados (Dono).' 
+            }
+        )
+        .setFooter({ text: 'Dica: Digite o comando corretamente para evitar erros.' })
+        .setTimestamp();
 
-        return message.reply({ embeds: [embedAjuda] });
-    }
+    return message.reply({ embeds: [embedAjuda] });
+}
 });
 
 // ==================== 🏪 SISTEMA DE STOCK (OTIMIZADO) ====================
