@@ -2049,51 +2049,110 @@ if (command === 'comprar' || command === 'buy') {
             return message.reply('❌ Erro ao silenciar! Verifica se o meu cargo está no topo da lista de cargos.');
         }
     }// ==================== 📖 AJUDA OTIMIZADA (ATUALIZADA) ====================
+ // ==================== 📖 AJUDA OTIMIZADA (CATEGORIAS EXPANDIDAS) ====================
+
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
+
     
+
     let avisoIdioma = '';
+
     if (command === 'help') avisoIdioma = '🌐 **Note:** This bot is originally in Portuguese.';
+
     if (command === 'ayuda') avisoIdioma = '🌐 **Nota:** Este bot es originalmente en Portugués.';
 
+
+
     const embedAjuda = new EmbedBuilder()
+
         .setTitle('📖 Central de Comandos OmniBot')
+
         .setColor('#5865F2')
+
         .setThumbnail(client.user.displayAvatarURL())
+
         .setDescription(`${avisoIdioma}${avisoIdioma ? '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : ''}Seja bem-vindo! Explore minhas funcionalidades abaixo:`)
+
         .addFields(
+
             { 
-                name: '💰 ECONOMIA & BANCO', 
-                value: '`!perfil`: Ver perfil e mochila.\n`!top`: Ranking dos mais ricos.\n`!daily`: Resgatar prêmio diário.\n`!dep <valor>`: Guardar no banco.\n`!sacar <valor>`: Retirar do banco.\n`!pix @user [valor]`: Enviar moedas.' 
+
+                name: '💰 ECONOMIA & RANKING', 
+
+                value: '`!perfil`: Teus dados e mochila.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top`: Os mais ricos do servidor.' 
+
+            },
+
+            { 
+
+                name: '🎰 CASSINO & SORTE', 
+
+                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: Cara ou Coroa PvP.\n`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
+
+            },
+
+            { 
+
+                name: '💍 RELACIONAMENTOS', 
+
+                value: '`!casar @user`: Iniciar casamento (25k).\n`!vercasamento`: Status e afinidade.\n`!cartinha @user`: Pontos de afeto.\n`!divorciar`: Terminar relação.\n`!ship @user @user`: Compatibilidade.' 
+
+            },
+
+            { 
+
+                name: '🎭 INTERAÇÕES SOCIAIS', 
+
+                value: '`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
+
+            },
+
+            { 
+
+                name: '🌑 SUBMUNDO ILEGAL', 
+
+                value: '`!submundo`: Loja proibida.\n`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto (10%).\n`!contrato`: Aceitar alvo.\n`!concluir`: Receber prêmio.\n`!entrar`: Virar Membro da Facção.\n`!traficar`: Rota de lucro.\n`!missao`: Operações da elite.\n`!assaltodupla`: Golpe em casal.' 
+
             },
             { 
                 name: '⚒️ TRABALHO & PROGRESSO', 
-                value: '`!trabalhar`: Ganhar moedas.\n`!conquistas`: Ver teus marcos e medalhas.\n`!background`: Loja de fundos para o perfil.' 
+                value: '`!conquistas`: Ver teus marcos e medalhas.\n`!background`: Loja de fundos para o perfil.' 
             },
+
             { 
-                name: '🎰 CASSINO & SORTE', 
-                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: PvP.\n`!dado [1 ou 2] [valor]`: Apostar.' 
+
+                name: '🛍️ MERCADO GLOBAL', 
+
+                value: '`!loja`: Ver estoque atual.\n`!comprar [item]`: Comprar produto.\n`!mochila`: Atalho para inventário.' 
+
             },
+
             { 
-                name: '💍 RELACIONAMENTOS', 
-                value: '`!casar @user`: Casamento (25k).\n`!vercasamento`: Status.\n`!ship @user @user`: Afinidade.' 
+
+                name: '🛡️ MODERAÇÃO & STAFF', 
+
+                value: '`!matar @user`: Timeout (1 min).\n`!clear [nº]`: Limpar chat.\n`!kick`/`!ban`: Expulsar/Banir.\n`!anuncio`: Mensagem oficial.\n`!falar`: Repetir texto.' 
+
             },
+
             { 
-                name: '🌑 SUBMUNDO ILEGAL', 
-                value: '`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto.\n`!missao`: Operações de elite.\n`!traficar`: Rota de lucro.' 
-            },
-            { 
-                name: '🛍️ MERCADOS & ITENS', 
-                value: '`!loja`: Ver estoque.\n`!comprar [item]`: Comprar.\n`!dar @user [item]`: Enviar item.' 
-            },
-            { 
-                name: '🛡️ ADMINISTRAÇÃO & INFO', 
-                value: '`!stats`: Uptime e dados.\n`!info`: Links e convite.\n`!clear [nº]`: Limpar chat.\n`!anuncio`: Mensagem oficial.' 
+
+                name: '⚙️ CONFIGURAÇÕES & INFO', 
+
+                value: '`!stats`: Dados técnicos e Uptime.\n`!info`: Créditos do desenvolvedor.\n`!renovar`: Resetar estoque da loja.\n`!resetar @user`: Limpar dados (Dono).' 
+
             }
+
         )
-        .setFooter({ text: 'Dica: O dinheiro no Banco está protegido contra roubos!' })
+
+        .setFooter({ text: 'Dica: Digite o comando corretamente para evitar erros.' })
+
         .setTimestamp();
 
+
+
     return message.reply({ embeds: [embedAjuda] });
+
 }
 });
 
