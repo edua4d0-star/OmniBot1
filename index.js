@@ -1307,40 +1307,50 @@ if (command === 'crime') {
         return message.reply(`👮 **A casa caiu!** Tiveste de pagar uma "taxa" de **${multa.toLocaleString()} moedas** para não ires preso.`);
     }
 }
-// ==================== 📢 COMANDO ANÚNCIO (OTIMIZADO) ====================
-    if (command === 'anuncio' || command === 'broadcast') {
-        // 1. Verificação de Permissão (Apenas Administradores)
-        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return message.reply('❌ Não tens permissão de Administrador para usar este comando!');
-        }
-
-        // 2. Separar Canal e Mensagem
-        const args = message.content.split(' ').slice(1);
-        const channel = message.mentions.channels.first();
-        const texto = args.slice(1).join(' ');
-
-        if (!channel || !texto) {
-            return message.reply('❓ Como usar: `!anuncio #canal Sua mensagem aqui`');
-        }
-
-        // 3. Criar a Embed de Anúncio
-        const embedAnuncio = new EmbedBuilder()
-            .setTitle('📢 Comunicado Oficial')
-            .setColor('#F1C40F') // Amarelo vibrante
-            .setDescription(texto)
-            .setThumbnail(message.guild.iconURL())
-            .setFooter({ text: `Enviado por: ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
-            .setTimestamp();
-
-        // 4. Enviar e dar feedback
-        try {
-            await channel.send({ embeds: [embedAnuncio] });
-            return message.reply(`✅ Anúncio enviado com sucesso em ${channel}!`);
-        } catch (err) {
-            console.error(err);
-            return message.reply('❌ Não consegui enviar a mensagem. Verifica se eu tenho permissão de ver esse canal!');
-        }
+// ==================== 📢 COMANDO ANÚNCIO (SILENCIOSO) ====================
+if (command === 'anuncio' || command === 'broadcast') {
+    // 1. Verificação de Permissão
+    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        return message.reply('❌ Não tens permissão para usar este comando!');
     }
+
+    // 2. Lógica de Canal e Texto
+    const args = message.content.split(' ').slice(1);
+    const canalMencionado = message.mentions.channels.first();
+    
+    // Define o canal: Mencionado ou o Atual
+    const canalDestino = canalMencionado || message.channel;
+    
+    // Define o texto: Se tiver canal, remove a primeira palavra (a menção). Se não, usa tudo.
+    const texto = canalMencionado ? args.slice(1).join(' ') : args.join(' ');
+
+    if (!texto) {
+        return message.reply('❓ Digite a mensagem após o comando!').then(msg => {
+            setTimeout(() => msg.delete(), 5000); // Apaga o erro após 5 segundos
+        });
+    }
+
+    // 3. Criar a Embed
+    const embedAnuncio = new EmbedBuilder()
+        .setTitle('📢 Comunicado Oficial')
+        .setColor('#F1C40F')
+        .setDescription(texto)
+        .setThumbnail(message.guild.iconURL())
+        .setFooter({ text: `Enviado por: ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+        .setTimestamp();
+
+    // 4. Execução
+    try {
+        // Apaga a mensagem do comando do usuário
+        if (message.deletable) await message.delete();
+
+        // Envia apenas o anúncio no canal de destino
+        await canalDestino.send({ embeds: [embedAnuncio] });
+
+    } catch (err) {
+        console.error("Erro no anúncio:", err);
+    }
+}
     // ==================== 📊 COMANDO STATS ====================
 if (command === 'stats' || command === 'botinfo') {
     const uptime = process.uptime();
