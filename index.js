@@ -1643,12 +1643,14 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
                 { name: "🔨 Trabalhos", value: `\`${totalTrabalhos}\``, inline: true },
                 { name: "🎒 Mochila", value: itensFormatados, inline: false }
             )
-            .setFooter({ text: "Use !fundo para comprar planos de fundo!" })
             .setTimestamp();
 
-        // --- BACKGROUND ---
-        if (dadosPerfil.bg && dadosPerfil.bg !== "") {
+        // --- VERIFICAÇÃO E EXIBIÇÃO DO BACKGROUND ---
+        if (dadosPerfil.bg && typeof dadosPerfil.bg === 'string' && dadosPerfil.bg.startsWith("http")) {
             embed.setImage(dadosPerfil.bg);
+            embed.setFooter({ text: "Use !fundo para trocar seu plano de fundo!" });
+        } else {
+            embed.setFooter({ text: "Você ainda não tem um fundo! Use !fundo para comprar." });
         }
 
         return message.reply({ embeds: [embed] });
@@ -1701,7 +1703,7 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS ORGANIZADA ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS COM INVENTÁRIO ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
         "1": { nome: "Itadori Yuji", preco: 40000, url: "https://images6.alphacoders.com/112/1129532.jpg" },
@@ -1733,40 +1735,125 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     const opcao = args[0];
 
     if (!opcao) {
-        // Criando a lista de forma que mostre: [NÚMERO] Nome - Preço
-        let listaFormatada = "";
-        for (const id in fundos) {
-            listaFormatada += `\`[${id}]\` ${fundos[id].nome} — 💰 ${fundos[id].preco.toLocaleString()}\n`;
-        }
+        let listaFormatada = Object.entries(fundos)
+            .map(([id, info]) => `\`[${id}]\` **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\``)
+            .join("\n");
 
         const embedLoja = new EmbedBuilder()
             .setTitle("🖼️ Loja de Planos de Fundo")
             .setColor("#00FFFF")
-            .setDescription("Digite `!fundo [número]` para comprar!\n\n" + listaFormatada)
-            .setFooter({ text: "O fundo aparecerá no seu !perfil" });
+            .setDescription("Para comprar: `!fundo [número]`\nPara ver os seus: `!meusfundos`\n\n" + listaFormatada)
+            .setFooter({ text: "O fundo será aplicado no seu !perfil" });
 
         return message.reply({ embeds: [embedLoja] });
     }
 
     const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Esse número não existe na loja!");
+    if (!fundoEscolhido) return message.reply("❌ Código inválido!");
+
+    // --- NOVA LÓGICA: VERIFICA SE JÁ POSSUI ---
+    if (userData.bgInventory && userData.bgInventory.includes(opcao)) {
+        userData.bg = fundoEscolhido.url;
+        await userData.save();
+        return message.reply(`✨ Você já possui **${fundoEscolhido.nome}**! Ele foi equipado novamente.`);
+    }
 
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente!");
+    if (saldoTotal < fundoEscolhido.preco) {
+        return message.reply(`❌ Saldo insuficiente! Preço: **${fundoEscolhido.preco.toLocaleString()}**.`);
+    }
 
     // Cobrança
     if (userData.money >= fundoEscolhido.preco) {
         userData.money -= fundoEscolhido.preco;
     } else {
-        const resto = fundoEscolhido.preco - userData.money;
+        const restante = fundoEscolhido.preco - userData.money;
         userData.money = 0;
-        userData.bank -= resto;
+        userData.bank -= restante;
     }
 
-    userData.bg = fundoEscolhido.url; // Salva o link no banco
+    // SALVAMENTO (Equipa e Adiciona ao Histórico)
+    userData.bg = fundoEscolhido.url;
+    
+    if (!userData.bgInventory) userData.bgInventory = [];
+    userData.bgInventory.push(opcao);
+
     await userData.save();
 
-    return message.reply(`✅ Você comprou o fundo **${fundoEscolhido.nome}**! Use \`!perfil\` para ver.`);
+    return message.reply(`✅ Compra realizada! **${fundoEscolhido.nome}** agora faz parte da sua coleção e está equipado.`);
+}
+if (command === 'meusfundos' || command === 'bgs') {
+    const fundos = {
+        "1": { nome: "Itadori Yuji", url: "https://images6.alphacoders.com/112/1129532.jpg" },
+        "2": { nome: "Gojo Satoru", url: "https://images2.alphacoders.com/114/1143851.jpg" },
+        "3": { nome: "Sukuna", url: "https://images5.alphacoders.com/112/1129113.jpg" },
+        "4": { nome: "Denji (Chainsaw)", url: "https://images8.alphacoders.com/121/1218987.jpg" },
+        "5": { nome: "Makima", url: "https://images2.alphacoders.com/121/1218991.jpg" },
+        "6": { nome: "Power", url: "https://images5.alphacoders.com/121/1219000.jpg" },
+        "7": { nome: "Luffy Gear 5", url: "https://images7.alphacoders.com/132/1321742.png" },
+        "8": { nome: "Roronoa Zoro", url: "https://images2.alphacoders.com/115/1154564.jpg" },
+        "9": { nome: "Portgas D. Ace", url: "https://images4.alphacoders.com/606/606311.jpg" },
+        "10": { nome: "Jinx", url: "https://images3.alphacoders.com/119/1191595.jpg" },
+        "11": { nome: "Vi", url: "https://images6.alphacoders.com/118/1189448.jpg" },
+        "12": { nome: "Ekko", url: "https://images2.alphacoders.com/119/1193325.jpg" },
+        "13": { nome: "Eleven", url: "https://images.alphacoders.com/123/1230113.jpg" },
+        "14": { nome: "Eddie Munson", url: "https://images7.alphacoders.com/123/1239922.jpg" },
+        "15": { nome: "Vecna", url: "https://images6.alphacoders.com/123/1234703.jpg" },
+        "16": { nome: "Steve & Alex", url: "https://images3.alphacoders.com/105/1052601.jpg" },
+        "17": { nome: "Creeper", url: "https://images7.alphacoders.com/101/1014569.jpg" },
+        "18": { nome: "Enderman", url: "https://images4.alphacoders.com/101/1014574.jpg" },
+        "19": { nome: "CR7 Real Madrid", url: "https://images4.alphacoders.com/133/1337494.jpeg" },
+        "20": { nome: "CR7 Portugal", url: "https://images.alphacoders.com/129/1294817.jpg" },
+        "21": { nome: "CR7 LENDA", url: "https://images5.alphacoders.com/133/1337497.jpeg" },
+        "22": { nome: "Dante", url: "https://images8.alphacoders.com/956/956463.jpg" },
+        "23": { nome: "Vergil", url: "https://images2.alphacoders.com/109/1096753.jpg" },
+        "24": { nome: "Nero", url: "https://images.alphacoders.com/990/990391.jpg" }
+    };
+
+    const bgsComprados = userData.bgInventory || [];
+
+    if (bgsComprados.length === 0) {
+        return message.reply("❌ Ainda não compraste nenhum plano de fundo! Usa `!fundo`.");
+    }
+
+    // Criar a lista de nomes para a Embed
+    const listaNomes = bgsComprados.map(id => `\`${id}\` - ${fundos[id]?.nome || "Desconhecido"}`).join("\n");
+
+    const embed = new EmbedBuilder()
+        .setTitle("🖼️ Teus Planos de Fundo")
+        .setColor("#00FF00")
+        .setDescription("Clica no botão correspondente ao ID para equipar!\n\n" + listaNomes);
+
+    // Criar Botões (Máximo 5 por linha, vamos criar para os primeiros 5 comprados como exemplo)
+    // Se tiveres muitos, o ideal é usar um StringSelectMenu (Menu de Seleção)
+    const row = new ActionRowBuilder();
+    
+    // Vamos usar um Menu de Seleção que é melhor para muitos itens
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('select_bg')
+        .setPlaceholder('Escolhe um fundo para equipar...')
+        .addOptions(
+            bgsComprados.map(id => ({
+                label: `${id} - ${fundos[id]?.nome || "Fundo"}`,
+                value: id,
+            }))
+        );
+
+    row.addComponents(selectMenu);
+
+    const msg = await message.reply({ embeds: [embed], components: [row] });
+
+    // Coletor para o Menu
+    const filter = i => i.customId === 'select_bg' && i.user.id === message.author.id;
+    const collector = msg.createMessageComponentCollector({ filter, time: 30000 });
+
+    collector.on('collect', async i => {
+        const idEscolhido = i.values[0];
+        userData.bg = fundos[idEscolhido].url;
+        await userData.save();
+
+        await i.update({ content: `✅ Equipaste o fundo: **${fundos[idEscolhido].nome}**!`, embeds: [], components: [] });
+    });
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
@@ -2264,8 +2351,13 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
                 name: '💰 ECONOMIA & RANKING', 
 
-                value: '`!perfil`: Teus dados e mochila.\n`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
+                value: '`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
 
+            },
+            
+            { 
+                name: "👤 Perfil & Status", 
+                value: "`!perfil` - Veja seu dinheiro, profissão e fundo.\n`!meusfundos` - Veja sua coleção e equipe fundos comprados." 
             },
 
             { 
