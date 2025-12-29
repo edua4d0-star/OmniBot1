@@ -1429,6 +1429,55 @@ https://discord.gg/WbdkRy9JCM
             return message.channel.send(fala);
         }
     }
+    // ==================== ⚖️ COMANDO AVALIAR (VARIADAS RESPOSTAS) ====================
+if (command === 'avaliar' || command === 'rate') {
+    const coisaParaAvaliar = args.join(' ');
+
+    if (!coisaParaAvaliar) {
+        return message.reply('❓ O que você quer que eu avalie? Exemplo: `!avaliar OmniBot`');
+    }
+
+    const nota = Math.floor(Math.random() * 11);
+
+    // Banco de frases por categoria de nota
+    const frases = {
+        baixa: [
+            "Sinceramente? Nota 0. Nem sei o que dizer...",
+            "Isso é bem ruim, nota 1. Melhore, por favor.",
+            "Decepcionante... esperava muito mais. Nota 2.",
+            "Nota 3. Tem gosto para tudo, eu acho..."
+        ],
+        media: [
+            "É... razoável. Nota 4.",
+            "Nota 5. Está exatamente na média, nada de especial.",
+            "Nota 6. É passável, mas falta um 'tchan'.",
+            "Até que é legalzinho. Nota 7."
+        ],
+        alta: [
+            "Gostei bastante! Nota 8. Muito bom!",
+            "Uau, nota 9! Tem muito potencial!",
+            "Simplesmente perfeito! Nota 10! Não mudaria nada!",
+            "Incrível! 10/10! Você tem muita sorte de ter isso!"
+        ]
+    };
+
+    let respostaFinal = "";
+    let emoji = "";
+
+    // Lógica para escolher a frase baseada na nota
+    if (nota <= 3) {
+        respostaFinal = frases.baixa[Math.floor(Math.random() * frases.baixa.length)];
+        emoji = "🤔";
+    } else if (nota <= 7) {
+        respostaFinal = frases.media[Math.floor(Math.random() * frases.media.length)];
+        emoji = "😐";
+    } else {
+        respostaFinal = frases.alta[Math.floor(Math.random() * frases.alta.length)];
+        emoji = "🤩";
+    }
+
+    return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
+}
 
 // ==================== 👤 COMANDO PERFIL ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
@@ -2113,7 +2162,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
                 name: '🎭 INTERAÇÕES SOCIAIS', 
 
-                value: '`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
+                value: '`!avaliar [algo]`: Minha opinião sincera.\n`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
 
             },
 
