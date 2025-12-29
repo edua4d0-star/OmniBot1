@@ -281,7 +281,7 @@ if (command === 'trabalhos' || command === 'jobs' || command === 'empregos') {
 
     return message.reply({ embeds: [embed] });
 }
-// ==================== 🛠️ COMANDO RESETAR (APENAS DONO) ====================
+// ==================== 🛠️ COMANDO RESETAR (ATUALIZADO) ====================
 if (command === 'resetar' || command === 'reset') {
     try {
         const meuID = "1203435676083822712";
@@ -291,10 +291,10 @@ if (command === 'resetar' || command === 'reset') {
             return message.reply("❌ Apenas o meu desenvolvedor pode usar este comando!");
         }
 
-        // 2. Define o alvo: quem foi marcado OU você mesmo (se não houver menção)
+        // 2. Define o alvo: quem foi marcado OU você mesmo
         const alvo = message.mentions.users.first() || message.author;
 
-        // 3. Busca os dados no MongoDB (se for você, usa userData, se for outro, busca no banco)
+        // 3. Busca os dados no MongoDB
         let targetData;
         if (alvo.id === message.author.id) {
             targetData = userData;
@@ -306,7 +306,11 @@ if (command === 'resetar' || command === 'reset') {
 
         // 4. Reseta os dados no MongoDB
         targetData.money = 5000; 
+        targetData.bank = 0; // Adicionei o reset do banco também por segurança
         targetData.cargo = "Civil";
+        
+        // --- RESET DO BACKGROUND ---
+        targetData.bg = ""; // Remove o fundo atual (deixa o padrão do perfil)
         
         // Remove o item 'faccao' se ele existir no inventário
         if (targetData.inventory) {
@@ -318,6 +322,7 @@ if (command === 'resetar' || command === 'reset') {
         targetData.missionCount = 0;
         targetData.workCount = 0; 
         targetData.lastCrime = 0; 
+        targetData.lastWork = 0; // Reseta o tempo de trabalho também
         
         await targetData.save();
 
@@ -336,7 +341,7 @@ if (command === 'resetar' || command === 'reset') {
 
         const msgQuem = alvo.id === message.author.id ? "Seu próprio perfil foi resetado" : `O perfil de **${alvo.username}** foi resetado`;
 
-        return message.reply(`🛠️ **[ADMIN]** ${msgQuem} com sucesso!\n- Dinheiro: 5000\n- Status: Civil\n- Mochila: Item 'faccao' removido\n- Discord: Cargo de Facção removido.`);
+        return message.reply(`🛠️ **[ADMIN]** ${msgQuem} com sucesso!\n- Dinheiro: 5.000\n- Status: Civil\n- Fundo: **Resetado** 🖼️\n- Mochila: Limpa (exceto outros itens)\n- Discord: Cargo removido.`);
 
     } catch (error) {
         console.error("Erro no comando resetar:", error);
@@ -1581,7 +1586,7 @@ if (command === 'avaliar' || command === 'rate') {
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
 
-// ==================== 👤 COMANDO PERFIL (ATUALIZADO) ====================
+// ==================== 👤 COMANDO PERFIL (VERSÃO FINAL) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
         const alvo = message.mentions.users.first() || message.author;
@@ -1596,7 +1601,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             }
         }
 
-        // --- LÓGICA DE CARREIRA (Para exibir a profissão no perfil) ---
+        // --- LÓGICA DE CARREIRA (Sincronizada com o limite de 1k) ---
         const totalTrabalhos = dadosPerfil.workCount || 0;
         const isFaccao = dadosPerfil.cargo === "Membro da Facção";
         let profissaoNome = "";
@@ -1609,53 +1614,39 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         let index = metas.findIndex(m => totalTrabalhos < m);
         profissaoNome = index === -1 ? listaProf[10] : listaProf[index];
 
-        // --- LÓGICA DE DADOS ---
-        const inventory = dadosPerfil.inventory || [];
-        const cargo = dadosPerfil.cargo || "Civil"; 
+        // --- DADOS FINANCEIROS ---
         const carteira = dadosPerfil.money || 0;
         const banco = dadosPerfil.bank || 0;
-        const total = carteira + banco;
+        const totalMoedas = carteira + banco;
         
-        // Agrupar itens da mochila
+        // --- MOCHILA ---
+        const inventory = dadosPerfil.inventory || [];
         const contagemItens = {};
-        inventory.forEach(item => {
-            contagemItens[item] = (contagemItens[item] || 0) + 1;
-        });
+        inventory.forEach(item => { contagemItens[item] = (contagemItens[item] || 0) + 1; });
 
         const itensFormatados = Object.keys(contagemItens).length > 0 
             ? Object.entries(contagemItens).map(([nome, qtd]) => `\`${nome} x${qtd}\``).join(', ') 
-            : "Nenhum item";
+            : "Vazia";
 
-        // Estética baseada no cargo
-        const corEmbed = cargo === "Membro da Facção" ? "#2f3136" : "#0099ff";
-        const emojiStatus = cargo === "Membro da Facção" ? "🏴‍☠️" : "🏙️"; 
+        // --- ESTÉTICA ---
+        const corEmbed = isFaccao ? "#2b2d31" : "#00ff00";
 
         const embed = new EmbedBuilder()
             .setColor(corEmbed)
-            .setTitle(`${emojiStatus} Perfil de ${alvo.username}`)
+            .setTitle(`👤 Perfil de ${alvo.username}`)
             .setThumbnail(alvo.displayAvatarURL({ dynamic: true }))
-            .setDescription(`**Cargo:** \`${cargo}\`\n**Profissão:** \`${profissaoNome}\`\n**Saldo Total:** 💰 \`${total.toLocaleString()} moedas\``)
+            .setDescription(`**Status:** \`${dadosPerfil.cargo || "Civil"}\`\n**Profissão:** \`${profissaoNome}\``)
             .addFields(
-                {
-                    name: "💳 Economia",
-                    value: `**Carteira:** \`${carteira.toLocaleString()}\`\n**Banco:** \`${banco.toLocaleString()}\`\n**Trabalhos:** \`${totalTrabalhos}\``,
-                    inline: true
-                },
-                {
-                    name: "🎯 Estatísticas",
-                    value: `**Missões:** \`${dadosPerfil.missionCount || 0}\`\n**Serviços:** \`${dadosPerfil.jobsDone || 0}\``,
-                    inline: true
-                },
-                {
-                    name: "backpack Mochila",
-                    value: itensFormatados,
-                    inline: false
-                }
+                { name: "💰 Saldo Total", value: `\`${totalMoedas.toLocaleString()} moedas\``, inline: false },
+                { name: "💳 Carteira", value: `\`${carteira.toLocaleString()}\``, inline: true },
+                { name: "🏦 Banco", value: `\`${banco.toLocaleString()}\``, inline: true },
+                { name: "🔨 Trabalhos", value: `\`${totalTrabalhos}\``, inline: true },
+                { name: "🎒 Mochila", value: itensFormatados, inline: false }
             )
-            .setFooter({ text: `ID: ${alvo.id} • Use !background para mudar o fundo` })
+            .setFooter({ text: "Use !fundo para comprar planos de fundo!" })
             .setTimestamp();
 
-        // --- APLICAÇÃO DO BACKGROUND ---
+        // --- O PULO DO GATO: ADICIONAR O BACKGROUND COMPRADO ---
         if (dadosPerfil.bg) {
             embed.setImage(dadosPerfil.bg);
         }
@@ -1663,8 +1654,8 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         return message.reply({ embeds: [embed] });
 
     } catch (error) {
-        console.error("Erro no comando perfil:", error);
-        return message.reply("❌ Erro ao carregar o perfil.");
+        console.error("Erro no perfil:", error);
+        return message.reply("❌ Erro ao carregar dados do perfil.");
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
@@ -1710,66 +1701,71 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS (EDIÇÃO COMPLETA) ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS (COM PREÇOS NA LISTA) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
-        // ... (Seus fundos anteriores do 1 ao 21 continuam aqui) ...
-        "1": { nome: "Itadori Yuji", preco: 40000, url: "https://i.imgur.com/8W77uRE.jpg" },
-        "2": { nome: "Gojo Satoru", preco: 100000, url: "https://i.imgur.com/39S5R5m.jpg" },
-        "3": { nome: "Sukuna", preco: 80000, url: "https://i.imgur.com/fMvC8uG.jpg" },
-        "4": { nome: "Denji (Chainsaw)", preco: 45000, url: "https://i.imgur.com/vHq0qHl.jpg" },
-        "5": { nome: "Makima", preco: 90000, url: "https://i.imgur.com/k6bK1w0.jpg" },
-        "6": { nome: "Power", preco: 50000, url: "https://i.imgur.com/XGfR1fL.jpg" },
-        "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://i.imgur.com/o2kGv5G.jpg" },
-        "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://i.imgur.com/0vKzX7u.jpg" },
-        "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://i.imgur.com/YvVjV6L.jpg" },
-        "10": { nome: "Jinx", preco: 60000, url: "https://i.imgur.com/mOqWn8V.jpg" },
-        "11": { nome: "Vi", preco: 60000, url: "https://i.imgur.com/2P6S7vS.jpg" },
-        "12": { nome: "Ekko", preco: 55000, url: "https://i.imgur.com/v8p0mXp.jpg" },
-        "13": { nome: "Eleven (Onze)", preco: 75000, url: "https://i.imgur.com/9v6QW8b.jpg" },
-        "14": { nome: "Eddie Munson", preco: 70000, url: "https://i.imgur.com/8Q9S6zH.jpg" },
-        "15": { nome: "Vecna", preco: 95000, url: "https://i.imgur.com/U8C1S3M.jpg" },
-        "16": { nome: "Steve & Alex", preco: 30000, url: "https://i.imgur.com/E1i37zT.jpg" },
-        "17": { nome: "Creeper", preco: 35000, url: "https://i.imgur.com/Gj8vR4u.jpg" },
-        "18": { nome: "Enderman", preco: 40000, url: "https://i.imgur.com/Xw0zB5Z.jpg" },
-        "19": { nome: "CR7 (Real Madrid)", preco: 200000, url: "https://i.imgur.com/O6Sj9m3.jpg" },
-        "20": { nome: "CR7 (Portugal)", preco: 250000, url: "https://i.imgur.com/U7vVjK8.jpg" },
-        "21": { nome: "CR7 (Siiiii)", preco: 500000, url: "https://i.imgur.com/pYVjK9m.jpg" },
-        
-        // --- DEVIL MAY CRY (Novos!) ---
-        "22": { nome: "Dante", preco: 110000, url: "https://i.imgur.com/qU3H6W1.jpg" },
-        "23": { nome: "Vergil (Motivation)", preco: 130000, url: "https://i.imgur.com/wP8yU8S.jpg" },
-        "24": { nome: "Nero", preco: 80000, url: "https://i.imgur.com/HqP3P3D.jpg" }
+        // --- JUJUTSU KAISEN ---
+        "1": { nome: "Itadori Yuji", preco: 40000, url: "https://images6.alphacoders.com/112/1129532.jpg" },
+        "2": { nome: "Gojo Satoru", preco: 100000, url: "https://images2.alphacoders.com/114/1143851.jpg" },
+        "3": { nome: "Sukuna", preco: 80000, url: "https://images5.alphacoders.com/112/1129113.jpg" },
+        // --- CHAINSAW MAN ---
+        "4": { nome: "Denji (Chainsaw)", preco: 45000, url: "https://images8.alphacoders.com/121/1218987.jpg" },
+        "5": { nome: "Makima", preco: 90000, url: "https://images2.alphacoders.com/121/1218991.jpg" },
+        "6": { nome: "Power", preco: 50000, url: "https://images5.alphacoders.com/121/1219000.jpg" },
+        // --- ONE PIECE ---
+        "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://images7.alphacoders.com/132/1321742.png" },
+        "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://images2.alphacoders.com/115/1154564.jpg" },
+        "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://images4.alphacoders.com/606/606311.jpg" },
+        // --- ARCANE ---
+        "10": { nome: "Jinx", preco: 60000, url: "https://images3.alphacoders.com/119/1191595.jpg" },
+        "11": { nome: "Vi", preco: 60000, url: "https://images6.alphacoders.com/118/1189448.jpg" },
+        "12": { nome: "Ekko", preco: 55000, url: "https://images2.alphacoders.com/119/1193325.jpg" },
+        // --- STRANGER THINGS ---
+        "13": { nome: "Eleven (Onze)", preco: 75000, url: "https://images.alphacoders.com/123/1230113.jpg" },
+        "14": { nome: "Eddie Munson", preco: 70000, url: "https://images7.alphacoders.com/123/1239922.jpg" },
+        "15": { nome: "Vecna", preco: 95000, url: "https://images6.alphacoders.com/123/1234703.jpg" },
+        // --- MINECRAFT ---
+        "16": { nome: "Steve & Alex", preco: 30000, url: "https://images3.alphacoders.com/105/1052601.jpg" },
+        "17": { nome: "Creeper", preco: 35000, url: "https://images7.alphacoders.com/101/1014569.jpg" },
+        "18": { nome: "Enderman", preco: 40000, url: "https://images4.alphacoders.com/101/1014574.jpg" },
+        // --- CRISTIANO RONALDO ---
+        "19": { nome: "CR7 Real Madrid", preco: 200000, url: "https://images4.alphacoders.com/133/1337494.jpeg" },
+        "20": { nome: "CR7 Portugal", preco: 250000, url: "https://images.alphacoders.com/129/1294817.jpg" },
+        "21": { nome: "CR7 LENDA", preco: 500000, url: "https://images5.alphacoders.com/133/1337497.jpeg" },
+        // --- DEVIL MAY CRY ---
+        "22": { nome: "Dante", preco: 110000, url: "https://images8.alphacoders.com/956/956463.jpg" },
+        "23": { nome: "Vergil", preco: 130000, url: "https://images2.alphacoders.com/109/1096753.jpg" },
+        "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" }
     };
 
     const opcao = args[0];
 
+    // --- EXIBIÇÃO DA LOJA ---
     if (!opcao) {
         const embedLoja = new EmbedBuilder()
-            .setTitle("🖼️ Galeria de Backgrounds do Omni")
-            .setColor("#FF0000")
-            .setDescription("Use `!fundo [id]` para comprar seu fundo exclusivo!")
-            .addFields(
-                { name: "🏮 Jujutsu", value: "`1` Yuji | `2` Gojo | `3` Sukuna", inline: true },
-                { name: "🪚 Chainsaw", value: "`4` Denji | `5` Makima | `6` Power", inline: true },
-                { name: "🏴‍☠️ One Piece", value: "`7` Luffy | `8` Zoro | `9` Ace", inline: true },
-                { name: "🧪 Arcane", value: "`10` Jinx | `11` Vi | `12` Ekko", inline: true },
-                { name: "🚲 Stranger", value: "`13` Onze | `14` Eddie | `15` Vecna", inline: true },
-                { name: "🟩 Minecraft", value: "`16` Steve | `17` Creeper | `18` Ender", inline: true },
-                { name: "⚽ CR7", value: "`19` Real | `20` Portugal | `21` LENDA", inline: true },
-                { name: "😈 Devil May Cry", value: "`22` Dante | `23` Vergil | `24` Nero", inline: true }
-            )
-            .setFooter({ text: "O fundo será aplicado no seu !perfil" });
+            .setTitle("🖼️ Galeria de Backgrounds Omni")
+            .setColor("#00FFFF")
+            .setDescription("Use `!fundo [id]` para comprar e equipar no seu `!perfil`.\n\n" +
+                "**🏮 Jujutsu:** `1` (40k) | `2` (100k) | `3` (80k)\n" +
+                "**🪚 Chainsaw:** `4` (45k) | `5` (90k) | `6` (50k)\n" +
+                "**🏴‍☠️ One Piece:** `7` (120k) | `8` (85k) | `9` (70k)\n" +
+                "**🧪 Arcane:** `10` (60k) | `11` (60k) | `12` (55k)\n" +
+                "**🚲 Stranger:** `13` (75k) | `14` (70k) | `15` (95k)\n" +
+                "**🟩 Minecraft:** `16` (30k) | `17` (35k) | `18` (40k)\n" +
+                "**⚽ CR7:** `19` (200k) | `20` (250k) | `21` (500k)\n" +
+                "**😈 DMC:** `22` (110k) | `23` (130k) | `24` (80k)")
+            .setFooter({ text: "Imagens corrigidas! Se uma não carregar, avise a staff." });
 
         return message.reply({ embeds: [embedLoja] });
     }
 
     const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Código inválido! Use os números da loja.");
+    if (!fundoEscolhido) return message.reply("❌ Código de fundo inválido! Verifique os números na loja.");
 
+    // Verifica saldo total
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
     if (saldoTotal < fundoEscolhido.preco) {
-        return message.reply(`❌ Você precisa de **${fundoEscolhido.preco.toLocaleString()} moedas** no total.`);
+        return message.reply(`❌ Você não tem moedas suficientes! Esse fundo custa **${fundoEscolhido.preco.toLocaleString()} moedas**.`);
     }
 
     // Lógica de Pagamento
@@ -1781,11 +1777,12 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         userData.bank -= restante;
     }
 
+    // Salva e Equipa
     userData.bg = fundoEscolhido.url;
     await userData.save();
 
-    return message.reply(`✅ Estilo SSS! Fundo **${fundoEscolhido.nome}** equipado.`);
-}
+    return message.reply(`✅ Você comprou e equipou **${fundoEscolhido.nome}** por **${fundoEscolhido.preco.toLocaleString()} moedas**! Veja o resultado no seu \`!perfil\`.`);
+} 
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
     try {
