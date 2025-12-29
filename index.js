@@ -1585,20 +1585,16 @@ if (command === 'avaliar' || command === 'rate') {
 
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
-
-// ==================== 👤 COMANDO PERFIL (FINAL E SEGURO) ====================
+// ==================== 👤 COMANDO PERFIL (FINAL CORRIGIDO) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
     try {
         const alvo = message.mentions.users.first() || message.author;
 
-        let dadosPerfil;
-        if (alvo.id === message.author.id) {
-            dadosPerfil = userData;
-        } else {
-            dadosPerfil = await User.findOne({ userId: alvo.id });
-            if (!dadosPerfil) {
-                dadosPerfil = await User.create({ userId: alvo.id });
-            }
+        // BUSCA OS DADOS MAIS ATUAIS NO BANCO DE DADOS
+        let dadosPerfil = await User.findOne({ userId: alvo.id });
+        
+        if (!dadosPerfil) {
+            dadosPerfil = await User.create({ userId: alvo.id });
         }
 
         // --- LÓGICA DE CARREIRA ---
@@ -1646,8 +1642,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setTimestamp();
 
         // --- VERIFICAÇÃO E EXIBIÇÃO DO BACKGROUND ---
-        // Adicionada verificação extra de segurança para dadosPerfil.bg
-        if (dadosPerfil.bg && typeof dadosPerfil.bg === 'string' && dadosPerfil.bg.startsWith("http")) {
+        if (dadosPerfil.bg && typeof dadosPerfil.bg === 'string' && dadosPerfil.bg.length > 5) {
             embed.setImage(dadosPerfil.bg);
             embed.setFooter({ text: "Use !fundo para trocar seu plano de fundo!" });
         } else {
@@ -1732,7 +1727,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         "23": { nome: "Vergil", preco: 130000, url: "https://images2.alphacoders.com/109/1096753.jpg" },
         "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" },
         // --- JOJO INDIVIDUAIS ---
-        "25": { nome: "Joseph Joestar", preco: 15000, url: "https://images.alphacoders.com/609/609338.jpg" },
+        "25": { nome: "Joseph Joestar", preco: 15000, url: "https://i.imgur.com/83pXqfS.jpg" },
         "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://images5.alphacoders.com/609/609340.jpg" },
         "27": { nome: "Iggy (JoJo)", preco: 15000, url: "https://images2.alphacoders.com/609/609341.jpg" }
     };
