@@ -1689,6 +1689,52 @@ if (command === 'perfil' || command === 'p') {
         if (aguarde) await aguarde.edit("❌ Erro ao desenhar o perfil.");
     }
 }
+// ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
+if (command === 'guia') {
+    try {
+        const { EmbedBuilder } = require('discord.js');
+
+        const embedGuia = new EmbedBuilder()
+            .setTitle("📖 Dicionário Completo de Conquistas")
+            .setColor("#F1C40F")
+            .setThumbnail('https://cdn-icons-png.flaticon.com/512/190/190411.png')
+            .setDescription("Aqui estão todos os objetivos que podes alcançar no servidor:")
+            .addFields(
+                { 
+                    name: "💰 Riqueza & Finanças", 
+                    value: "• **Iniciante Rico:** 100k totais\n• **Milionário:** 1M totais\n• **Magnata:** 10M totais\n• **Império:** 100M totais\n• **Elon Musk:** 1 Bilhão\n• **Investidor:** 50M no banco"
+                },
+                { 
+                    name: "🛠️ Trabalho & Elite", 
+                    value: "• **Proletário:** 50 trabalhos\n• **Viciado:** 500 trabalhos\n• **Lenda:** 1.000 trabalhos\n• **Workaholic:** 5.000 trabalhos\n• **Operador:** 20 missões\n• **Veterano:** 100 missões"
+                },
+                { 
+                    name: "💍 Amor & Social", 
+                    value: "• **Casado:** Casar com alguém\n• **Amor Eterno:** 500 afinidade\n• **Alma Gêmea:** 2.000 afinidade\n• **Destino:** 10.000 afinidade"
+                },
+                { 
+                    name: "🏴‍☠️ Submundo", 
+                    value: "• **Assassino:** 10 contratos\n• **Hitman:** 50 contratos\n• **Criminoso:** Entrar na Facção\n• **Primeiro Sangue:** 1º !kill\n• **Ladrão de Galinha:** 1º !rob"
+                },
+                { 
+                    name: "🎨 Coleção & Eventos", 
+                    value: "• **Esteta:** Ter 1 fundo\n• **Colecionador:** Ter 10 fundos\n• **Completista:** Todos os 31 fundos\n• **Dono da Foquinha:** Comprar ID 31\n• **O Robo (CR7):** Comprar ID 21\n• **Rei dos Piratas (Luffy):** Comprar ID 7"
+                },
+                { 
+                    name: "🎭 Temáticos & Especiais", 
+                    value: "• **Feiticeiro:** Fundos Jujutsu (1, 2 ou 3)\n• **Sobrevivente:** Fundos Stranger Things (13, 14 ou 15)\n• **Arquiteto:** Fundos Minecraft (16, 17 ou 18)\n• **Dante/Vergil:** Fundos DMC (22, 23 ou 24)\n• **Mestre Jojo:** Fundos Jojo (25, 26 ou 27)\n• **Na Sarjeta:** Ter 0 moedas\n• **Minimalista:** 500k e 0 fundos"
+                }
+            )
+            .setFooter({ text: "Dica: Usa !conquistas para veres o teu progresso!" })
+            .setTimestamp();
+
+        return message.reply({ embeds: [embedGuia] });
+
+    } catch (error) {
+        console.error("ERRO NO GUIA:", error);
+        // Verifica se o erro aparece no teu terminal (console)
+    }
+}
 // ==================== 🏆 COMANDO CONQUISTAS ====================
 if (command === 'conquistas' || command === 'achievements' || command === 'badges') {
     try {
