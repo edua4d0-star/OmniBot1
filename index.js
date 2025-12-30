@@ -1,9 +1,8 @@
 require('dotenv').config();
 const express = require('express'); 
 const mongoose = require('mongoose');
-// Adicionado AttachmentBuilder aqui embaixo:
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, Options, PermissionsBitField } = require('discord.js');
-const { RankCardBuilder } = require('canvacord'); 
 const path = require('path'); 
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
@@ -1588,76 +1587,125 @@ if (command === 'avaliar' || command === 'rate') {
 
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
-// ==================== 👤 COMANDO PERFIL com CANVAS (VERSÃO CORRIGIDA) ====================
-if (command === 'perfil' || command === 'p' || command === 'me') {
-    const aguarde = await message.reply("🎨 Gerando seu perfil personalizado...");
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+
+// ==================== 👤 COMANDO PERFIL ULTRA DETALHADO (VERSÃO ID + TRABALHO ABAIXO) ====================
+if (command === 'perfil' || command === 'p') {
+    const aguarde = await message.reply("🎨 Desenhando seu perfil completo...");
 
     try {
         const alvo = message.mentions.users.first() || message.author;
+        let dados = await User.findOne({ userId: alvo.id }) || await User.create({ userId: alvo.id });
 
-        let dadosPerfil = await User.findOne({ userId: alvo.id });
-        if (!dadosPerfil) {
-            dadosPerfil = await User.create({ userId: alvo.id });
-        }
-
-        // --- LÓGICA DE PROFISSÃO ---
-        const totalTrabalhos = dadosPerfil.workCount || 0;
-        const isFaccao = dadosPerfil.cargo === "Membro da Facção";
-        const profsCivil = ["Estagiário", "Auxiliar", "Vendedor Júnior", "Analista Pleno", "Supervisor", "Gerente", "Diretor", "Vice-Presidente", "Sócio", "CEO 💎"];
-        const profsFaccao = ["Olheiro", "Aviãozinho", "Vendedor de Carga", "Segurança do Morro", "Cobrador", "Gerente de Boca", "Fornecedor", "Conselheiro", "Braço Direito", "Sub-Chefe", "Líder da Facção 🏴‍☠️"];
+        // --- LÓGICA DE NÍVEL E PROFISSÃO ---
+        const totalTrabalhos = dados.workCount || 0;
         const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
-        const listaProf = isFaccao ? profsFaccao : profsCivil;
-        let index = metas.findIndex(m => totalTrabalhos < m);
-        let profissaoNome = index === -1 ? listaProf[9] : listaProf[index];
-
-        // --- DADOS FINANCEIROS ---
-        const totalMoedas = (dadosPerfil.money || 0) + (dadosPerfil.bank || 0);
+        let nivelIdx = metas.findIndex(m => totalTrabalhos < m);
+        if (nivelIdx === -1) nivelIdx = 9;
         
-        // --- MOCHILA ---
-        const inventory = dadosPerfil.inventory || [];
-        const itensFormatados = inventory.length > 0 
-            ? inventory.slice(0, 2).join(', ') + (inventory.length > 2 ? `...` : '')
-            : "Vazia";
+        const isFaccao = dados.cargo === "Membro da Facção";
+        const profs = isFaccao 
+            ? ["Olheiro", "Aviãozinho", "Vendedor", "Segurança", "Cobrador", "Gerente", "Fornecedor", "Conselheiro", "Braço Direito", "Líder 🏴‍☠️"]
+            : ["Estagiário", "Auxiliar", "Vendedor", "Analista", "Supervisor", "Gerente", "Diretor", "Vice-Presidente", "Sócio", "CEO 💎"];
+        
+        const profissaoNome = profs[nivelIdx];
+        const xpNecessario = metas[nivelIdx] || 1200;
+        const porcentagem = Math.min((totalTrabalhos / xpNecessario), 1);
 
-// --- CONFIGURAÇÃO DO CARD (CANVACORD) ---
-        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
-        let fundoFinal = (dadosPerfil.bg && dadosPerfil.bg.includes("imgur.com")) ? dadosPerfil.bg : fundoPadrao;
+        // --- CRIAÇÃO DO CANVAS ---
+        const canvas = createCanvas(900, 550); // Aumentei um pouco a altura para acomodar o ID e o trabalho abaixo
+        const ctx = canvas.getContext('2d');
 
-        const rankCard = new RankCardBuilder()
-            .setAvatar(alvo.displayAvatarURL({ forceStatic: true, extension: 'png' })) // Avatar estático para evitar erro
-            .setDisplayName(alvo.username)
-            .setCurrentExperience(totalTrabalhos)
-            .setRequiredExperience(metas[index] || 1200)
-            .setLevel(index + 1, "NÍVEL")
-            .setRank(1, "RANK", false) 
-            .setBackground(fundoFinal) // Aqui ele puxa o link do Imgur
-            .setOverlay(0.7)
-            .setStyles({
-                progressbar: {
-                    thumb: {
-                        style: { backgroundColor: "#00FFFF" }
-                    }
-                }
-            });
+        // Carregar Background
+        const fundoUrl = (dados.bg && dados.bg.includes("imgur")) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
+        const background = await loadImage(fundoUrl);
+        
+        ctx.save();
+        ctx.beginPath(); ctx.roundRect(0, 0, 900, 550, 30); ctx.clip();
+        ctx.drawImage(background, 0, 0, 900, 550);
+        ctx.restore();
 
-        // Tenta construir a imagem
-        try {
-            const image = await rankCard.build();
-            const attachment = new AttachmentBuilder(image, { name: 'perfil.png' });
+        // Camada de contraste (Overlay)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.beginPath(); ctx.roundRect(20, 20, 860, 510, 20); ctx.fill();
 
-            if (aguarde) await aguarde.delete().catch(() => {});
-            
-            return message.reply({ 
-                content: `📊 **Perfil de ${alvo.username}**\n💰 **Total:** ${totalMoedas.toLocaleString()} moedas\n💼 **Profissão:** ${profissaoNome}\n🎒 **Mochila:** ${itensFormatados}`,
-                files: [attachment] 
-            });
-        } catch (buildError) {
-            console.error("ERRO NO BUILD DO CANVAS:", buildError);
-            if (aguarde) await aguarde.edit("⚠️ O gerador de imagens falhou. Verifique se eu tenho permissão de 'Anexar Arquivos'.");
-        }
+        // --- LADO ESQUERDO: AVATAR, NOME E ID ---
+        const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png' }));
+        ctx.save();
+        ctx.beginPath(); ctx.arc(130, 130, 80, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+        ctx.drawImage(avatarImg, 50, 50, 160, 160);
+        ctx.restore();
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText(alvo.username.toUpperCase(), 50, 260); 
+        
+        ctx.font = '16px sans-serif';
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText(`ID: ${alvo.id}`, 50, 285); // ID colocado abaixo do nome
+
+        ctx.font = '20px sans-serif';
+        ctx.fillStyle = '#00FFFF';
+        ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 320);
+        ctx.fillText(`Profissão: ${profissaoNome}`, 50, 350);
+
+        // --- LADO DIREITO: FINANCEIRO ---
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText("💰 SALDO TOTAL", 300, 80);
+        ctx.font = '30px sans-serif';
+        ctx.fillStyle = '#00FF00';
+        ctx.fillText(`${(dados.money + dados.bank).toLocaleString()} moedas`, 300, 115);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("💳 CARTEIRA", 300, 180);
+        ctx.font = '22px sans-serif';
+        ctx.fillText(`${dados.money.toLocaleString()}`, 300, 210);
+
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("🏦 BANCO", 580, 180);
+        ctx.font = '22px sans-serif';
+        ctx.fillText(`${dados.bank.toLocaleString()}`, 580, 210);
+
+        // --- PARTE DE BAIXO: TRABALHOS E MOCHILA ---
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("🛠️ TRABALHOS REALIZADOS:", 300, 280); // Título do trabalho movido
+        ctx.font = '24px sans-serif';
+        ctx.fillStyle = '#00FFFF';
+        ctx.fillText(`${totalTrabalhos} vezes`, 300, 310);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("🎒 MOCHILA:", 300, 360);
+        const itens = dados.inventory.length > 0 ? dados.inventory.join(', ') : "Vazia";
+        ctx.font = '18px sans-serif';
+        ctx.fillText(itens.length > 50 ? itens.slice(0, 50) + "..." : itens, 300, 390);
+
+        // --- BARRA DE PROGRESSO (RODAPÉ) ---
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#333333';
+        ctx.beginPath(); ctx.roundRect(50, 460, 800, 40, 20); ctx.fill();
+
+        ctx.fillStyle = '#00FFFF';
+        ctx.shadowBlur = 10; ctx.shadowColor = '#00FFFF';
+        ctx.beginPath(); ctx.roundRect(50, 460, 800 * porcentagem, 40, 20); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(`PROGRESSO DE NÍVEL: ${totalTrabalhos} / ${xpNecessario} EXP`, 450, 488);
+
+        // --- ENVIO ---
+        const attachment = new AttachmentBuilder(await canvas.encode('png'), { name: 'perfil.png' });
+        if (aguarde) await aguarde.delete().catch(() => {});
+        return message.reply({ files: [attachment] });
 
     } catch (error) {
-        console.error("Erro geral no comando perfil:", error);
+        console.error(error);
+        if (aguarde) await aguarde.edit("❌ Erro ao desenhar o perfil.");
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
@@ -2393,7 +2441,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
             { 
                 name: "👤 Perfil & Status", 
-                value: '`!perfil` - Veja seu dinheiro e profissão.'
+                value: '`!perfil` ou `!p` - Mostra seu card com nível, dinheiro e mochila.\n`!fundos` - Lista seus backgrounds comprados.\n`!fundos <número>` - Escolhe qual fundo usar agora.'
             },
 
             { 
@@ -2428,7 +2476,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
             },
             { 
-                name: '⚒️ TRABALHO & PROGRESSO', 
+                name: '⚒️ PROGRESSO', 
                 value: '`!conquistas`: Ver teus marcos e medalhas.' 
             },
 
