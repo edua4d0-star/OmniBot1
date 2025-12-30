@@ -190,7 +190,7 @@ if (command === 'trabalhar' || command === 'work') {
 }
 if (command === 'setmoney') {
     // Verificação de Dono (Coloque seu ID aqui)
-    if (message.author.id !== 1203435676083822712) return message.reply("❌ Apenas o dono pode usar este comando.");
+    if (message.author.id !== '1203435676083822712') return message.reply("❌ Apenas o dono pode usar este comando.");
 
     const alvo = message.mentions.users.first();
     const quantia = parseInt(args[1]);
