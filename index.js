@@ -1882,7 +1882,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 
     return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**!`);
 }
-// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V2) ====================
+// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V2 - FIX DUPLICADOS) ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
         let dadosPerfil = await User.findOne({ userId: message.author.id });
@@ -1916,15 +1916,14 @@ if (command === 'meusfundos' || command === 'bgs') {
             "25": { nome: "Joseph Joestar", url: "https://i.imgur.com/lkvWJmE.jpeg" },
             "26": { nome: "Jean Pierre Polnareff", url: "https://i.imgur.com/hGNl3x9.jpeg" },
             "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" },
-            
-            // --- NOVAS ATUALIZAÇÕES ADICIONADAS ---
             "28": { nome: "Travis", url: "https://i.imgur.com/6Rbe2OL.jpeg" },
             "29": { nome: "Donovan", url: "https://i.imgur.com/wFco1Kz.jpeg" },
             "30": { nome: "Travis & Donovan", url: "https://i.imgur.com/1VkMQ7z.jpeg" },
             "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" }
         };
 
-        const bgsComprados = dadosPerfil.bgInventory || [];
+        // --- SOLUÇÃO DO ERRO: Remover IDs duplicados antes de mapear ---
+        const bgsComprados = [...new Set(dadosPerfil.bgInventory || [])];
 
         if (bgsComprados.length === 0) {
             return message.reply("❌ Você não tem nenhum fundo! Compre um na loja usando `!fundo`.");
@@ -1941,6 +1940,7 @@ if (command === 'meusfundos' || command === 'bgs') {
             .addOptions(
                 bgsComprados
                     .filter(id => fundos[id]) 
+                    .slice(0, 25) // O Discord aceita no máximo 25 opções por menu
                     .map(id => ({
                         label: fundos[id].nome,
                         value: id,
@@ -1948,7 +1948,7 @@ if (command === 'meusfundos' || command === 'bgs') {
             );
 
         if (selectMenu.options.length === 0) {
-            return message.reply("❌ Seus fundos são antigos ou incompatíveis. Compre novos na loja!");
+            return message.reply("❌ Seus fundos são antigos ou incompatíveis.");
         }
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
@@ -1962,18 +1962,18 @@ if (command === 'meusfundos' || command === 'bgs') {
             const infoFundo = fundos[selecionado];
 
             if (infoFundo) {
-                dadosPerfil.bg = infoFundo.url;
-                await dadosPerfil.save();
+                // Usando findOneAndUpdate para evitar o VersionError de novo
+                await User.findOneAndUpdate(
+                    { userId: message.author.id },
+                    { $set: { bg: infoFundo.url } }
+                );
+                
                 await i.update({ 
-                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado no seu perfil.`, 
+                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado.`, 
                     embeds: [], 
                     components: [] 
                 });
             }
-        });
-
-        collector.on('end', collected => {
-            if (collected.size === 0) msg.edit({ components: [] }).catch(() => {});
         });
 
     } catch (error) {
