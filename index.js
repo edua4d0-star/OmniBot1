@@ -2473,7 +2473,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
             },
             { 
                 name: '⚒️ PROGRESSO', 
-                value: '`!conquistas`: Ver teus marcos e medalhas.' 
+                value: '`!guia` - Mostra a lista de TODOS os troféus e como pegá-los.\n`!conquistas`: Ver teus marcos e medalhas.' 
             },
 
             { 
