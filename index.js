@@ -1589,7 +1589,7 @@ if (command === 'avaliar' || command === 'rate') {
 }
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-// ==================== 👤 COMANDO PERFIL ULTRA DETALHADO (VERSÃO ID + TRABALHO ABAIXO) ====================
+// ==================== 👤 COMANDO PERFIL ATUALIZADO ====================
 if (command === 'perfil' || command === 'p') {
     const aguarde = await message.reply("🎨 Desenhando seu perfil completo...");
 
@@ -1613,11 +1613,12 @@ if (command === 'perfil' || command === 'p') {
         const porcentagem = Math.min((totalTrabalhos / xpNecessario), 1);
 
         // --- CRIAÇÃO DO CANVAS ---
-        const canvas = createCanvas(900, 550); // Aumentei um pouco a altura para acomodar o ID e o trabalho abaixo
+        const canvas = createCanvas(900, 550); 
         const ctx = canvas.getContext('2d');
 
-        // Carregar Background
-        const fundoUrl = (dados.bg && dados.bg.includes("imgur")) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
+        // --- CARREGAR BACKGROUND ---
+        // Agora aceita qualquer link salvo no banco, ou usa o padrão se estiver vazio
+        const fundoUrl = (dados.bg && dados.bg.length > 5) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
         const background = await loadImage(fundoUrl);
         
         ctx.save();
@@ -1625,7 +1626,7 @@ if (command === 'perfil' || command === 'p') {
         ctx.drawImage(background, 0, 0, 900, 550);
         ctx.restore();
 
-        // Camada de contraste (Overlay)
+        // Camada de contraste (Overlay) - Essencial para ler o texto nos novos fundos
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.beginPath(); ctx.roundRect(20, 20, 860, 510, 20); ctx.fill();
 
@@ -1643,7 +1644,7 @@ if (command === 'perfil' || command === 'p') {
         
         ctx.font = '16px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(`ID: ${alvo.id}`, 50, 285); // ID colocado abaixo do nome
+        ctx.fillText(`ID: ${alvo.id}`, 50, 285); 
 
         ctx.font = '20px sans-serif';
         ctx.fillStyle = '#00FFFF';
@@ -1672,7 +1673,7 @@ if (command === 'perfil' || command === 'p') {
         // --- PARTE DE BAIXO: TRABALHOS E MOCHILA ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🛠️ TRABALHOS REALIZADOS:", 300, 280); // Título do trabalho movido
+        ctx.fillText("🛠️ TRABALHOS REALIZADOS:", 300, 280); 
         ctx.font = '24px sans-serif';
         ctx.fillStyle = '#00FFFF';
         ctx.fillText(`${totalTrabalhos} vezes`, 300, 310);
@@ -1797,8 +1798,17 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         // --- JOJO ---
         "25": { nome: "Joseph Joestar", preco: 15000, url: "https://i.imgur.com/lkvWJmE.jpeg" },
         "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://i.imgur.com/hGNl3x9.jpeg" },
-        "27": { nome: "Iggy", preco: 15000, url: "https://i.imgur.com/iMfIlDY.jpeg" }
+        "27": { nome: "Iggy", preco: 15000, url: "https://i.imgur.com/iMfIlDY.jpeg" },
+
+        // --- NOVAS ATUALIZAÇÕES ---
+        "28": { nome: "Travis", preco: 50000, url: "https://i.imgur.com/6Rbe2OL.jpeg" },
+        "29": { nome: "Donovan", preco: 50000, url: "https://i.imgur.com/wFco1Kz.jpeg" },
+        "30": { nome: "Travis & Donovan", preco: 85000, url: "https://i.imgur.com/1VkMQ7z.jpeg" },
+        "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" }
     };
+
+    let dados = await User.findOne({ userId: message.author.id });
+    if (!dados) dados = await User.create({ userId: message.author.id });
 
     const opcao = args[0];
 
@@ -1808,7 +1818,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
             .join("\n");
 
         const embedLoja = new EmbedBuilder()
-            .setTitle("🖼️ Loja de Planos de Fundo")
+            .setTitle("🏪 Loja de Planos de Fundo")
             .setColor("#00FFFF")
             .setDescription("Para comprar: `!fundo [número]`\n\n" + listaFormatada)
             .setFooter({ text: "Use !meusfundos para ver sua coleção!" });
@@ -1820,33 +1830,33 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     if (!fundoEscolhido) return message.reply("❌ Código não encontrado na loja.");
 
     // Verifica se já tem o fundo no inventário
-    if (userData.bgInventory && userData.bgInventory.includes(opcao)) {
-        userData.bg = fundoEscolhido.url;
-        await userData.save();
+    if (dados.bgInventory && dados.bgInventory.includes(opcao)) {
+        dados.bg = fundoEscolhido.url;
+        await dados.save();
         return message.reply(`✨ Você já tem **${fundoEscolhido.nome}**! Ele foi equipado.`);
     }
 
-    const saldoTotal = (userData.money || 0) + (userData.bank || 0);
+    const saldoTotal = (dados.money || 0) + (dados.bank || 0);
     if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente.");
 
     // Sistema de Cobrança (prioriza carteira, depois banco)
-    if (userData.money >= fundoEscolhido.preco) {
-        userData.money -= fundoEscolhido.preco;
+    if (dados.money >= fundoEscolhido.preco) {
+        dados.money -= fundoEscolhido.preco;
     } else {
-        const restante = fundoEscolhido.preco - userData.money;
-        userData.money = 0;
-        userData.bank -= restante;
+        const restante = fundoEscolhido.preco - dados.money;
+        dados.money = 0;
+        dados.bank -= restante;
     }
 
     // Salva o fundo atual e adiciona ao inventário
-    userData.bg = fundoEscolhido.url;
-    if (!userData.bgInventory) userData.bgInventory = [];
-    userData.bgInventory.push(opcao);
-    await userData.save();
+    dados.bg = fundoEscolhido.url;
+    if (!dados.bgInventory) dados.bgInventory = [];
+    dados.bgInventory.push(opcao);
+    await dados.save();
 
     return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**!`);
 }
-// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO ====================
+// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V2) ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
         let dadosPerfil = await User.findOne({ userId: message.author.id });
@@ -1879,7 +1889,13 @@ if (command === 'meusfundos' || command === 'bgs') {
             "24": { nome: "Nero", url: "https://i.imgur.com/rfPiveO.jpeg" },
             "25": { nome: "Joseph Joestar", url: "https://i.imgur.com/lkvWJmE.jpeg" },
             "26": { nome: "Jean Pierre Polnareff", url: "https://i.imgur.com/hGNl3x9.jpeg" },
-            "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" }
+            "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" },
+            
+            // --- NOVAS ATUALIZAÇÕES ADICIONADAS ---
+            "28": { nome: "Travis", url: "https://i.imgur.com/6Rbe2OL.jpeg" },
+            "29": { nome: "Donovan", url: "https://i.imgur.com/wFco1Kz.jpeg" },
+            "30": { nome: "Travis & Donovan", url: "https://i.imgur.com/1VkMQ7z.jpeg" },
+            "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" }
         };
 
         const bgsComprados = dadosPerfil.bgInventory || [];
@@ -1895,7 +1911,7 @@ if (command === 'meusfundos' || command === 'bgs') {
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('selecionar_fundo')
-            .setPlaceholder('Escolha um fundo...')
+            .setPlaceholder('Escolha um fundo para equipar...')
             .addOptions(
                 bgsComprados
                     .filter(id => fundos[id]) 
@@ -1906,7 +1922,7 @@ if (command === 'meusfundos' || command === 'bgs') {
             );
 
         if (selectMenu.options.length === 0) {
-            return message.reply("❌ Seus fundos são antigos. Compre novos na loja!");
+            return message.reply("❌ Seus fundos são antigos ou incompatíveis. Compre novos na loja!");
         }
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
@@ -1923,7 +1939,7 @@ if (command === 'meusfundos' || command === 'bgs') {
                 dadosPerfil.bg = infoFundo.url;
                 await dadosPerfil.save();
                 await i.update({ 
-                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado.`, 
+                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado no seu perfil.`, 
                     embeds: [], 
                     components: [] 
                 });
@@ -1935,8 +1951,8 @@ if (command === 'meusfundos' || command === 'bgs') {
         });
 
     } catch (error) {
-        console.error(error);
-        message.reply("❌ Erro ao abrir coleção.");
+        console.error("Erro no MeusFundos:", error);
+        message.reply("❌ Erro ao abrir sua coleção.");
     }
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
