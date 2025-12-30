@@ -1849,7 +1849,9 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 // ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
-        // LISTA SINCRONIZADA COM A LOJA (LINKS DIRETOS IMGUR)
+        let dadosPerfil = await User.findOne({ userId: message.author.id });
+        if (!dadosPerfil) dadosPerfil = await User.create({ userId: message.author.id });
+
         const fundos = {
             "1": { nome: "Itadori Yuji", url: "https://i.imgur.com/jFG9qEQ.jpeg" },
             "2": { nome: "Gojo Satoru", url: "https://i.imgur.com/Z9Abixe.jpeg" },
@@ -1880,24 +1882,23 @@ if (command === 'meusfundos' || command === 'bgs') {
             "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" }
         };
 
-        const bgsComprados = userData.bgInventory || [];
+        const bgsComprados = dadosPerfil.bgInventory || [];
 
         if (bgsComprados.length === 0) {
-            return message.reply("❌ Você não tem nenhum fundo na sua coleção! Compre um na loja usando `!fundo`.");
+            return message.reply("❌ Você não tem nenhum fundo! Compre um na loja usando `!fundo`.");
         }
 
         const embed = new EmbedBuilder()
             .setTitle("🖼️ Sua Coleção de Backgrounds")
             .setColor("#00FF00")
-            .setDescription("Escolha um fundo no menu abaixo para equipar no seu perfil.");
+            .setDescription("Selecione abaixo o fundo que deseja equipar no seu perfil.");
 
-        // Criar as opções do menu de seleção apenas com o que o usuário já comprou
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('selecionar_fundo')
-            .setPlaceholder('Selecione o fundo para equipar...')
+            .setPlaceholder('Escolha um fundo...')
             .addOptions(
                 bgsComprados
-                    .filter(id => fundos[id]) // Garante que o ID existe na lista atual
+                    .filter(id => fundos[id]) 
                     .map(id => ({
                         label: fundos[id].nome,
                         value: id,
@@ -1905,11 +1906,10 @@ if (command === 'meusfundos' || command === 'bgs') {
             );
 
         if (selectMenu.options.length === 0) {
-            return message.reply("❌ Seus fundos antigos são incompatíveis com a nova versão da loja. Compre novos fundos para atualizar sua coleção!");
+            return message.reply("❌ Seus fundos são antigos. Compre novos na loja!");
         }
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
-
         const msg = await message.reply({ embeds: [embed], components: [row] });
 
         const filter = i => i.customId === 'selecionar_fundo' && i.user.id === message.author.id;
@@ -1920,10 +1920,10 @@ if (command === 'meusfundos' || command === 'bgs') {
             const infoFundo = fundos[selecionado];
 
             if (infoFundo) {
-                userData.bg = infoFundo.url;
-                await userData.save();
+                dadosPerfil.bg = infoFundo.url;
+                await dadosPerfil.save();
                 await i.update({ 
-                    content: `✅ Você equipou o fundo: **${infoFundo.nome}**!`, 
+                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado.`, 
                     embeds: [], 
                     components: [] 
                 });
@@ -1935,8 +1935,8 @@ if (command === 'meusfundos' || command === 'bgs') {
         });
 
     } catch (error) {
-        console.error("Erro no comando meusfundos:", error);
-        message.reply("❌ Ocorreu um erro ao abrir a sua coleção.");
+        console.error(error);
+        message.reply("❌ Erro ao abrir coleção.");
     }
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
@@ -2441,7 +2441,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
             { 
                 name: "👤 Perfil & Status", 
-                value: '`!perfil` ou `!p` - Mostra seu card com nível, dinheiro e mochila.\n`!fundos` - Lista seus backgrounds comprados.\n`!fundos <número>` - Escolhe qual fundo usar agora.'
+                value: '`!perfil` ou `!p` - Mostra seu card com nível, dinheiro e mochila.\n`!fundos` - Lista seus backgrounds comprados.\n`!meusfundos` - Escolhe qual fundo usar agora.'
             },
 
             { 
