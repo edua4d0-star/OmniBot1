@@ -188,47 +188,28 @@ if (command === 'trabalhar' || command === 'work') {
 
     return message.reply(resposta);
 }
-// ==================== 🛠️ COMANDO SETMONEY (APENAS DONO) ====================
 if (command === 'setmoney') {
+    // Verificação de Dono (Coloque seu ID aqui)
+    if (message.author.id !== 1203435676083822712) return message.reply("❌ Apenas o dono pode usar este comando.");
+
+    const alvo = message.mentions.users.first();
+    const quantia = parseInt(args[1]);
+
+    if (!alvo || isNaN(quantia)) return message.reply("❌ Use: `!setmoney @usuario 1000`.");
+
     try {
-        // 1. Verifica se é o dono do bot
-        if (message.author.id !== '1203435676083822712') {
-            return message.reply("❌ Apenas o desenvolvedor pode usar este comando.");
-        }
+        // O findOneAndUpdate com 'upsert' cria o usuário se ele não existir
+        // E o 'new: true' retorna o documento atualizado sem erro de versão
+        const usuarioAtualizado = await User.findOneAndUpdate(
+            { userId: alvo.id },
+            { $inc: { money: quantia } },
+            { upsert: true, new: true }
+        );
 
-        // 2. Define o alvo e o valor
-        const targetUser = message.mentions.users.first() || message.author;
-        
-        // Se houver menção, o valor está no args[1]. Se não houver, está no args[0].
-        const valorString = message.mentions.users.first() ? args[1] : args[0];
-        const valor = parseInt(valorString);
-
-        // 3. Verificações de segurança
-        if (isNaN(valor)) {
-            return message.reply("❌ Indica um número válido! Ex: `!setmoney @user 100` ou `!setmoney 100`.");
-        }
-
-        // 4. Busca os dados (se for você, usa userData, se for outro, busca no banco)
-        let targetData;
-        if (targetUser.id === message.author.id) {
-            targetData = userData;
-        } else {
-            targetData = await User.findOne({ userId: targetUser.id });
-            if (!targetData) {
-                targetData = await User.create({ userId: targetUser.id });
-            }
-        }
-
-        // 5. Altera e salva
-        targetData.money = valor;
-        await targetData.save();
-
-        const msgQuem = targetUser.id === message.author.id ? "Seu saldo foi" : `O saldo de **${targetUser.username}** foi`;
-        return message.reply(`✅ ${msgQuem} alterado para **${valor.toLocaleString()}** moedas!`);
-
+        return message.reply(`✅ Adicionado **${quantia.toLocaleString()}** moedas para ${alvo.username}. (Saldo: ${usuarioAtualizado.money})`);
     } catch (error) {
         console.error("Erro no comando setmoney:", error);
-        return message.reply("❌ Ocorreu um erro ao tentar alterar o dinheiro.");
+        message.reply("❌ Ocorreu um erro ao setar o dinheiro.");
     }
 }
 // ==================== 💼 COMANDO TRABALHOS (MÁXIMO 1K) ====================
