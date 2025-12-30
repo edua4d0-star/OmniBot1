@@ -2477,7 +2477,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
                 name: '💰 ECONOMIA & RANKING', 
 
-                value: '`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
+                value: '`!depositar´: deposita seu dinheiro no banco.\n`!sacar´: saca o seu dinheiro do banco.\n`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
 
             },
 
