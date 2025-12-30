@@ -309,23 +309,23 @@ if (command === 'resetar' || command === 'reset') {
 
         // 4. Reseta os dados no MongoDB
         targetData.money = 5000; 
-        targetData.bank = 0; // Adicionei o reset do banco também por segurança
+        targetData.bank = 0; 
         targetData.cargo = "Civil";
         
-        // --- RESET DO BACKGROUND ---
-        targetData.bg = ""; // Remove o fundo atual (deixa o padrão do perfil)
+        // --- RESET DO SISTEMA DE BACKGROUNDS ---
+        targetData.bg = "https://i.imgur.com/yG1r44O.jpeg"; // Volta para o fundo padrão seguro
+        targetData.bgInventory = []; // Limpa a lista de fundos comprados
         
-        // Remove o item 'faccao' se ele existir no inventário
-        if (targetData.inventory) {
-            targetData.inventory = targetData.inventory.filter(item => item !== 'faccao');
-        } else {
-            targetData.inventory = [];
-        }
+        // Limpa o inventário geral (mantendo a estrutura de array)
+        targetData.inventory = [];
 
         targetData.missionCount = 0;
         targetData.workCount = 0; 
         targetData.lastCrime = 0; 
-        targetData.lastWork = 0; // Reseta o tempo de trabalho também
+        targetData.lastWork = 0; 
+        targetData.lastDaily = 0;
+        targetData.lastTrafico = 0;
+        targetData.lastMission = 0;
         
         await targetData.save();
 
@@ -337,18 +337,18 @@ if (command === 'resetar' || command === 'reset') {
             if (membroNoServidor.roles.cache.has(idDoCargoFaccao)) {
                 await membroNoServidor.roles.remove(idDoCargoFaccao).catch(err => {
                     console.error("Erro ao remover cargo:", err);
-                    message.channel.send("⚠️ Erro ao remover o cargo no Discord (Hierarquia de cargos baixa).");
+                    message.channel.send("⚠️ Erro ao remover o cargo no Discord (Verifique minha posição na hierarquia).");
                 });
             }
         }
 
         const msgQuem = alvo.id === message.author.id ? "Seu próprio perfil foi resetado" : `O perfil de **${alvo.username}** foi resetado`;
 
-        return message.reply(`🛠️ **[ADMIN]** ${msgQuem} com sucesso!\n- Dinheiro: 5.000\n- Status: Civil\n- Fundo: **Resetado** 🖼️\n- Mochila: Limpa (exceto outros itens)\n- Discord: Cargo removido.`);
+        return message.reply(`🛠️ **[ADMIN]** ${msgQuem} com sucesso!\n- Dinheiro inicial: 5.000\n- Status: Civil\n- Fundo: **Padrão Restaurado** 🖼️\n- Inventário: Esvaziado\n- Timers: Zerados`);
 
     } catch (error) {
         console.error("Erro no comando resetar:", error);
-        return message.reply("❌ Ocorreu um erro crítico ao tentar resetar.");
+        return message.reply("❌ Ocorreu um erro crítico ao tentar resetar os dados.");
     }
 }
 // ==================== 🏦 SISTEMA DE BANCO ====================
@@ -1588,9 +1588,8 @@ if (command === 'avaliar' || command === 'rate') {
 
     return message.reply(`${emoji} | A minha nota para \`${coisaParaAvaliar}\` é... **${nota}**! ${respostaFinal}`);
 }
-// ==================== 👤 COMANDO PERFIL com CANVAS ====================
+// ==================== 👤 COMANDO PERFIL com CANVAS (VERSÃO CORRIGIDA) ====================
 if (command === 'perfil' || command === 'p' || command === 'me') {
-    // Aviso inicial para o usuário saber que a imagem está sendo gerada
     const aguarde = await message.reply("🎨 Gerando seu perfil personalizado...");
 
     try {
@@ -1612,9 +1611,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         let profissaoNome = index === -1 ? listaProf[9] : listaProf[index];
 
         // --- DADOS FINANCEIROS ---
-        const carteira = dadosPerfil.money || 0;
-        const banco = dadosPerfil.bank || 0;
-        const totalMoedas = carteira + banco;
+        const totalMoedas = (dadosPerfil.money || 0) + (dadosPerfil.bank || 0);
         
         // --- MOCHILA ---
         const inventory = dadosPerfil.inventory || [];
@@ -1622,14 +1619,18 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             ? inventory.slice(0, 2).join(', ') + (inventory.length > 2 ? `...` : '')
             : "Vazia";
 
-        // --- CONFIGURAÇÃO DO CARD (CANVACORD) ---
-        // Fundo padrão caso o usuário não tenha um ou o link seja antigo
+        // --- 🛠️ CORREÇÃO DE BACKGROUND (AQUI ESTÁ O SEGREDO) ---
         const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
-        
-        // FILTRO: Só aceita o fundo se for Imgur (nossos links novos) ou se não for Alphacoders (links que quebram)
         let fundoFinal = fundoPadrao;
-        if (dadosPerfil.bg && dadosPerfil.bg.startsWith("http") && !dadosPerfil.bg.includes("alphacoders")) {
+
+        // Se o link NÃO for do Imgur ou for do Alphacoders, ele é considerado "quebrado"
+        if (dadosPerfil.bg && dadosPerfil.bg.includes("imgur.com")) {
             fundoFinal = dadosPerfil.bg;
+        } else {
+            // Se o link for antigo/inválido, resetamos no banco de dados para evitar novos erros
+            fundoFinal = fundoPadrao;
+            dadosPerfil.bg = fundoPadrao;
+            await dadosPerfil.save(); 
         }
 
         const rankCard = new RankCardBuilder()
@@ -1640,22 +1641,18 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setLevel(index + 1, "NÍVEL")
             .setRank(1, "RANK", false) 
             .setBackground(fundoFinal)
-            .setOverlay(0.7) // Mantém a legibilidade dos textos
+            .setOverlay(0.7)
             .setStyles({
                 progressbar: {
                     thumb: {
-                        style: {
-                            backgroundColor: "#00FFFF" // Ciano para combinar com a loja
-                        }
+                        style: { backgroundColor: "#00FFFF" }
                     }
                 }
             });
 
-        // Gerando a imagem
         const image = await rankCard.build();
         const attachment = new AttachmentBuilder(image, { name: 'perfil.png' });
 
-        // Apaga o "Aguarde" e envia o perfil
         await aguarde.delete().catch(() => {});
         return message.reply({ 
             content: `📊 **Perfil de ${alvo.username}**\n💰 **Total:** ${totalMoedas.toLocaleString()} moedas\n💼 **Profissão:** ${profissaoNome}\n🎒 **Mochila:** ${itensFormatados}`,
@@ -1663,8 +1660,8 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
         });
 
     } catch (error) {
-        console.error("Erro ao gerar perfil com Canvas:", error);
-        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. O serviço de geração de cartas pode estar instável ou o link da imagem quebrou.");
+        console.error("Erro ao gerar perfil:", error);
+        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. Tente usar `!fundo 16` para resetar seu visual.");
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
