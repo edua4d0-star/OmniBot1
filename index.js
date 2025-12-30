@@ -1619,28 +1619,18 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             ? inventory.slice(0, 2).join(', ') + (inventory.length > 2 ? `...` : '')
             : "Vazia";
 
-        // --- 🛠️ CORREÇÃO DE BACKGROUND (AQUI ESTÁ O SEGREDO) ---
+// --- CONFIGURAÇÃO DO CARD (CANVACORD) ---
         const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
-        let fundoFinal = fundoPadrao;
-
-        // Se o link NÃO for do Imgur ou for do Alphacoders, ele é considerado "quebrado"
-        if (dadosPerfil.bg && dadosPerfil.bg.includes("imgur.com")) {
-            fundoFinal = dadosPerfil.bg;
-        } else {
-            // Se o link for antigo/inválido, resetamos no banco de dados para evitar novos erros
-            fundoFinal = fundoPadrao;
-            dadosPerfil.bg = fundoPadrao;
-            await dadosPerfil.save(); 
-        }
+        let fundoFinal = (dadosPerfil.bg && dadosPerfil.bg.includes("imgur.com")) ? dadosPerfil.bg : fundoPadrao;
 
         const rankCard = new RankCardBuilder()
-            .setAvatar(alvo.displayAvatarURL({ extension: 'png', size: 256 }))
+            .setAvatar(alvo.displayAvatarURL({ forceStatic: true, extension: 'png' })) // Avatar estático para evitar erro
             .setDisplayName(alvo.username)
             .setCurrentExperience(totalTrabalhos)
             .setRequiredExperience(metas[index] || 1200)
             .setLevel(index + 1, "NÍVEL")
             .setRank(1, "RANK", false) 
-            .setBackground(fundoFinal)
+            .setBackground(fundoFinal) // Aqui ele puxa o link do Imgur
             .setOverlay(0.7)
             .setStyles({
                 progressbar: {
@@ -1650,18 +1640,24 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
                 }
             });
 
-        const image = await rankCard.build();
-        const attachment = new AttachmentBuilder(image, { name: 'perfil.png' });
+        // Tenta construir a imagem
+        try {
+            const image = await rankCard.build();
+            const attachment = new AttachmentBuilder(image, { name: 'perfil.png' });
 
-        await aguarde.delete().catch(() => {});
-        return message.reply({ 
-            content: `📊 **Perfil de ${alvo.username}**\n💰 **Total:** ${totalMoedas.toLocaleString()} moedas\n💼 **Profissão:** ${profissaoNome}\n🎒 **Mochila:** ${itensFormatados}`,
-            files: [attachment] 
-        });
+            if (aguarde) await aguarde.delete().catch(() => {});
+            
+            return message.reply({ 
+                content: `📊 **Perfil de ${alvo.username}**\n💰 **Total:** ${totalMoedas.toLocaleString()} moedas\n💼 **Profissão:** ${profissaoNome}\n🎒 **Mochila:** ${itensFormatados}`,
+                files: [attachment] 
+            });
+        } catch (buildError) {
+            console.error("ERRO NO BUILD DO CANVAS:", buildError);
+            if (aguarde) await aguarde.edit("⚠️ O gerador de imagens falhou. Verifique se eu tenho permissão de 'Anexar Arquivos'.");
+        }
 
     } catch (error) {
-        console.error("Erro ao gerar perfil:", error);
-        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. Tente usar `!fundo 16` para resetar seu visual.");
+        console.error("Erro geral no comando perfil:", error);
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
