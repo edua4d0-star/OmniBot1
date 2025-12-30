@@ -1623,9 +1623,14 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             : "Vazia";
 
         // --- CONFIGURAÇÃO DO CARD (CANVACORD) ---
-        // Usando links seguros (Imgur) para evitar erro de avaliação do Discord
-        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpg";
-        const fundoFinal = (dadosPerfil.bg && dadosPerfil.bg.startsWith("http")) ? dadosPerfil.bg : fundoPadrao;
+        // Fundo padrão caso o usuário não tenha um ou o link seja antigo
+        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
+        
+        // FILTRO: Só aceita o fundo se for Imgur (nossos links novos) ou se não for Alphacoders (links que quebram)
+        let fundoFinal = fundoPadrao;
+        if (dadosPerfil.bg && dadosPerfil.bg.startsWith("http") && !dadosPerfil.bg.includes("alphacoders")) {
+            fundoFinal = dadosPerfil.bg;
+        }
 
         const rankCard = new RankCardBuilder()
             .setAvatar(alvo.displayAvatarURL({ extension: 'png', size: 256 }))
@@ -1633,14 +1638,14 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
             .setCurrentExperience(totalTrabalhos)
             .setRequiredExperience(metas[index] || 1200)
             .setLevel(index + 1, "NÍVEL")
-            .setRank(1, "RANK", false) // Oculta o rank se não tiver sistema global
+            .setRank(1, "RANK", false) 
             .setBackground(fundoFinal)
-            .setOverlay(0.7) // Transparência preta por cima do fundo (0.7 = 70%)
+            .setOverlay(0.7) // Mantém a legibilidade dos textos
             .setStyles({
                 progressbar: {
                     thumb: {
                         style: {
-                            backgroundColor: "#00FFFF" // Cor da barra (Ciano)
+                            backgroundColor: "#00FFFF" // Ciano para combinar com a loja
                         }
                     }
                 }
@@ -1659,7 +1664,7 @@ if (command === 'perfil' || command === 'p' || command === 'me') {
 
     } catch (error) {
         console.error("Erro ao gerar perfil com Canvas:", error);
-        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. Verifique se o link do seu fundo é válido.");
+        if (aguarde) aguarde.edit("❌ Erro ao processar a imagem. O serviço de geração de cartas pode estar instável ou o link da imagem quebrou.");
     }
 }
 // ==================== 🏆 COMANDO CONQUISTAS ====================
@@ -1708,34 +1713,50 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
 // ==================== 🖼️ LOJA DE BACKGROUNDS ATUALIZADA ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
-        "1": { nome: "Itadori Yuji", preco: 40000, url: "https://images6.alphacoders.com/112/1129532.jpg" },
-        "2": { nome: "Gojo Satoru", preco: 100000, url: "https://images2.alphacoders.com/114/1143851.jpg" },
-        "3": { nome: "Sukuna", preco: 80000, url: "https://images5.alphacoders.com/112/1129113.jpg" },
-        "4": { nome: "Denji (Chainsaw)", preco: 45000, url: "https://images8.alphacoders.com/121/1218987.jpg" },
-        "5": { nome: "Makima", preco: 90000, url: "https://images2.alphacoders.com/121/1218991.jpg" },
-        "6": { nome: "Power", preco: 50000, url: "https://images5.alphacoders.com/121/1219000.jpg" },
-        "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://images7.alphacoders.com/132/1321742.png" },
-        "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://images2.alphacoders.com/115/1154564.jpg" },
-        "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://images4.alphacoders.com/606/606311.jpg" },
-        "10": { nome: "Jinx", preco: 60000, url: "https://images3.alphacoders.com/119/1191595.jpg" },
-        "11": { nome: "Vi", preco: 60000, url: "https://images6.alphacoders.com/118/1189448.jpg" },
-        "12": { nome: "Ekko", preco: 55000, url: "https://images2.alphacoders.com/119/1193325.jpg" },
-        "13": { nome: "Eleven", preco: 75000, url: "https://images.alphacoders.com/123/1230113.jpg" },
-        "14": { nome: "Eddie Munson", preco: 70000, url: "https://images7.alphacoders.com/123/1239922.jpg" },
-        "15": { nome: "Vecna", preco: 95000, url: "https://images6.alphacoders.com/123/1234703.jpg" },
-        "16": { nome: "Steve & Alex", preco: 30000, url: "https://images3.alphacoders.com/105/1052601.jpg" },
-        "17": { nome: "Creeper", preco: 35000, url: "https://images7.alphacoders.com/101/1014569.jpg" },
-        "18": { nome: "Enderman", preco: 40000, url: "https://images4.alphacoders.com/101/1014574.jpg" },
-        "19": { nome: "CR7 Real Madrid", preco: 80000, url: "https://images4.alphacoders.com/133/1337494.jpeg" },
-        "20": { nome: "CR7 Portugal", preco: 90000, url: "https://images.alphacoders.com/129/1294817.jpg" },
-        "21": { nome: "CR7 LENDA", preco: 150000, url: "https://images5.alphacoders.com/133/1337497.jpeg" },
-        "22": { nome: "Dante", preco: 110000, url: "https://images8.alphacoders.com/956/956463.jpg" },
-        "23": { nome: "Vergil", preco: 130000, url: "https://images2.alphacoders.com/109/1096753.jpg" },
-        "24": { nome: "Nero", preco: 80000, url: "https://images.alphacoders.com/990/990391.jpg" },
-        // --- JOJO INDIVIDUAIS ---
-        "25": { nome: "Joseph Joestar", preco: 15000, url: "https://i.imgur.com/83pXqfS.jpg" },
-        "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://images5.alphacoders.com/609/609340.jpg" },
-        "27": { nome: "Iggy (JoJo)", preco: 15000, url: "https://images2.alphacoders.com/609/609341.jpg" }
+        // --- JUJUTSU KAISEN ---
+        "1": { nome: "Itadori Yuji", preco: 40000, url: "https://i.imgur.com/jFG9qEQ.jpeg" },
+        "2": { nome: "Gojo Satoru", preco: 100000, url: "https://i.imgur.com/Z9Abixe.jpeg" },
+        "3": { nome: "Sukuna", preco: 80000, url: "https://i.imgur.com/befNGoP.jpeg" },
+
+        // --- CHAINSAW MAN ---
+        "4": { nome: "Denji", preco: 45000, url: "https://i.imgur.com/MKCqrgl.jpeg" },
+        "5": { nome: "Makima", preco: 90000, url: "https://i.imgur.com/DvfpArD.jpeg" },
+        "6": { nome: "Power", preco: 50000, url: "https://i.imgur.com/ff806Ce.jpeg" },
+
+        // --- ONE PIECE ---
+        "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://i.imgur.com/qXe3vXP.jpeg" },
+        "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://i.imgur.com/hYxWRXp.jpeg" },
+        "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://i.imgur.com/wuMIXgu.jpeg" },
+
+        // --- ARCANE / LOL ---
+        "10": { nome: "Jinx", preco: 60000, url: "https://i.imgur.com/8c8LS69.jpeg" },
+        "11": { nome: "Violet", preco: 60000, url: "https://i.imgur.com/hLGa15b.jpeg" },
+        "12": { nome: "Ekko", preco: 55000, url: "https://i.imgur.com/5uA25cu.jpeg" },
+
+        // --- STRANGER THINGS ---
+        "13": { nome: "Eleven", preco: 75000, url: "https://i.imgur.com/RsLB4q1.jpeg" },
+        "14": { nome: "Eddie Munson", preco: 70000, url: "https://i.imgur.com/CWkmnDz.jpeg" },
+        "15": { nome: "Vecna", preco: 95000, url: "https://i.imgur.com/tE8D06M.jpeg" },
+
+        // --- MINECRAFT ---
+        "16": { nome: "Steve & Alex", preco: 30000, url: "https://i.imgur.com/Dr8z0JQ.jpeg" },
+        "17": { nome: "Creeper", preco: 35000, url: "https://i.imgur.com/EldsLKt.jpeg" },
+        "18": { nome: "Enderman", preco: 40000, url: "https://i.imgur.com/l2ZuN7C.jpeg" },
+
+        // --- FUTEBOL ---
+        "19": { nome: "CR7 Real Madrid", preco: 80000, url: "https://i.imgur.com/XFYwLzk.jpeg" },
+        "20": { nome: "CR7 Portugal", preco: 90000, url: "https://i.imgur.com/OOMIbu6.jpeg" },
+        "21": { nome: "CR7 LENDA", preco: 150000, url: "https://i.imgur.com/VYRPaP9.jpeg" },
+
+        // --- DEVIL MAY CRY ---
+        "22": { nome: "Dante", preco: 110000, url: "https://i.imgur.com/BK3uoB2.jpeg" },
+        "23": { nome: "Vergil", preco: 130000, url: "https://i.imgur.com/alXjYpk.jpeg" },
+        "24": { nome: "Nero", preco: 80000, url: "https://i.imgur.com/rfPiveO.jpeg" },
+
+        // --- JOJO ---
+        "25": { nome: "Joseph Joestar", preco: 15000, url: "https://i.imgur.com/lkvWJmE.jpeg" },
+        "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://i.imgur.com/hGNl3x9.jpeg" },
+        "27": { nome: "Iggy", preco: 15000, url: "https://i.imgur.com/iMfIlDY.jpeg" }
     };
 
     const opcao = args[0];
@@ -1757,7 +1778,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundoEscolhido = fundos[opcao];
     if (!fundoEscolhido) return message.reply("❌ Código não encontrado na loja.");
 
-    // Verifica se já tem o fundo
+    // Verifica se já tem o fundo no inventário
     if (userData.bgInventory && userData.bgInventory.includes(opcao)) {
         userData.bg = fundoEscolhido.url;
         await userData.save();
@@ -1767,7 +1788,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     const saldoTotal = (userData.money || 0) + (userData.bank || 0);
     if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente.");
 
-    // Cobrança
+    // Sistema de Cobrança (prioriza carteira, depois banco)
     if (userData.money >= fundoEscolhido.preco) {
         userData.money -= fundoEscolhido.preco;
     } else {
@@ -1776,68 +1797,75 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         userData.bank -= restante;
     }
 
-    // Salva
+    // Salva o fundo atual e adiciona ao inventário
     userData.bg = fundoEscolhido.url;
     if (!userData.bgInventory) userData.bgInventory = [];
     userData.bgInventory.push(opcao);
     await userData.save();
 
-    return message.reply(`✅ Você comprou o fundo **${fundoEscolhido.nome}**!`);
+    return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**!`);
 }
 // ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
-        // ESSA LISTA DEVE SER IGUAL À DA LOJA PARA FUNCIONAR TUDO BEM
+        // LISTA SINCRONIZADA COM A LOJA (LINKS DIRETOS IMGUR)
         const fundos = {
-            "1": { nome: "Itadori Yuji", url: "https://images6.alphacoders.com/112/1129532.jpg" },
-            "2": { nome: "Gojo Satoru", url: "https://images2.alphacoders.com/114/1143851.jpg" },
-            "3": { nome: "Sukuna", url: "https://images5.alphacoders.com/112/1129113.jpg" },
-            "4": { nome: "Denji (Chainsaw)", url: "https://images8.alphacoders.com/121/1218987.jpg" },
-            "5": { nome: "Makima", url: "https://images2.alphacoders.com/121/1218991.jpg" },
-            "6": { nome: "Power", url: "https://images5.alphacoders.com/121/1219000.jpg" },
-            "7": { nome: "Luffy Gear 5", url: "https://images7.alphacoders.com/132/1321742.png" },
-            "8": { nome: "Roronoa Zoro", url: "https://images2.alphacoders.com/115/1154564.jpg" },
-            "9": { nome: "Portgas D. Ace", url: "https://images4.alphacoders.com/606/606311.jpg" },
-            "10": { nome: "Jinx", url: "https://images3.alphacoders.com/119/1191595.jpg" },
-            "11": { nome: "Vi", url: "https://images6.alphacoders.com/118/1189448.jpg" },
-            "12": { nome: "Ekko", url: "https://images2.alphacoders.com/119/1193325.jpg" },
-            "13": { nome: "Eleven", url: "https://images.alphacoders.com/123/1230113.jpg" },
-            "14": { nome: "Eddie Munson", url: "https://images7.alphacoders.com/123/1239922.jpg" },
-            "15": { nome: "Vecna", url: "https://images6.alphacoders.com/123/1234703.jpg" },
-            "16": { nome: "Steve & Alex", url: "https://images3.alphacoders.com/105/1052601.jpg" },
-            "17": { nome: "Creeper", url: "https://images7.alphacoders.com/101/1014569.jpg" },
-            "18": { nome: "Enderman", url: "https://images4.alphacoders.com/101/1014574.jpg" },
-            "19": { nome: "CR7 Real Madrid", url: "https://images4.alphacoders.com/133/1337494.jpeg" },
-            "20": { nome: "CR7 Portugal", url: "https://images.alphacoders.com/129/1294817.jpg" },
-            "21": { nome: "CR7 LENDA", url: "https://images5.alphacoders.com/133/1337497.jpeg" },
-            "22": { nome: "Dante", url: "https://images8.alphacoders.com/956/956463.jpg" },
-            "23": { nome: "Vergil", url: "https://images2.alphacoders.com/109/1096753.jpg" },
-            "24": { nome: "Nero", url: "https://images.alphacoders.com/990/990391.jpg" },
-            "25": { nome: "Joseph Joestar", url: "https://images.alphacoders.com/609/609338.jpg" },
-            "26": { nome: "Jean Pierre Polnareff", url: "https://images5.alphacoders.com/609/609340.jpg" },
-            "27": { nome: "Iggy (JoJo)", url: "https://images2.alphacoders.com/609/609341.jpg" }
+            "1": { nome: "Itadori Yuji", url: "https://i.imgur.com/jFG9qEQ.jpeg" },
+            "2": { nome: "Gojo Satoru", url: "https://i.imgur.com/Z9Abixe.jpeg" },
+            "3": { nome: "Sukuna", url: "https://i.imgur.com/befNGoP.jpeg" },
+            "4": { nome: "Denji (Chainsaw)", url: "https://i.imgur.com/MKCqrgl.jpeg" },
+            "5": { nome: "Makima", url: "https://i.imgur.com/DvfpArD.jpeg" },
+            "6": { nome: "Power", url: "https://i.imgur.com/ff806Ce.jpeg" },
+            "7": { nome: "Luffy Gear 5", url: "https://i.imgur.com/qXe3vXP.jpeg" },
+            "8": { nome: "Roronoa Zoro", url: "https://i.imgur.com/hYxWRXp.jpeg" },
+            "9": { nome: "Portgas D. Ace", url: "https://i.imgur.com/wuMIXgu.jpeg" },
+            "10": { nome: "Jinx", url: "https://i.imgur.com/8c8LS69.jpeg" },
+            "11": { nome: "Violet", url: "https://i.imgur.com/hLGa15b.jpeg" },
+            "12": { nome: "Ekko", url: "https://i.imgur.com/5uA25cu.jpeg" },
+            "13": { nome: "Eleven", url: "https://i.imgur.com/RsLB4q1.jpeg" },
+            "14": { nome: "Eddie Munson", url: "https://i.imgur.com/CWkmnDz.jpeg" },
+            "15": { nome: "Vecna", url: "https://i.imgur.com/tE8D06M.jpeg" },
+            "16": { nome: "Steve & Alex", url: "https://i.imgur.com/Dr8z0JQ.jpeg" },
+            "17": { nome: "Creeper", url: "https://i.imgur.com/EldsLKt.jpeg" },
+            "18": { nome: "Enderman", url: "https://i.imgur.com/l2ZuN7C.jpeg" },
+            "19": { nome: "CR7 Real Madrid", url: "https://i.imgur.com/XFYwLzk.jpeg" },
+            "20": { nome: "CR7 Portugal", url: "https://i.imgur.com/OOMIbu6.jpeg" },
+            "21": { nome: "CR7 LENDA", url: "https://i.imgur.com/VYRPaP9.jpeg" },
+            "22": { nome: "Dante", url: "https://i.imgur.com/BK3uoB2.jpeg" },
+            "23": { nome: "Vergil", url: "https://i.imgur.com/alXjYpk.jpeg" },
+            "24": { nome: "Nero", url: "https://i.imgur.com/rfPiveO.jpeg" },
+            "25": { nome: "Joseph Joestar", url: "https://i.imgur.com/lkvWJmE.jpeg" },
+            "26": { nome: "Jean Pierre Polnareff", url: "https://i.imgur.com/hGNl3x9.jpeg" },
+            "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" }
         };
 
         const bgsComprados = userData.bgInventory || [];
 
         if (bgsComprados.length === 0) {
-            return message.reply("❌ Não tens nenhum fundo na tua coleção! Compra um na loja usando `!fundo`.");
+            return message.reply("❌ Você não tem nenhum fundo na sua coleção! Compre um na loja usando `!fundo`.");
         }
 
         const embed = new EmbedBuilder()
-            .setTitle("🖼️ Tua Coleção de Backgrounds")
+            .setTitle("🖼️ Sua Coleção de Backgrounds")
             .setColor("#00FF00")
-            .setDescription("Escolhe um fundo no menu abaixo para equipares no teu perfil.");
+            .setDescription("Escolha um fundo no menu abaixo para equipar no seu perfil.");
 
+        // Criar as opções do menu de seleção apenas com o que o usuário já comprou
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('selecionar_fundo')
-            .setPlaceholder('Seleciona o fundo para equipar...')
+            .setPlaceholder('Selecione o fundo para equipar...')
             .addOptions(
-                bgsComprados.map(id => ({
-                    label: fundos[id] ? fundos[id].nome : `Fundo #${id}`,
-                    value: id,
-                }))
+                bgsComprados
+                    .filter(id => fundos[id]) // Garante que o ID existe na lista atual
+                    .map(id => ({
+                        label: fundos[id].nome,
+                        value: id,
+                    }))
             );
+
+        if (selectMenu.options.length === 0) {
+            return message.reply("❌ Seus fundos antigos são incompatíveis com a nova versão da loja. Compre novos fundos para atualizar sua coleção!");
+        }
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
 
@@ -1853,7 +1881,11 @@ if (command === 'meusfundos' || command === 'bgs') {
             if (infoFundo) {
                 userData.bg = infoFundo.url;
                 await userData.save();
-                await i.update({ content: `✅ Equipaste o fundo: **${infoFundo.nome}**!`, embeds: [], components: [] });
+                await i.update({ 
+                    content: `✅ Você equipou o fundo: **${infoFundo.nome}**!`, 
+                    embeds: [], 
+                    components: [] 
+                });
             }
         });
 
@@ -1863,7 +1895,7 @@ if (command === 'meusfundos' || command === 'bgs') {
 
     } catch (error) {
         console.error("Erro no comando meusfundos:", error);
-        message.reply("❌ Ocorreu um erro ao abrir a tua coleção.");
+        message.reply("❌ Ocorreu um erro ao abrir a sua coleção.");
     }
 }
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
