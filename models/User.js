@@ -13,9 +13,9 @@ const UserSchema = new mongoose.Schema({
     lastDaily: { type: Number, default: 0 },   
 
     // ==================== 🎒 INVENTÁRIO & ESTÉTICA ====================
-    inventory: { type: Array, default: [] },   
-    bg: { type: String, default: "" },         // Link do fundo atual equipado
-    bgInventory: { type: Array, default: [] }, // LISTA DE IDS COMPRADOS (NOVO)
+    inventory: { type: [String], default: [] },   // Itens da mochila
+    bg: { type: String, default: "" },             // Link do fundo atual equipado
+    bgInventory: { type: [String], default: [] }, // LISTA DE IDS DOS FUNDOS COMPRADOS
 
     // ==================== 🌑 SISTEMA DE FACÇÃO ====================
     cargo: { type: String, default: "Civil" }, 
@@ -31,9 +31,9 @@ const UserSchema = new mongoose.Schema({
     // ==================== 🎯 CONTRATOS & CRIMES ====================
     contract: { type: String, default: null }, 
     lastContract: { type: Number, default: 0 }, 
-    jobsDone: { type: Number, default: 0 }, 
-    lastKill: { type: Number, default: 0 }, 
-    lastRob: { type: Number, default: 0 },    
+    jobsDone: { type: Number, default: 0 },    // Essencial para conquista Hitman
+    lastKill: { type: Number, default: 0 },    // Essencial para conquista Primeiro Sangue
+    lastRob: { type: Number, default: 0 },     // Essencial para conquista Ladrão de Galinha
     lastCrime: { type: Number, default: 0 }
 });
 
