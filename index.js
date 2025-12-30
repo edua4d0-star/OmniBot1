@@ -189,27 +189,26 @@ if (command === 'trabalhar' || command === 'work') {
     return message.reply(resposta);
 }
 if (command === 'setmoney') {
-    // Verificação de Dono (Coloque seu ID aqui)
+    // Substitua apenas os números, mantenha as aspas ''
     if (message.author.id !== '1203435676083822712') return message.reply("❌ Apenas o dono pode usar este comando.");
 
     const alvo = message.mentions.users.first();
     const quantia = parseInt(args[1]);
 
-    if (!alvo || isNaN(quantia)) return message.reply("❌ Use: `!setmoney @usuario 1000`.");
+    if (!alvo || isNaN(quantia)) return message.reply("❌ Use: `!setmoney @usuario 5000`.");
 
     try {
-        // O findOneAndUpdate com 'upsert' cria o usuário se ele não existir
-        // E o 'new: true' retorna o documento atualizado sem erro de versão
+        // O $set muda o valor diretamente para a quantia digitada
         const usuarioAtualizado = await User.findOneAndUpdate(
             { userId: alvo.id },
-            { $inc: { money: quantia } },
+            { $set: { money: quantia } }, 
             { upsert: true, new: true }
         );
 
-        return message.reply(`✅ Adicionado **${quantia.toLocaleString()}** moedas para ${alvo.username}. (Saldo: ${usuarioAtualizado.money})`);
+        return message.reply(`✅ O saldo de ${alvo.username} foi alterado diretamente para **${quantia.toLocaleString()}** moedas.`);
     } catch (error) {
         console.error("Erro no comando setmoney:", error);
-        message.reply("❌ Ocorreu um erro ao setar o dinheiro.");
+        message.reply("❌ Ocorreu um erro ao definir o dinheiro.");
     }
 }
 // ==================== 💼 COMANDO TRABALHOS (MÁXIMO 1K) ====================
