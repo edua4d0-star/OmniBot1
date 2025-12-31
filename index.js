@@ -2214,22 +2214,21 @@ if (command === 'avaliar' || command === 'rate') {
 }
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-// ==================== 👤 COMANDO PERFIL (CANVAS EDITION - ARRUMADO) ====================
+// ==================== 👤 COMANDO PERFIL (FIXED & ALIGNED) ====================
 if (command === 'perfil' || command === 'p') {
-    const aguarde = await message.reply("🎨 A desenhar o teu perfil completo...");
+    const aguarde = await message.reply("🎨 A desenhar o teu perfil...");
 
     try {
         const alvo = message.mentions.users.first() || message.author;
         let dados = await User.findOne({ userId: alvo.id }) || await User.create({ userId: alvo.id });
 
-        // --- LÓGICA DE NÍVEL E PROFISSÃO ---
+        // --- LÓGICA DE NÍVEL ---
         const totalTrabalhos = dados.workCount || 0;
         const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
         let nivelIdx = metas.findIndex(m => totalTrabalhos < m);
         if (nivelIdx === -1) nivelIdx = 9;
         
-        const isFaccao = dados.cargo === "Membro da Facção";
-        const profs = isFaccao 
+        const profs = (dados.cargo && dados.cargo.includes("Facção"))
             ? ["Olheiro", "Aviãozinho", "Vendedor", "Segurança", "Cobrador", "Gerente", "Fornecedor", "Conselheiro", "Braço Direito", "Líder 🏴‍☠️"]
             : ["Estagiário", "Auxiliar", "Vendedor", "Analista", "Supervisor", "Gerente", "Diretor", "Vice-Presidente", "Sócio", "CEO 💎"];
         
@@ -2237,120 +2236,126 @@ if (command === 'perfil' || command === 'p') {
         const xpNecessario = metas[nivelIdx] || 1200;
         const porcentagem = Math.min((totalTrabalhos / xpNecessario), 1);
 
-        // --- CRIAÇÃO DO CANVAS ---
+        // --- CANVAS SETUP ---
         const canvas = createCanvas(900, 550); 
         const ctx = canvas.getContext('2d');
 
-        // --- BACKGROUND DYNAMICO ---
-        // Se o usuário não tiver o item 'fundo', usa o padrão mesmo que tenha link no banco
-        const temPasse = (dados.inventory || []).includes('fundo');
-        const fundoUrl = (temPasse && dados.bg) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
-        
+        // --- BACKGROUND (RESTAURADO) ---
+        // Aqui eu removi a trava do item 'fundo'. Ele vai ler o seu 'dados.bg' direto.
+        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
+        const linkFundo = (dados.bg && dados.bg.startsWith('http')) ? dados.bg : fundoPadrao;
+
         try {
-            const background = await loadImage(fundoUrl);
-            ctx.drawImage(background, 0, 0, 900, 550);
+            const imageBackground = await loadImage(linkFundo);
+            ctx.drawImage(imageBackground, 0, 0, 900, 550);
         } catch (e) {
+            // Se o seu link quebrar, ele usa uma cor sólida para não dar erro
             ctx.fillStyle = "#1a1a1a";
             ctx.fillRect(0, 0, 900, 550);
         }
 
-        // Overlay Escuro para leitura
+        // Overlay Escuro (Melhorado para transparência elegante)
         ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
-        ctx.fillRect(20, 20, 860, 510);
+        ctx.beginPath();
+        ctx.roundRect(25, 25, 850, 500, 20);
+        ctx.fill();
 
-        // --- AVATAR CIRCULAR ---
+        // --- AVATAR ---
         const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png', size: 256 }));
         ctx.save();
-        ctx.beginPath(); ctx.arc(130, 130, 80, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-        ctx.drawImage(avatarImg, 50, 50, 160, 160);
+        ctx.beginPath();
+        ctx.arc(135, 135, 85, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, 50, 50, 170, 170);
         ctx.restore();
 
-        // --- INFO BÁSICA (ESQUERDA) ---
+        // --- TEXTOS (LADO ESQUERDO) ---
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 30px sans-serif';
-        ctx.fillText(alvo.username.toUpperCase(), 50, 260); 
-        
-        ctx.font = '18px sans-serif';
+        ctx.fillText(alvo.username.toUpperCase(), 50, 270); 
+
+        ctx.font = '22px sans-serif';
         ctx.fillStyle = '#00FFFF';
-        ctx.fillText(`${profissaoNome}`, 50, 290);
-        
+        ctx.fillText(profissaoNome, 50, 305);
+
+        ctx.font = '16px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.font = '14px sans-serif';
-        ctx.fillText(`ID: ${alvo.id}`, 50, 315);
+        ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 340);
+        ctx.fillText(`ID: ${alvo.id}`, 50, 365);
 
         // --- FINANCEIRO (DIREITA) ---
+        const xCol = 330;
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("💰 CAPITAL TOTAL", 300, 70);
-        ctx.font = '35px sans-serif';
+        ctx.fillText("💰 CAPITAL TOTAL", xCol, 80);
+        
+        ctx.font = 'bold 36px sans-serif';
         ctx.fillStyle = '#00FF00';
-        ctx.fillText(`${((dados.money || 0) + (dados.bank || 0)).toLocaleString()} moedas`, 300, 110);
+        const total = (dados.money || 0) + (dados.bank || 0) + (dados.dirtyMoney || 0);
+        ctx.fillText(`${total.toLocaleString()} moedas`, xCol, 125);
 
-        // Carteira e Banco menores
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`💵 Carteira: ${dados.money.toLocaleString()}`, 300, 150);
-        ctx.fillText(`🏦 Banco: ${dados.bank.toLocaleString()}`, 550, 150);
+        ctx.fillText(`💵 Carteira: ${(dados.money || 0).toLocaleString()}`, xCol, 170);
+        ctx.fillText(`🏦 Banco: ${(dados.bank || 0).toLocaleString()}`, xCol + 230, 170);
 
-        // --- RELACIONAMENTO & SOCIAL ---
+        // --- RELACIONAMENTO ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("❤️ RELACIONAMENTO", 300, 210);
+        ctx.fillText("❤️ RELACIONAMENTO", xCol, 240);
+        
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#FF69B4';
-        
-        let statusAmor = "Solteiro(a)";
+        let txtRel = "Solteiro(a)";
         if (dados.marriedWith) {
-            const parca = await client.users.fetch(dados.marriedWith).catch(() => null);
-            statusAmor = parca ? `Casado(a) com ${parca.username}` : "Casado(a)";
+            try {
+                const conjuge = await client.users.fetch(dados.marriedWith);
+                txtRel = `Casado(a) com ${conjuge.username}`;
+            } catch { txtRel = "Casado(a)"; }
         }
-        ctx.fillText(statusAmor, 300, 240);
-        ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, 300, 265);
+        ctx.fillText(txtRel, xCol, 275);
+        ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, xCol, 305);
 
-        // --- MOCHILA (RESUMO) ---
+        // --- MOCHILA ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🎒 MOCHILA (ITENS PRINCIPAIS)", 300, 330);
+        ctx.fillText("🎒 MOCHILA (ITENS)", xCol, 370);
         
-        const inv = dados.inventory || [];
-        const uniqueItems = [...new Set(inv)].slice(0, 6); // Pega os 6 primeiros itens únicos
+        const inv = (dados.inventory && dados.inventory.length > 0) 
+            ? [...new Set(dados.inventory)].slice(0, 5).join(' • ') 
+            : "Vazia";
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(uniqueItems.length > 0 ? uniqueItems.join(' • ') : "Nenhum item especial", 300, 360);
+        ctx.fillText(inv, xCol, 405);
 
-        // --- BARRA DE PROGRESSO (EMBAIXO) ---
-        // Fundo da barra
+        // --- BARRA DE PROGRESSO ---
         ctx.fillStyle = '#333333';
         ctx.beginPath();
-        ctx.roundRect(50, 450, 800, 35, 10);
+        ctx.roundRect(50, 460, 800, 35, 15);
         ctx.fill();
 
-        // Progresso
-        const grad = ctx.createLinearGradient(50, 0, 850, 0);
-        grad.addColorStop(0, '#008B8B');
-        grad.addColorStop(1, '#00FFFF');
-        ctx.fillStyle = grad;
+        ctx.fillStyle = '#00FFFF';
         ctx.beginPath();
-        ctx.roundRect(50, 450, 800 * porcentagem, 35, 10);
+        ctx.roundRect(50, 460, 800 * porcentagem, 35, 15);
         ctx.fill();
 
-        // Texto da Barra
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 474);
+        ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 483);
 
         // --- ENVIO ---
         const buffer = canvas.toBuffer('image/png');
         const attachment = new AttachmentBuilder(buffer, { name: 'perfil.png' });
         
-        await aguarde.delete().catch(() => {});
+        if (aguarde) await aguarde.delete().catch(() => {});
         return message.reply({ files: [attachment] });
 
     } catch (error) {
-        console.error("Erro no perfil:", error);
-        if (aguarde) await aguarde.edit("❌ Erro ao gerar o perfil Canvas.");
+        console.error("Erro Perfil:", error);
+        if (aguarde) aguarde.edit("❌ Erro ao gerar a imagem do perfil.");
     }
 }
 // ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
