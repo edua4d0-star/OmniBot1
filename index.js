@@ -2291,7 +2291,7 @@ if (command === 'perfil' || command === 'p') {
 
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("💰 CAPITAL TOTAL", xInfo, 85);
+        ctx.fillText("💰 Saldo Total", xInfo, 85);
         
         ctx.font = 'bold 38px sans-serif';
         ctx.fillStyle = '#00FF00';
