@@ -3573,7 +3573,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
             },
             { 
                 name: "👤 PERFIL & STATUS", 
-                value: '`!perfil`: Ver seu card e nível.\n`!mochila`: Ver inventário.\n`!usar [item]`: Ativar consumíveis.\n`!setbg [link]`: Mudar fundo do perfil.\n`!meusfundos`: Gerenciar backgrounds.'
+                value: '`!perfil`: Ver seu card e nível.\n`!mochila`: Ver inventário.\n`!usar [item]`: Ativar consumíveis.\n`!background`: Loja de fundos para o perfil.\n`!meusfundos`: Gerenciar backgrounds.'
             },
             { 
                 name: '🛍️ MERCADO & LOJAS', 
