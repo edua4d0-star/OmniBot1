@@ -45,18 +45,48 @@ const client = new Client({
 });
 
 const lojaItens = {
-    // CATEGORIA: LEGAL
-    "escudo": { nome: "Escudo de Energia", preco: 6000, estoque: 3, categoria: "legal", desc: "Protege o teu saldo de um roubo." },
-    "picareta": { nome: "Picareta de Ferro", preco: 8000, estoque: 5, categoria: "legal", desc: "Aumenta os ganhos no !trabalhar." },
-    "computador": { nome: "Computador", preco: 10000, estoque: 4, categoria: "legal", desc: "Permite trabalhar remotamente com bónus de moedas." },
+    // 🏛️ CATEGORIA: LEGAL & TRABALHO
+    "escudo": { nome: "Escudo de Energia", preco: 6000, estoque: 3, categoria: "legal", desc: "Protege o teu saldo de uma tentativa de roubo." },
+    "picareta": { nome: "Picareta de Ferro", preco: 8000, estoque: 5, categoria: "legal", desc: "Aumenta os teus ganhos ao minerar no !trabalhar." },
+    "computador": { nome: "Computador", preco: 10000, estoque: 4, categoria: "legal", desc: "Permite trabalhar como Freelancer com bónus de moedas." },
+    "cafe": { nome: "Café Energético", preco: 2500, estoque: 20, categoria: "legal", desc: "Reduz o tempo de espera do próximo !trabalhar." },
+    "maleta": { nome: "Maleta Executiva", preco: 15000, estoque: 3, categoria: "legal", desc: "Aumenta a capacidade máxima de depósito no banco." },
+    "uniforme": { nome: "Uniforme de Trabalho", preco: 4000, estoque: 10, categoria: "legal", desc: "Dá um bónus fixo de 500 moedas em cada !trabalhar." },
+    "tablet": { nome: "Tablet de Gestão", preco: 12000, estoque: 5, categoria: "legal", desc: "Visualiza os ganhos de todos os membros do servidor." },
+    "fundo": { nome: "Passe de Background", preco: 25000, estoque: 999, categoria: "legal", desc: "Permite usar um link de imagem personalizado no seu !perfil." },
 
-    // CATEGORIA: SUBMUNDO
-    "passaporte": { nome: "Passaporte Falso", preco: 7500, estoque: 5, categoria: "submundo", desc: "Reseta o timer do trabalho." },
-    "faca": { nome: "Faca de Combate", preco: 8000, estoque: 10, categoria: "submundo", desc: "Aumenta chance no !roubar e !concluir." },
-    "dinamite": { nome: "Dinamite", preco: 10000, estoque: 5, categoria: "submundo", desc: "Sucesso no !crime e ganho x2.5 (Consumível)." },
-    "arma": { nome: "Pistola 9mm", preco: 25000, estoque: 2, categoria: "submundo", desc: "Proteção total, bónus no crime e garante o !atacar." },
-    "faccao": { nome: "Convite de Facção", preco: 2000000, estoque: 1, categoria: "submundo", desc: "???" }
-}
+    // 🌑 CATEGORIA: SUBMUNDO (CRIME)
+    "passaporte": { nome: "Passaporte Falso", preco: 7500, estoque: 5, categoria: "submundo", desc: "Limpa o teu histórico e reseta o timer do contrato." },
+    "faca": { nome: "Faca de Combate", preco: 8000, estoque: 10, categoria: "submundo", desc: "Aumenta a tua chance de sucesso no !roubar e !concluir." },
+    "dinamite": { nome: "Dinamite", preco: 10000, estoque: 5, categoria: "submundo", desc: "Garante sucesso no !crime com ganho x2.5 (Consumível)." },
+    "arma": { nome: "Pistola 9mm", preco: 25000, estoque: 2, categoria: "submundo", desc: "Garante vitória no !atacar e bónus passivo no crime." },
+    "lockpick": { nome: "Chave Mestra (Lockpick)", preco: 5000, estoque: 15, categoria: "submundo", desc: "Aumenta a chance de roubar lojas sem ser apanhado." },
+    "mascara": { nome: "Máscara de Palhaço", preco: 12000, estoque: 4, categoria: "submundo", desc: "Esconde o teu nome nos logs e reduz multas da polícia." },
+    "pendrive": { nome: "Pen-drive Infectado", preco: 9000, estoque: 6, categoria: "submundo", desc: "Item essencial para as missões de Hacker da Deep Web." },
+    "colete": { nome: "Colete à Prova de Balas", preco: 18000, estoque: 3, categoria: "submundo", desc: "Evita que você seja silenciado pelo comando !matar uma vez." },
+    "inibidor": { nome: "Inibidor de Sinal", preco: 14000, estoque: 2, categoria: "submundo", desc: "Impede que alguém use o comando !localizar em você." },
+    "algema": { nome: "Algemas de Aço", preco: 15000, estoque: 3, categoria: "submundo", desc: "Prende um usuário, impedindo-o de usar comandos por 2 minutos." },
+
+    // ⚡ CATEGORIA: CIBERNÉTICA & TECH
+    "chip": { nome: "Chip Neural", preco: 45000, estoque: 2, categoria: "tech", desc: "Reduz cooldowns e dá bônus de 20% no lucro do !concluir." },
+    "bateria": { nome: "Bateria de Lítio Pro", preco: 7000, estoque: 10, categoria: "tech", desc: "Consumível: Reseta instantaneamente o cooldown do !atacar." },
+    "visor": { nome: "Visor Noturno", preco: 16000, estoque: 4, categoria: "tech", desc: "Permite ver quem tem mais dinheiro na mão no momento." },
+    "virus": { nome: "Vírus Cavalo de Tróia", preco: 20000, estoque: 3, categoria: "tech", desc: "Rouba 10% do banco de um alvo aleatório (Risco de falha)." },
+
+    // ❤️ CATEGORIA: RELACIONAMENTO & LUXO (SISTEMA DE AFINIDADE)
+    "anel": { nome: "Anel de Diamante", preco: 50000, estoque: 2, categoria: "presente", desc: "Aumenta drasticamente a afinidade ao dar um !presentear." },
+    "flores": { nome: "Buquê de Flores", preco: 1500, estoque: 50, categoria: "presente", desc: "Aumenta +10 de afinidade no comando !presentear." },
+    "chocolate": { nome: "Caixa de Bombons", preco: 3000, estoque: 30, categoria: "presente", desc: "Aumenta a afinidade e reseta o cooldown de comandos sociais." },
+    "urso": { nome: "Urso Gigante", preco: 7000, estoque: 10, categoria: "presente", desc: "Um presente fofo que concede +25 de afinidade ao cônjuge." },
+    "mansao": { nome: "Escritório na Mansão", preco: 350000, estoque: 1, categoria: "luxo", desc: "Dobra o valor recebido em bónus diários (!daily)." },
+
+    // 💎 CATEGORIA: RELÍQUIAS LENDÁRIAS
+    "faccao": { nome: "Convite de Facção", preco: 2000000, estoque: 1, categoria: "lendario", desc: "Dá acesso ao cargo supremo e bónus em todos os crimes." },
+    "iate": { nome: "Escritório no Iate", preco: 500000, estoque: 1, categoria: "lendario", desc: "Reduz as multas de polícia em 50% permanentemente." },
+    "jatinho": { nome: "Jatinho Particular", preco: 1500000, estoque: 1, categoria: "lendario", desc: "Permite fugir de qualquer tentativa de !matar ou !kick." },
+    "relogio": { nome: "Relógio de Ouro", preco: 100000, estoque: 2, categoria: "lendario", desc: "Exibe um título especial de 'Magnata' no seu perfil." },
+    "coroa": { nome: "Coroa do Rei do Crime", preco: 5000000, estoque: 1, categoria: "lendario", desc: "O item mais caro. Dá imunidade a roubos de qualquer jogador." }
+}; 
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
@@ -86,22 +116,62 @@ client.on('messageCreate', async (message) => {
         return message.reply(`💰 **${alvo.username}** tem **${saldo} moedas**.`);
     }
 
-    // COMANDO DAILY
-    if (command === 'daily') {
-        const tempoEspera = 24 * 60 * 60 * 1000;
+// ==================== 🎁 COMANDO DAILY (INTEGRADO) ====================
+if (command === 'daily') {
+    try {
+        const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
         const agora = Date.now();
+        const inventory = userData.inventory || [];
+
+        // 1. Verificação de Cooldown
         if (agora - (userData.lastDaily || 0) < tempoEspera) {
             const restando = tempoEspera - (agora - userData.lastDaily);
-            return message.reply(`❌ Tente novamente em **${Math.floor(restando / 3600000)}h**.`);
+            const horas = Math.floor(restando / 3600000);
+            const minutos = Math.floor((restando % 3600000) / 60000);
+            
+            return message.reply(`❌ Já coletaste o teu bônus hoje! Volta em **${horas}h e ${minutos}min**.`);
         }
-        const ganho = Math.floor(Math.random() * 7001) + 3000;
+
+        // 2. Lógica de Ganhos
+        let ganho = Math.floor(Math.random() * 7001) + 3000; // Base: 3k a 10k
+        let extras = [];
+
+        // --- BÔNUS: MANSÃO (Dobra o valor) ---
+        if (inventory.includes('mansao')) {
+            ganho *= 2;
+            extras.push("🏡 **Bônus de Mansão (2x)**");
+        }
+
+        // --- BÔNUS: RELÓGIO DE OURO (Bônus fixo de ostentação) ---
+        if (inventory.includes('relogio')) {
+            const bonusOuro = 2500;
+            ganho += bonusOuro;
+            extras.push("⌚ **Bônus Magnata (+2.5k)**");
+        }
+
+        // 3. Salvamento
         userData.money += ganho;
         userData.lastDaily = agora;
         await userData.save();
-        return message.reply(`🎁 Ganhaste **${ganho.toLocaleString()}** moedas!`);
-    }
 
-// ==================== 🔨 COMANDO TRABALHAR (PROGRESSÃO 1K) ====================
+        // 4. Resposta Estilizada
+        let resposta = `🎁 **RECOMPENSA DIÁRIA** 🎁\n\n` +
+                       `Recebeste **${ganho.toLocaleString()} moedas** hoje!`;
+
+        if (extras.length > 0) {
+            resposta += `\n\n✨ **Benefícios ativos:**\n${extras.join('\n')}`;
+        }
+
+        resposta += `\n\n*Amanhã tem mais! Não te esqueças de voltar.*`;
+
+        return message.reply(resposta);
+
+    } catch (error) {
+        console.error("Erro no comando daily:", error);
+        message.reply("❌ Ocorreu um erro ao coletar o seu daily.");
+    }
+}
+// ==================== 🔨 COMANDO TRABALHAR (VERSÃO 2.0 - INTEGRADA) ====================
 if (command === 'trabalhar' || command === 'work') {
     const now = Date.now();
     const inventory = userData.inventory || [];
@@ -109,34 +179,41 @@ if (command === 'trabalhar' || command === 'work') {
     const isFaccao = userData.cargo === "Membro da Facção";
     const lastWork = userData.lastWork || 0;
 
-    // 1. Definição Dinâmica de Cooldown (11 Níveis até 60min)
+    // 1. Definição Dinâmica de Cooldown
     let cooldown;
-    if (totalTrabalhos < 30) cooldown = 600000;          // 10 min
-    else if (totalTrabalhos < 70) cooldown = 900000;     // 15 min
-    else if (totalTrabalhos < 130) cooldown = 1200000;   // 20 min
-    else if (totalTrabalhos < 200) cooldown = 1500000;   // 25 min
-    else if (totalTrabalhos < 300) cooldown = 1800000;   // 30 min
-    else if (totalTrabalhos < 420) cooldown = 2100000;   // 35 min
-    else if (totalTrabalhos < 550) cooldown = 2400000;   // 40 min
-    else if (totalTrabalhos < 700) cooldown = 2700000;   // 45 min
-    else if (totalTrabalhos < 850) cooldown = 3000000;   // 50 min
-    else if (totalTrabalhos < 1000) cooldown = 3300000;  // 55 min
-    else cooldown = 3600000;                             // 60 min (Nível Máximo)
+    if (totalTrabalhos < 30) cooldown = 600000;
+    else if (totalTrabalhos < 70) cooldown = 900000;
+    else if (totalTrabalhos < 130) cooldown = 1200000;
+    else if (totalTrabalhos < 200) cooldown = 1500000;
+    else if (totalTrabalhos < 300) cooldown = 1800000;
+    else if (totalTrabalhos < 420) cooldown = 2100000;
+    else if (totalTrabalhos < 550) cooldown = 2400000;
+    else if (totalTrabalhos < 700) cooldown = 2700000;
+    else if (totalTrabalhos < 850) cooldown = 3000000;
+    else if (totalTrabalhos < 1000) cooldown = 3300000;
+    else cooldown = 3600000;
+
+    // --- [NOVO] BÔNUS PASSIVO: CHIP NEURAL (Reduz cooldown em 30%) ---
+    if (inventory.includes('chip')) {
+        cooldown = Math.floor(cooldown * 0.7);
+    }
 
     // 2. Verificação de Cooldown / Passaporte
     if (now - lastWork < cooldown) {
+        // Se tiver passaporte, ele usa automaticamente para não barrar o comando
         if (inventory.includes('passaporte')) {
             const index = userData.inventory.indexOf('passaporte');
             userData.inventory.splice(index, 1);
-            userData.markModified('inventory'); 
+            userData.markModified('inventory');
+            // Deixa passar para o trabalho...
         } else {
             const restante = cooldown - (now - lastWork);
             const minutos = Math.ceil(restante / 60000);
-            return message.reply(`⏳ Estás cansado! Volta em **${minutos} minutos**.\n💡 *Dica: O **Passaporte Falso** reseta o tempo instantaneamente!*`);
+            return message.reply(`⏳ Estás cansado! Volta em **${minutos} minutos**.\n💡 *Dica: Podes usar um **Café Energético** ou um **Passaporte** para resetar o tempo!*`);
         }
     }
 
-    // 3. Lógica de Profissões e Ganhos (11 Níveis)
+    // 3. Lógica de Profissões (Mantendo sua estrutura original)
     let ganhoBase = 0;
     let nomeProfissao = "";
 
@@ -166,11 +243,14 @@ if (command === 'trabalhar' || command === 'work') {
         else { ganhoBase = Math.floor(Math.random() * 10000) + 15000; nomeProfissao = "CEO da Empresa 💎"; }
     }
 
-    // 4. Bônus de Itens e Atualização
+    // 4. BÔNUS DE ITENS (SISTEMA MELHORADO)
     let bonusTotal = 0;
     let extras = [];
-    if (inventory.includes('picareta')) { bonusTotal += 1200; extras.push("⛏️ Picareta (+1.2k)"); }
-    if (inventory.includes('computador')) { bonusTotal += 3000; extras.push("💻 Computador (+3k)"); }
+    
+    if (inventory.includes('picareta')) { bonusTotal += 1200; extras.push("⛏️"); }
+    if (inventory.includes('computador')) { bonusTotal += 3000; extras.push("💻"); }
+    if (inventory.includes('uniforme')) { bonusTotal += 500; extras.push("👕"); }
+    if (inventory.includes('chip')) { extras.push("💾"); }
 
     const totalFinal = ganhoBase + bonusTotal;
     userData.money += totalFinal;
@@ -178,15 +258,16 @@ if (command === 'trabalhar' || command === 'work') {
     userData.workCount = (userData.workCount || 0) + 1;
     await userData.save();
 
-    // 5. Resposta Visual
-    let resposta = (now - lastWork < cooldown) ? "🎫 **PASSAPORTE USADO!** O tempo foi resetado.\n" : "";
-    resposta += `🔨 Trabalhaste como **${nomeProfissao}** e ganhaste **${totalFinal.toLocaleString()} moedas**!`;
-    
-    if (extras.length > 0) resposta += `\n> **Bônus:** ${extras.join(' e ')}`;
-    
-    resposta += `\n📊 Nível: \`${userData.workCount}\` | ⏳ Próximo descanso: \`${Math.ceil(cooldown/60000)}min\``;
+    // 5. Resposta Visual Estilizada
+    const passaporteTexto = (now - lastWork < cooldown) ? "🎫 **PASSAPORTE USADO!** Cansaço ignorado.\n" : "";
+    const bonusTexto = extras.length > 0 ? `\n> **Bônus ativos:** ${extras.join(' ')} (+\`${bonusTotal.toLocaleString()}\`)` : "";
 
-    return message.reply(resposta);
+    return message.reply(
+        `${passaporteTexto}` +
+        `🔨 Trabalhaste como **${nomeProfissao}** e ganhaste **${totalFinal.toLocaleString()} moedas**!` +
+        `${bonusTexto}\n` +
+        `📊 Nível: \`${userData.workCount}\` | ⏳ Cooldown: \`${Math.ceil(cooldown/60000)}min\``
+    );
 }
 if (command === 'setmoney') {
     // Substitua apenas os números, mantenha as aspas ''
@@ -846,196 +927,461 @@ if (command === 'top') {
             return message.reply("❌ O correio falhou! Tenta enviar a cartinha novamente mais tarde.");
         }
     }
-// ==================== 💋 COMANDO BEIJAR (OTIMIZADO) ====================
-    if (command === 'beijar' || command === 'kiss') {
+    // ==================== 🎁 COMANDO PRESENTEAR (SOCIAL) ====================
+if (command === 'presentear' || command === 'gift' || command === 'dar') {
+    const alvo = message.mentions.users.first();
+    const itemID = args[1]?.toLowerCase();
+
+    // 1. Verificações de Alvo e Item
+    if (!alvo) return message.reply("🎁 **Para quem é o presente?** Menciona alguém! Ex: `!presentear @user rosa`.");
+    if (alvo.id === message.author.id) return message.reply("🤔 Dar um presente a ti mesmo? Que tal seres mais generoso com os outros?");
+    if (alvo.bot) return message.reply("🤖 Bots não têm sentimentos... Guarda o presente para um humano!");
+    if (!itemID) return message.reply("💝 **O que queres dar?** Escreve o ID do item da mochila. Ex: `!presentear @user flores`.");
+
+    const inventory = userData.inventory || [];
+    const index = inventory.indexOf(itemID);
+
+    if (index === -1) return message.reply("❌ Não tens esse item na tua mochila!");
+
+    // 2. Definição de Valores de Afinidade por Item
+    const tabelaAfinidade = {
+        'rosa': { pts: 5, msg: "fichou encantado(a) com a tua rosa solitária! 🌹" },
+        'flores': { pts: 15, msg: "adorou o buquê de flores! O clima está a aquecer. 💐" },
+        'chocolate': { pts: 10, msg: "saboreou o chocolate e achou-te uma doçura! 🍫" },
+        'urso': { pts: 25, msg: "abraçou o urso de pelúcia e agora não para de sorrir! 🧸" },
+        'anel': { pts: 50, msg: "ficou sem palavras com o anel... Isso foi um pedido? 💍" },
+        'mansao': { pts: 500, msg: "AGORA É OFICIAL! Tu deste uma MANSÃO! Quem resistiria? 🏰" }
+    };
+
+    const presente = tabelaAfinidade[itemID];
+    if (!presente) return message.reply("❓ Esse item não pode ser dado como presente social. Tenta uma Rosa, Flores, Chocolate, Urso ou Anel!");
+
+    try {
+        const alvoData = await User.findOne({ userId: alvo.id });
+        if (!alvoData) return message.reply("❌ Esse usuário ainda não tem conta no bot.");
+
+        // 3. Processamento do Presente
+        userData.inventory.splice(index, 1); // Remove da mochila de quem dá
+        
+        // Garante que o campo existe e adiciona os pontos
+        // A afinidade é salva no perfil de quem RECEBE em relação a quem DÁ (ou num campo geral de prestígio)
+        alvoData.affinity = (alvoData.affinity || 0) + presente.pts;
+        
+        // Opcional: Adicionar o item na mochila de quem recebe (se quiseres que o item mude de dono)
+        if (!alvoData.inventory) alvoData.inventory = [];
+        alvoData.inventory.push(itemID);
+
+        userData.markModified('inventory');
+        alvoData.markModified('inventory');
+
+        await userData.save();
+        await alvoData.save();
+
+        // 4. Resposta Especial
+        return message.reply(
+            `🎁 **PRESENTE ENVIADO!**\n` +
+            `❤️ **${alvo.username}** ${presente.msg}\n` +
+            `📈 Afinidade de **${alvo.username}** subiu **+${presente.pts}** pontos!`
+        );
+
+    } catch (err) {
+        console.error("Erro no comando presentear:", err);
+        return message.reply("❌ Ocorreu um erro ao entregar o presente.");
+    }
+}
+
+// ==================== 💋 COMANDO BEIJAR (SISTEMA COMPLETO + 25 FRASES) ====================
+if (command === 'beijar' || command === 'kiss') {
+    try {
         const target = message.mentions.users.first();
+        const inventory = userData.inventory || [];
 
-        // 1. Verificações Iniciais
-        if (!target) return message.reply('❌ Precisas de marcar (@) quem queres beijar!');
-        if (target.id === message.author.id) return message.reply('❌ Beijar o espelho não conta! Marca outra pessoa.');
-        if (target.bot) return message.reply('❌ Beijar circuitos eletrónicos dá choque! Tenta alguém real.');
+        // 1. Verificações de Alvo (Estilo Loritta)
+        if (!target) return message.reply('💋 Você precisa mencionar alguém para beijar! Exemplo: `!beijar @usuario`');
 
-        // 2. Cooldown para evitar spam (10 segundos)
-        const agora = Date.now();
-        const cooldownSocial = 10000; 
-        if (agora - (userData.lastSocial || 0) < cooldownSocial) {
-            return message.reply("⏳ Calma! Beijar demais cansa. Espera uns segundos.");
+        if (target.id === message.author.id) {
+            return message.reply('Você quer beijar você mesmo? Deixe-me fazer isso por você! *lhe dou um beijinho*');
         }
 
-        // 3. Lógica de Afinidade (Se estiverem casados)
-        let msgAdicional = "";
-        if (userData.marriedWith === target.id) {
-            const pts = Math.floor(Math.random() * 3) + 1; // 1 a 3 pontos
-            
-            userData.affinity = (userData.affinity || 0) + pts;
-            
-            // Atualiza o cônjuge no banco de forma atômica (leve)
-            await User.updateOne({ userId: target.id }, { $inc: { affinity: pts } });
-            
-            msgAdicional = `\n💖 **O amor está no ar!** Ganharam **+${pts}** de afinidade.`;
+        if (target.id === message.client.user.id) {
+            return message.reply('Como assim você quer me beijar? Eu sou apenas um bot! Mas tudo bem, eu aceito o seu carinho. *te retribuo com um abraço*');
         }
 
-        // 4. Salva o tempo da última interação social
-        userData.lastSocial = agora;
+        // 2. Lógica de Afinidade e Itens
+        let ganhoAfinidade = 1;
+        let extras = [];
+
+        // --- BÔNUS: ANEL DE DIAMANTE (Passivo: Dobra afinidade) ---
+        if (inventory.includes('anel')) {
+            ganhoAfinidade *= 2;
+            extras.push("💍 **Bônus de Anel:** Afinidade dobrada!");
+        }
+
+        // --- BÔNUS: CHOCOLATE (Consumo Automático: +5 afinidade) ---
+        if (inventory.includes('chocolate')) {
+            const index = userData.inventory.indexOf('chocolate');
+            userData.inventory.splice(index, 1);
+            userData.markModified('inventory');
+            ganhoAfinidade += 5;
+            extras.push("🍫 **Chocolate usado:** +5 de afeto!");
+        }
+
+        // 3. Atualização no Banco de Dados
+        userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
         await userData.save();
 
-        // 5. Resposta Visual
-        const embed = new EmbedBuilder()
-            .setColor('#FF69B4')
-            .setDescription(`💋 ${message.author} deu um beijo apaixonado em ${target}!${msgAdicional}`);
+        // 4. Banco de Dados de Beijos (As 25 variações originais)
+        const mensagens = [
+            `💋 **${message.author.username}** deu um beijo apaixonado em **${target.username}**! ❤️`,
+            `😚 **${message.author.username}** deu um beijo fofinho na bochecha de **${target.username}**! ✨`,
+            `😏 **${message.author.username}** roubou um beijo de **${target.username}**! 🏃‍♂️💨`,
+            `💖 **${message.author.username}** e **${target.username}** deram um beijo cinematográfico! 🎬`,
+            `🥰 **${message.author.username}** deu um beijo carinhoso na testa de **${target.username}**! 🧸`,
+            `🌹 **${message.author.username}** beijou a mão de **${target.username}** com todo cavalheirismo! 🎩`,
+            `🍭 **${message.author.username}** deu um beijo doce em **${target.username}**! 🍬`,
+            `🤭 **${message.author.username}** beijou **${target.username}** e ficou todo vermelho de vergonha! 😳`,
+            `🦋 **${message.author.username}** deu um beijo de esquimó em **${target.username}**! ❄️`,
+            `⚡ **${message.author.username}** e **${target.username}** sentiram faíscas com esse beijo! 🎇`,
+            `✨ **${message.author.username}** deu um beijo de boa noite em **${target.username}**! 🌙`,
+            `🍓 **${message.author.username}** deu um beijo com sabor de morango em **${target.username}**! 🍓`,
+            `💎 **${message.author.username}** deu um beijo precioso em **${target.username}**!`,
+            `🍭 **${message.author.username}** e **${target.username}** trocaram um beijo super fofo!`,
+            `🐾 **${message.author.username}** deu um beijo de gatinho em **${target.username}**! 🐈`,
+            `🌈 **${message.author.username}** deu um beijo colorido em **${target.username}**!`,
+            `🍫 **${message.author.username}** deu um beijo doce como chocolate em **${target.username}**!`,
+            `🎈 **${message.author.username}** deu um beijo leve como um balão em **${target.username}**!`,
+            `⭐ **${message.author.username}** deu um beijo brilhante em **${target.username}**!`,
+            `🔥 **${message.author.username}** deu um beijo super intenso em **${target.username}**! Wow!`,
+            `🎵 **${message.author.username}** beijou **${target.username}** no ritmo da música! 🎶`,
+            `🧸 **${message.author.username}** deu um beijo de urso em **${target.username}**!`,
+            `🌊 **${message.author.username}** deu um beijo refrescante em **${target.username}**!`,
+            `🍩 **${message.author.username}** deu um beijo açucarado em **${target.username}**!`,
+            `💌 **${message.author.username}** mandou um beijo apaixonado para **${target.username}**!`
+        ];
 
-        return message.reply({ embeds: [embed] });
+        const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
+
+        // 5. Resposta Final Combinada
+        let footer = `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${userData.affinity}\`)`;
+        if (extras.length > 0) footer += `\n✨ ${extras.join(' | ')}`;
+
+        return message.channel.send(`${sorteio}${footer}`);
+
+    } catch (error) {
+        console.error("Erro no comando beijar:", error);
+        message.reply("❌ Ocorreu um erro ao processar o seu beijo!");
     }
-// ==================== 💆 COMANDO CAFUNÉ (OTIMIZADO) ====================
-    if (command === 'cafune' || command === 'headpat') {
+}
+// ==================== 💆 COMANDO CAFUNÉ (ESTILO LORITTA & TEXTO PURO) ====================
+if (command === 'cafune' || command === 'headpat') {
+    try {
         const target = message.mentions.users.first();
 
-        // 1. Verificações Básicas
-        if (!target) return message.reply('❌ Precisas de marcar (@) alguém para fazer um cafuné!');
-        if (target.id === message.author.id) return message.reply('❌ Fazeres cafuné em ti próprio é apenas coçar a cabeça!');
+        // 1. Verificações Específicas (Estilo Loritta)
+        if (!target) return message.reply('💆 Você precisa mencionar alguém para fazer um cafuné! Exemplo: `!cafune @usuario`');
 
-        // 2. Cooldown de Interação Social (10 segundos) para evitar spam
-        const agora = Date.now();
-        const cooldownSocial = 10000; 
-        if (agora - (userData.lastSocial || 0) < cooldownSocial) {
-            return message.reply("⏳ Relaxa! Espera uns segundos para o próximo carinho.");
+        // Se a pessoa tentar fazer cafuné nela mesma (Fala da Loritta)
+        if (target.id === message.author.id) {
+            return message.reply('Você quer fazer cafuné em você mesmo? Deixe-me fazer isso por você! *faço um cafuné em sua cabeça*');
         }
 
-        // 3. Lógica de Afinidade para Casados
+        // Se a pessoa tentar fazer cafuné no BOT (Fala da Loritta)
+        if (target.id === message.client.user.id) {
+            return message.reply('Aww, obrigada! Eu adoro carinho atrás das orelhas... digo, nos meus circuitos! *aproveito o cafuné*');
+        }
+
+        // 2. Banco de Dados de Cafuné (Mais de 20 variações criativas)
+        const mensagens = [
+            `💆 **${message.author.username}** está fazendo um cafuné relaxante em **${target.username}**!`,
+            `✨ **${message.author.username}** começou a fazer um cafuné fofinho em **${target.username}**!`,
+            `😊 **${message.author.username}** está bagunçando o cabelo de **${target.username}** com um cafuné!`,
+            `🧸 **${message.author.username}** deu um cafuné bem carinhoso em **${target.username}** para confortá-lo(a).`,
+            `☁️ **${message.author.username}** está fazendo um cafuné tão bom que **${target.username}** quase dormiu!`,
+            `🌟 **${message.author.username}** está dando atenção e muito cafuné para **${target.username}**!`,
+            `🐱 **${message.author.username}** fez um cafuné estilo "gatinho" em **${target.username}**!`,
+            `💤 **${message.author.username}** deixou **${target.username}** relaxado(a) com esse carinho na cabeça!`,
+            `🥰 **${message.author.username}** não resistiu e fez um cafuné em **${target.username}**!`,
+            `🍭 **${message.author.username}** fez um cafuné super doce em **${target.username}**!`,
+            `🖐️ **${message.author.username}** colocou a mão na cabeça de **${target.username}** e começou um cafuné suave.`,
+            `🍀 **${message.author.username}** está fazendo um cafuné da sorte em **${target.username}**!`,
+            `🎵 **${message.author.username}** faz cafuné em **${target.username}** enquanto cantarola uma música.`,
+            `🌈 **${message.author.username}** trouxe alegria para **${target.username}** com um cafuné especial!`,
+            `🧘 **${message.author.username}** está transmitindo paz para **${target.username}** através de um cafuné.`,
+            `💖 **${message.author.username}** está demonstrando todo o seu afeto com um cafuné em **${target.username}**.`,
+            `🍼 **${message.author.username}** mimalhou **${target.username}** com um cafuné de bebê!`,
+            `🍓 **${message.author.username}** deu um cafuné carinhoso em **${target.username}**!`,
+            `🌻 **${message.author.username}** fez um cafuné que iluminou o dia de **${target.username}**!`,
+            `🎈 **${message.author.username}** deixou **${target.username}** nas nuvens com esse cafuné!`
+        ];
+
+        // 3. Sorteio
+        const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
+
+        // 4. Lógica de Afinidade/Cooldown (Opcional - Mantendo a sua ideia anterior)
+        // Se você quiser manter o bônus de afinidade, o código continuaria aqui
         let msgBonus = "";
-        if (userData.marriedWith === target.id) {
-            const pts = 1; // Cafuné dá sempre 1 ponto fixo (é mais simples que o beijo)
-            userData.affinity = (userData.affinity || 0) + pts;
-            
-            // Atualiza o parceiro no banco (Leve e rápido)
-            await User.updateOne({ userId: target.id }, { $inc: { affinity: pts } });
-            msgBonus = `\n😊 <@${target.id}> adorou o carinho! **+1** de afinidade.`;
+        if (typeof userData !== 'undefined' && userData.marriedWith === target.id) {
+            msgBonus = `\n😊 **${target.username}** amou o carinho do seu amor!`;
         }
 
-        // 4. Salva o estado
-        userData.lastSocial = agora;
+        // 5. Envio da Resposta (Texto Puro para evitar bugs)
+        return message.channel.send(`${sorteio}${msgBonus}`);
+
+    } catch (error) {
+        console.error("Erro no comando cafune:", error);
+        message.reply("❌ Ocorreu um erro ao tentar fazer o cafuné!");
+    }
+}
+    
+// ==================== 🤗 COMANDO ABRAÇAR (SISTEMA DE AFETOS + TECH) ====================
+if (command === 'abracar' || command === 'hug') {
+    try {
+        const target = message.mentions.users.first();
+        const inventory = userData.inventory || [];
+        const now = Date.now();
+        const cooldownSocial = 30000; // 30 segundos de cooldown base
+
+        // 1. Verificações Específicas (Estilo Loritta)
+        if (!target) return message.reply('🤗 Precisas de mencionar alguém para abraçar! Exemplo: `!abracar @usuario`');
+
+        if (target.id === message.author.id) {
+            return message.reply('Queres abraçar-te a ti próprio? Deixa-me fazer isso por ti! *te dou um abraço bem apertado*');
+        }
+
+        if (target.id === message.client.user.id) {
+            return message.reply('Aww! Eu adoro abraços! *retribuo o abraço com os meus braços mecânicos e fofinhos*');
+        }
+
+        // 2. Lógica de Itens (Bateria de Lítio reseta cooldown social)
+        let usouBateria = false;
+        if (userData.lastSocial && (now - userData.lastSocial < cooldownSocial)) {
+            if (inventory.includes('bateria')) {
+                const index = userData.inventory.indexOf('bateria');
+                userData.inventory.splice(index, 1);
+                userData.markModified('inventory');
+                usouBateria = true;
+            } else {
+                const restante = Math.ceil((cooldownSocial - (now - userData.lastSocial)) / 1000);
+                return message.reply(`⏳ Calma! Estás muito carente. Espera **${restante} segundos** para abraçar de novo.`);
+            }
+        }
+
+        // 3. Lógica de Afinidade e Anel
+        let ganhoAfinidade = 1;
+        let extras = [];
+
+        if (inventory.includes('anel')) {
+            ganhoAfinidade *= 2;
+            extras.push("💍 **Poder do Anel:** Abraço duplicado!");
+        }
+
+        if (usouBateria) {
+            extras.push("🔋 **Bateria de Lítio:** Cooldown social resetado!");
+        }
+
+        // 4. Atualização no Banco
+        userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
+        userData.lastSocial = now; // Atualiza o tempo da última interação social
         await userData.save();
 
-        // 5. Resposta
-        const embed = new EmbedBuilder()
-            .setColor('#DEB887') // Cor de "conforto"
-            .setDescription(`💆 ${message.author} está a fazer um cafuné relaxante em ${target}!${msgBonus}`);
+        // 5. Banco de Dados de Abraços (Suas 20 frases)
+        const mensagens = [
+            `🤗 **${message.author.username}** deu um abraço bem apertado em **${target.username}**!`,
+            `✨ **${message.author.username}** deu um abraço carinhoso em **${target.username}**!`,
+            `💖 **${message.author.username}** envolveu **${target.username}** em um abraço quentinho!`,
+            `🧸 **${message.author.username}** deu um abraço de urso em **${target.username}**!`,
+            `☁️ **${message.author.username}** deu um abraço reconfortante em **${target.username}**!`,
+            `🌟 **${message.author.username}** correu e deu um abraço surpresa em **${target.username}**!`,
+            `😊 **${message.author.username}** e **${target.username}** estão abraçadinhos!`,
+            `🍂 **${message.author.username}** deu um abraço acolhedor em **${target.username}**!`,
+            `🐱 **${message.author.username}** deu um abraço fofo em **${target.username}**!`,
+            `🌊 **${message.author.username}** deu um abraço calmo em **${target.username}**!`,
+            `🎈 **${message.author.username}** deu um abraço leve em **${target.username}**!`,
+            `🍭 **${message.author.username}** deu um abraço doce em **${target.username}**!`,
+            `🔥 **${message.author.username}** deu um abraço protetor em **${target.username}**!`,
+            `🌈 **${message.author.username}** espalhou alegria com um abraço em **${target.username}**!`,
+            `🌻 **${message.author.username}** deu um abraço que iluminou o dia de **${target.username}**!`,
+            `🎶 **${message.author.username}** deu um abraço ritmado em **${target.username}**!`,
+            `💎 **${message.author.username}** deu um abraço valioso em **${target.username}**!`,
+            `🛡️ **${message.author.username}** deu um abraço de "estou aqui com você" em **${target.username}**!`,
+            `🚀 **${message.author.username}** deu um abraço sideral em **${target.username}**!`,
+            `⚡ **${message.author.username}** deu um abraço eletrizante em **${target.username}**!`
+        ];
 
-        return message.reply({ embeds: [embed] });
+        const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
+        let msgCasal = (userData.marriedWith === target.id) ? `\n💖 **${target.username}** se sentiu muito amado(a) com o seu abraço!` : "";
+
+        // 6. Resposta Final
+        let footer = `\n\n💕 **Afinidade:** \`+${ganhoAfinidade}\` | Total: \`${userData.affinity}\``;
+        if (extras.length > 0) footer += `\n✨ ${extras.join(' | ')}`;
+
+        return message.channel.send(`${sorteio}${msgCasal}${footer}`);
+
+    } catch (error) {
+        console.error("Erro no comando abraçar:", error);
+        message.reply("❌ Aconteceu um erro ao tentar dar esse abraço!");
     }
-    
-// ==================== 🤗 COMANDO ABRAÇAR (OTIMIZADO) ====================
-    if (command === 'abracar' || command === 'hug') {
+}
+// ==================== 🖐️ COMANDO TAPA (ESTILO LORITTA & TEXTO PURO) ====================
+if (command === 'tapa' || command === 'slap') {
+    try {
+        const target = message.mentions.users.first();
+
+        // 1. Verificações Específicas (Estilo Loritta)
+        if (!target) return message.reply('🖐️ Você precisa mencionar alguém para dar um tapa! Exemplo: `!tapa @usuario`');
+
+        // Se a pessoa tentar se bater (Fala da Loritta)
+        if (target.id === message.author.id) {
+            return message.reply('Você quer se bater? Não faça isso! Se você quer tanto dar um tapa em alguém, bata em mim... não, espera, em mim também não!');
+        }
+
+        // Se a pessoa tentar bater no BOT (Fala da Loritta)
+        if (target.id === message.client.user.id) {
+            return message.reply('Ei! Por que você está tentando me bater? Eu sou apenas um bot inofensivo! *começo a chorar virtualmente*');
+        }
+
+        // 2. Banco de Dados de Tapas (20 variações criativas)
+        const mensagens = [
+            `🖐️ **POW!** **${message.author.username}** deu um tapa bem estalado em **${target.username}**!`,
+            `💢 **${message.author.username}** deu um tapa de anime em **${target.username}**!`,
+            `😤 **${message.author.username}** perdeu a paciência e deu um tapa em **${target.username}**!`,
+            `💨 **${message.author.username}** deu um tapa tão rápido em **${target.username}** que nem deu para ver!`,
+            `🥊 **${message.author.username}** deu um tabefe em **${target.username}**!`,
+            `😹 **${message.author.username}** deu um tapa de brincadeira em **${target.username}**!`,
+            `😵 **${message.author.username}** deixou **${target.username}** tonto com esse tapa!`,
+            `💥 **${message.author.username}** deu um tapa épico em **${target.username}**!`,
+            `🤫 **${message.author.username}** deu um tapa silencioso em **${target.username}**!`,
+            `🙄 **${message.author.username}** deu um tapa "acorda pra vida" em **${target.username}**!`,
+            `👐 **${message.author.username}** deu um tapa duplo em **${target.username}**!`,
+            `🦗 **${message.author.username}** tentou dar um tapa em **${target.username}**, mas ele(a) desviou!`,
+            `🎭 **${message.author.username}** deu um tapa dramático em **${target.username}**!`,
+            `🥀 **${message.author.username}** deu um tapa com uma luva em **${target.username}**, que clássico!`,
+            `🔥 **${message.author.username}** deu um tapa ardente em **${target.username}**!`,
+            `👊 **${message.author.username}** deu um soco... não, espera, foi só um tapa em **${target.username}**!`,
+            `🥨 **${message.author.username}** deu um tapa de "pare com isso" em **${target.username}**!`,
+            `🌊 **${message.author.username}** deu um tapa molhado em **${target.username}**!`,
+            `✨ **${message.author.username}** deu um tapa mágico em **${target.username}**!`,
+            `💫 **${message.author.username}** fez **${target.username}** ver estrelas com esse tapa!`
+        ];
+
+        // 3. Sorteio
+        const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
+
+        // 4. Lógica de Cooldown (Opcional - usando sua variável)
+        const agora = Date.now();
+        if (typeof userData !== 'undefined') {
+            if (agora - (userData.lastSocial || 0) < 10000) {
+                return message.reply("⏳ Calma, a violência não é a resposta! Espera uns segundos.");
+            }
+            userData.lastSocial = agora;
+            await userData.save();
+        }
+
+        // 5. Envio da Resposta (Texto Puro)
+        return message.channel.send(sorteio);
+
+    } catch (error) {
+        console.error("Erro no comando tapa:", error);
+        message.reply("❌ Ocorreu um erro ao tentar dar esse tapa!");
+    }
+}
+// ==================== ⚔️ COMANDO ATACAR (SISTEMA DE COMBATE INTEGRADO) ====================
+if (command === 'atacar' || command === 'attack') {
+    try {
         const target = message.mentions.users.first();
 
         // 1. Verificações de Alvo
-        if (!target) return message.reply('❌ Marca alguém para dares um abraço quentinho!');
-        if (target.id === message.author.id) return message.reply('❌ Um abraço em ti próprio? Estás carente? 🥺');
+        if (!target) return message.reply('⚔️ Precisas de mencionar alguém para atacar! Exemplo: `!atacar @usuario`');
+        if (target.id === message.author.id) return message.reply('Queres atacar-te a ti próprio? Se estás triste, eu posso dar-te um abraço! 🤗');
+        if (target.id === message.client.user.id) return message.reply('Ei! Por que me queres atacar? Eu sou apenas um bot fofinho! 🤖📦');
 
-        // 2. Cooldown Social Integrado (10 segundos)
+        const targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
         const agora = Date.now();
-        const cooldownSocial = 10000; 
-        if (agora - (userData.lastSocial || 0) < cooldownSocial) {
-            return message.reply("⏳ Calma! Muitos abraços ao mesmo tempo tiram o fôlego. Espera um pouco.");
+        const myInv = userData.inventory || [];
+        const targetInv = targetData.inventory || [];
+
+        // 2. Cooldown com Bônus (Chip Neural reduz cansaço de luta)
+        let cooldownLuta = 15000; 
+        if (myInv.includes('chip')) cooldownLuta = 5000; // Reduz para 5s
+
+        if (agora - (userData.lastSocial || 0) < cooldownLuta) {
+            const restante = Math.ceil((cooldownLuta - (agora - userData.lastSocial)) / 1000);
+            return message.reply(`⏳ Estás sem fôlego! Espera **${restante}s** para lutar de novo.`);
         }
 
-        // 3. Bónus de Afinidade (Casados)
-        let msgAfinidade = "";
-        if (userData.marriedWith === target.id) {
-            const pts = 2; // O abraço é mais forte que o cafuné, dá 2 pontos
-            userData.affinity = (userData.affinity || 0) + pts;
+        // 3. Status de Equipamento
+        const euTenhoArma = myInv.includes('arma');
+        const euTenhoFaca = myInv.includes('faca');
+        const euTenhoChip = myInv.includes('chip');
+        const alvoTemArma = targetInv.includes('arma');
+        const indexEscudoAlvo = targetInv.indexOf('escudo');
+
+        // 4. Lógica de Poder (Chance de Vitória)
+        let chanceVitoria = 0.50; // 50/50 base
+        let bonusTexto = [];
+
+        if (euTenhoFaca) { chanceVitoria += 0.15; bonusTexto.push("🔪 Faca (+15%)"); }
+        if (euTenhoArma) { chanceVitoria += 0.25; bonusTexto.push("🔫 Pistola (+25%)"); }
+        if (euTenhoChip) { chanceVitoria += 0.10; bonusTexto.push("💾 Chip Neural (+10%)"); }
+
+        // Penalidade se o alvo estiver armado
+        if (alvoTemArma) { chanceVitoria -= 0.30; bonusTexto.push("⚠️ Alvo Armado (-30%)"); }
+
+        // 5. Verificação de Escudo (Defesa Absoluta)
+        if (indexEscudoAlvo !== -1 && !euTenhoArma) {
+            targetData.inventory.splice(indexEscudoAlvo, 1);
+            targetData.markModified('inventory');
+            await targetData.save();
+            userData.lastSocial = agora;
+            await userData.save();
+            return message.reply(`🛡️ **DEFESA!** **${target.username}** usou um **Escudo** para bloquear o teu ataque perfeitamente! O escudo quebrou, mas ele saiu ileso.`);
+        }
+
+        // 6. Execução do Combate
+        const venceu = Math.random() < chanceVitoria;
+        let resultadoTexto = "";
+
+        if (venceu) {
+            const frasesVitoria = [
+                `🥊 **NOCAUTE!** **${message.author.username}** acertou um soco em cheio em **${target.username}**!`,
+                `⚔️ **DOMÍNIO!** **${message.author.username}** venceu a briga e deixou **${target.username}** no chão!`,
+                `💥 **POW!** Com reflexos de ninja, **${message.author.username}** derrotou o oponente!`
+            ];
+            resultadoTexto = frasesVitoria[Math.floor(Math.random() * frasesVitoria.length)];
             
-            // Atualiza o parceiro de forma atómica no banco
-            await User.updateOne({ userId: target.id }, { $inc: { affinity: pts } });
-            msgAfinidade = `\n💖 O vosso vínculo ficou mais forte! **+${pts}** de afinidade.`;
+            // Se venceu usando arma, a frase é especial
+            if (euTenhoArma) resultadoTexto = `🔫 **FOGO CRUZADO!** **${message.author.username}** usou a sua Pistola 9mm para render **${target.username}** sem esforço! 🏆`;
+        } else {
+            const frasesDerrota = [
+                `🤕 **DERROTA!** **${target.username}** desviou do golpe de **${message.author.username}** e revidou com força!`,
+                `🛡️ **CONTRA-ATAQUE!** **${message.author.username}** tentou atacar, mas levou a pior contra **${target.username}**!`,
+                `💀 **QUE VIRADA!** **${target.username}** imobilizou **${message.author.username}** e ganhou a luta!`
+            ];
+            resultadoTexto = frasesDerrota[Math.floor(Math.random() * frasesDerrota.length)];
+
+            if (alvoTemArma) resultadoTexto = `🛡️ **REAÇÃO ARMADA!** **${target.username}** sacou uma Pistola 9mm e fez **${message.author.username}** fugir desesperado! 🏃💨`;
         }
 
-        // 4. Salva o cooldown no perfil do autor
+        // 7. Salvamento
         userData.lastSocial = agora;
         await userData.save();
 
-        // 5. Embed Visual
-        const embed = new EmbedBuilder()
-            .setColor('#5865F2') // Azul Blurple do Discord (cor acolhedora)
-            .setDescription(`🤗 ${message.author} deu um abraço bem apertado em ${target}!${msgAfinidade}`);
-
-        return message.reply({ embeds: [embed] });
-    }
-// ==================== 🖐️ COMANDO TAPA (OTIMIZADO) ====================
-    if (command === 'tapa' || command === 'slap') {
-        const target = message.mentions.users.first();
-        if (!target) return message.reply('❌ Precisas de marcar alguém para dar um tapa!');
-        if (target.id === message.author.id) return message.reply('❌ Dar um tapa em ti próprio? Estás bem? 🤨');
-
-        const agora = Date.now();
-        if (agora - (userData.lastSocial || 0) < 10000) return message.reply("⏳ Calma, a violência não é a resposta! Espera uns segundos.");
-
-        userData.lastSocial = agora;
-        await userData.save();
-
-        return message.reply(`🖐️ **POW!** ${message.author} deu um tapa bem estalado em ${target}!`);
-    }
-
-// ==================== ⚔️ COMANDO ATACAR (SISTEMA DE ARMAS) ====================
-    if (command === 'atacar' || command === 'attack') {
-        const target = message.mentions.users.first();
-        if (!target || target.id === message.author.id || target.bot) {
-            return message.reply('❌ Escolhe um alvo válido (que não sejas tu nem um bot)!');
-        }
-
-        const targetData = await User.findOne({ userId: target.id }) || new User({ userId: target.id });
-        const agora = Date.now();
+        // 8. Resposta Final
+        const embedTitulo = venceu ? "🤺 **VITÓRIA NA ARENA!**" : "🛡️ **DERROTA NA ARENA!**";
+        let msgFinal = `${embedTitulo}\n\n${resultadoTexto}`;
         
-        // Cooldown de 15 segundos
-        if (agora - (userData.lastSocial || 0) < 15000) {
-            return message.reply("⏳ Estás sem fôlego! Espera um pouco antes da próxima luta.");
-        }
+        if (bonusTexto.length > 0) msgFinal += `\n\n✨ **Fatores:** \`${bonusTexto.join(' | ')}\``;
 
-        const euTenhoArma = (userData.inventory || []).includes('arma');
-        const alvoTemArma = (targetData.inventory || []).includes('arma');
+        return message.channel.send(msgFinal);
 
-        let venceu = false;
-        let descricao = "";
-
-        // --- LÓGICA DE COMBATE COM ARMAS ---
-        if (euTenhoArma && !alvoTemArma) {
-            // Vitória garantida se só o atacante tiver arma
-            venceu = true;
-            descricao = `🔫 **DOMÍNIO TOTAL!** ${message.author} sacou uma Pistola 9mm. ${target} não teve chance e rendeu-se imediatamente! 🏆`;
-        } 
-        else if (!euTenhoArma && alvoTemArma) {
-            // Derrota garantida se o alvo tiver arma e o atacante não
-            venceu = false;
-            descricao = `🛡️ **REAÇÃO ARMADA!** ${message.author} tentou atacar, mas ${target} puxou uma Pistola 9mm e colocou o agressor para correr! 🏃💨`;
-        } 
-        else if (euTenhoArma && alvoTemArma) {
-            // Duelo se ambos tiverem arma (50/50)
-            venceu = Math.random() > 0.5;
-            descricao = venceu 
-                ? `💥 **TIROTEIO!** Ambos estavam armados, mas ${message.author} foi mais rápido no gatilho e venceu o duelo contra ${target}! 🏆`
-                : `💥 **TIROTEIO!** No meio da troca de tiros, ${target} levou a melhor e desarmou ${message.author}!`;
-        } 
-        else {
-            // Luta comum se ninguém tiver arma (50/50)
-            venceu = Math.random() > 0.5;
-            descricao = venceu 
-                ? `⚔️ **Luta de rua!** ${message.author} atacou ${target} e venceu no soco! 🏆`
-                : `🛡️ **Contra-ataque!** ${message.author} tentou atacar ${target}, mas acabou por levar a pior na briga!`;
-        }
-
-        userData.lastSocial = agora;
-        await userData.save();
-
-        const embed = new EmbedBuilder()
-            .setTitle('🤺 ARENA DE COMBATE')
-            .setColor(venceu ? '#2ecc71' : '#e74c3c')
-            .setDescription(descricao)
-            .setTimestamp();
-
-        return message.reply({ embeds: [embed] });
+    } catch (error) {
+        console.error("Erro no comando atacar:", error);
+        message.reply("❌ Ocorreu um erro durante a batalha!");
     }
-// ==================== 🥷 COMANDO ROUBAR (SISTEMA OMNI ARMAS) ====================
-    if (command === 'roubar' || command === 'steal') {
+}
+// ==================== 🥷 COMANDO ROUBAR (VERSÃO FINAL) ====================
+if (command === 'roubar' || command === 'steal') {
+    try {
         const target = message.mentions.users.first();
         
         // 1. Verificações de Segurança
@@ -1043,7 +1389,8 @@ if (command === 'top') {
         if (target.id === message.author.id) return message.reply('❌ Não podes roubar a ti próprio!');
         if (target.bot) return message.reply('❌ Não podes roubar robôs!');
 
-        let targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+        let targetData = await User.findOne({ userId: target.id });
+        if (!targetData) return message.reply('❌ Esta pessoa ainda não iniciou no bot!');
         if (targetData.money < 500) return message.reply('❌ Esta pessoa está falida, não vale o risco!');
 
         // --- INVENTÁRIOS ---
@@ -1052,34 +1399,60 @@ if (command === 'top') {
 
         const euTenhoArma = myInv.includes('arma');
         const euTenhoFaca = myInv.includes('faca');
+        const euTenhoInibidor = myInv.includes('inibidor');
+        const euTenhoMascara = myInv.includes('mascara');
+        const euTenhoLockpick = myInv.includes('lockpick');
+
         const alvoTemArma = victimInv.includes('arma');
+        const alvoTemCoroa = victimInv.includes('coroa'); // PROTEÇÃO SUPREMA
         const indexEscudo = victimInv.indexOf('escudo');
 
-        // 2. 🛡️ DEFESA PRIORITÁRIA: PISTOLA (Vítima)
-        if (alvoTemArma) {
-            const multaReacao = 3000;
-            userData.money = Math.max(0, userData.money - multaReacao);
-            await userData.save();
-            return message.reply(`🔫 **REAGIRAM!** Tentaste roubar ${target.username}, mas ele sacou uma **Pistola 9mm**! Fugiste a correr e perdeste **${multaReacao.toLocaleString()} moedas**.`);
+        // 2. 🛡️ DEFESA LENDÁRIA: COROA DO REI DO CRIME
+        if (alvoTemCoroa) {
+            return message.reply(`👑 **IMPOSSÍVEL!** ${target.username} porta a **Coroa do Rei**, a sua aura de poder impede qualquer tentativa de roubo!`);
         }
 
-        // 3. 🛡️ DEFESA SECUNDÁRIA: ESCUDO (Vítima)
+        // 3. 🔫 DEFESA: PISTOLA (Vítima)
+        if (alvoTemArma && !euTenhoInibidor) {
+            const multaReacao = 4000;
+            userData.money = Math.max(0, userData.money - multaReacao);
+            await userData.save();
+            return message.reply(`🔫 **REAGIRAM!** Tentaste roubar ${target.username}, mas ele sacou uma **Pistola 9mm**! Fugiste e perdeste **${multaReacao.toLocaleString()} moedas**.`);
+        } 
+        
+        // Se o ladrão tem Inibidor, ele gasta o item para anular a arma da vítima
+        if (alvoTemArma && euTenhoInibidor) {
+            userData.inventory.splice(myInv.indexOf('inibidor'), 1);
+            userData.markModified('inventory');
+        }
+
+        // 4. 🛡️ DEFESA: ESCUDO (Vítima)
         if (indexEscudo !== -1) {
             targetData.inventory.splice(indexEscudo, 1);
             targetData.markModified('inventory');
             await targetData.save();
-            return message.reply(`🛡️ O roubo falhou! **${target.username}** tinha um **Escudo** que foi destruído, mas protegeu o dinheiro!`);
+            return message.reply(`🛡️ **BLOQUEADO!** O roubo falhou! **${target.username}** tinha um **Escudo** que foi destruído, mas protegeu o dinheiro!`);
         }
 
-        // 4. 🔪 CÁLCULO DE CHANCE (Ataque)
-        let chanceSucesso = 0.30; // 30% base
-        if (euTenhoFaca) chanceSucesso = 0.50; // Faca sobe para 50%
-        if (euTenhoArma) chanceSucesso = 0.75; // Pistola no ataque sobe para 75%
+        // 5. 🔪 CÁLCULO DE CHANCE (Ataque)
+        let chanceSucesso = 0.35; 
+        if (euTenhoFaca) chanceSucesso += 0.15; 
+        if (euTenhoArma) chanceSucesso += 0.30;
+        if (euTenhoLockpick) chanceSucesso += 0.10; 
 
-        // 5. EXECUÇÃO
+        // 6. EXECUÇÃO
         if (Math.random() < chanceSucesso) {
-            // Sucesso: Rouba entre 10% e 20% do alvo
-            const roubo = Math.floor(targetData.money * (Math.random() * (0.20 - 0.10) + 0.10));
+            // Sucesso
+            let porcentagem = (Math.random() * (0.25 - 0.10) + 0.10); // 10% a 25%
+            
+            // Bônus do Lockpick: Rouba mais e consome o item
+            if (euTenhoLockpick) {
+                porcentagem += 0.05;
+                userData.inventory.splice(myInv.indexOf('lockpick'), 1);
+                userData.markModified('inventory');
+            }
+
+            const roubo = Math.floor(targetData.money * porcentagem);
             
             userData.money += roubo;
             targetData.money -= roubo;
@@ -1088,18 +1461,29 @@ if (command === 'top') {
             await targetData.save();
 
             let bonusMsg = "";
-            if (euTenhoArma) bonusMsg = " 🔫 *(A tua Pistola garantiu o domínio!)*";
-            else if (euTenhoFaca) bonusMsg = " 🔪 *(A tua faca ajudou no silêncio!)*";
+            if (euTenhoInibidor && alvoTemArma) bonusMsg += "\n📡 **Hackeado!** Teu Inibidor de Sinal desativou a segurança da vítima.";
+            if (euTenhoLockpick) bonusMsg += "\n🔐 **Mestre das Chaves:** O Lockpick garantiu um saque maior (Gasto).";
 
-            return message.reply(`💰 **Assalto bem sucedido!** Levaste **${roubo.toLocaleString()} moedas** de ${target.username}.${bonusMsg}`);
+            return message.reply(`💰 **SUCESSO!** Levaste **${roubo.toLocaleString()} moedas** de ${target.username}.${bonusMsg}`);
         } else {
             // Falha
-            const perda = 1000;
-            userData.money = Math.max(0, userData.money - perda);
+            let perda = 2500;
+            let msgFalha = `👮 **FALHA!** Foste apanhado e pagaste uma multa de **${perda.toLocaleString()} moedas**.`;
+
+            if (euTenhoMascara) {
+                msgFalha = `🎭 **ESCAPE!** Quase foste preso, mas como estavas de **Máscara**, ninguém te identificou. Fugiste sem perder dinheiro!`;
+            } else {
+                userData.money = Math.max(0, userData.money - perda);
+            }
+
             await userData.save();
-            return message.reply(`👮 **A casa caiu!** O alarme disparou e tiveste de largar **${perda.toLocaleString()} moedas** para conseguir fugir!`);
+            return message.reply(msgFalha);
         }
+    } catch (error) {
+        console.error("Erro no roubar:", error);
+        message.reply("❌ Erro técnico ao processar o roubo.");
     }
+}
  // ==================== 🏴 COMANDO ENTRAR NA FACÇÃO (SISTEMA COMPLETO) ====================
 if (command === 'entrarfaccao' || command === 'entrar') {
     const inventory = userData.inventory || [];
@@ -1153,120 +1537,368 @@ if (command === 'entrarfaccao' || command === 'entrar') {
         return message.reply("❌ Ocorreu um erro ao processar a tua entrada.");
     }
 }
-if (command === 'dominio') {
-    // Busca todos os usuários que são da facção
-    const membros = await User.find({ cargo: "Membro da Facção" });
-    const totalPoder = membros.length;
-    const riquezaTotal = membros.reduce((acc, user) => acc + user.money, 0);
-
-    const embed = {
-        color: 0x000000,
-        title: "🏴 Estatísticas da Organização",
-        fields: [
-            { name: "👥 Soldados", value: `${totalPoder}`, inline: true },
-            { name: "💰 Fundo de Caixa", value: `${riquezaTotal.toLocaleString()} moedas`, inline: true },
-            { name: "📊 Influência", value: totalPoder > 5 ? "🔥 Alta (Domínio da Cidade)" : "⚖️ Baixa (Em ascensão)", inline: false }
-        ]
-    };
-    return message.reply({ embeds: [embed] });
-}
-if (command === 'assaltodupla') {
-    // 1. Verificação de Casamento
-    if (!userData.marriedWith) {
-        return message.reply("❌ Este crime exige um parceiro de extrema confiança. Precisas de estar **casado** para planear este assalto!");
-    }
-
-    // 2. Cooldown (6 horas para não quebrar a economia)
-    const cooldown = 21600000; 
-    const agora = Date.now();
-    if (agora - (userData.lastRob || 0) < cooldown) {
-        const restante = Math.ceil((cooldown - (agora - (userData.lastRob || 0))) / 3600000);
-        return message.reply(`⏳ A polícia está a vigiar a vossa casa. Esperem mais **${restante} horas** para o próximo assalto.`);
-    }
-
-    // 3. Lógica de Ganho (Valores altos por ser em dupla)
-    const ganho = Math.floor(Math.random() * 30000) + 15000; // Entre 15k e 45k
-    
-    userData.money += ganho;
-    userData.lastRob = agora;
-    userData.affinity += 15; // Aumenta a afinidade do casal no seu Schema
-    await userData.save();
-
-    // 4. Resposta Temática
-    const embed = {
-        title: "🏦 Assalto em Dupla!",
-        description: `Tu e o teu cônjuge (<@${userData.marriedWith}>) planearam o golpe perfeito no Banco Central!`,
-        color: 0xff0000, // Vermelho
-        fields: [
-            { name: "💰 Lucro Total", value: `${ganho.toLocaleString()} moedas`, inline: true },
-            { name: "❤️ Afinidade", value: "+15 pontos", inline: true }
-        ],
-        footer: { text: "O amor e o crime andam de mãos dadas." }
-    };
-
-    return message.reply({ embeds: [embed] });
-}
-if (command === 'lavar') {
-    if (userData.cargo !== "Membro da Facção") return message.reply("🚫 Apenas a elite sabe como lavar dinheiro.");
-
-    const quantia = parseInt(args[0]);
-    if (!quantia || quantia <= 0) return message.reply("❓ Quanto queres lavar?");
-    if (userData.money < quantia) return message.reply("❌ Não tens esse dinheiro todo.");
-
-    // Sorte: 70% de chance de sucesso
-    if (Math.random() > 0.3) {
-        const bonus = Math.floor(quantia * 0.15); // Ganha 15% de bônus sobre o valor
-        userData.money += bonus;
-        await userData.save();
-        return message.reply(`🧼 **Dinheiro Limpo!** Lavaste **${quantia.toLocaleString()}** e conseguiste um retorno de **${bonus.toLocaleString()}** em bónus.`);
-    } else {
-        const perda = Math.floor(quantia * 0.5); // Perde metade se for pego
-        userData.money -= perda;
-        await userData.save();
-        return message.reply(`🚨 **PF na porta!** A lavagem foi descoberta e o governo confiscou **${perda.toLocaleString()}** das tuas contas.`);
-    }
-}
-// ==================== ❄️ COMANDO TRÁFICO (EXCLUSIVO FACÇÃO) ====================
-if (command === 'traficar' || command === 'trafico') {
-    // 1. Verificação de Cargo
-    if (userData.cargo !== "Membro da Facção") {
-        return message.reply("🚫 **Acesso Negado.** Apenas membros da elite da facção conhecem as rotas de tráfico.");
-    }
-
-    const now = Date.now();
-    const cooldown = 7200000; // 2 horas de espera
-    const lastTrafico = userData.lastTrafico || 0;
-
-    if (now - lastTrafico < cooldown) {
-        const restante = cooldown - (now - lastTrafico);
-        const horas = Math.floor(restante / 3600000);
-        const minutos = Math.ceil((restante % 3600000) / 60000);
-        return message.reply(`⏳ A polícia está a vigiar as rotas. Volta em **${horas}h e ${minutos}min**.`);
-    }
-
-    // 2. Lógica de Sucesso (80% sucesso, 20% prejuízo/prisão)
-    const sorte = Math.random();
-    
-    if (sorte > 0.20) {
-        let ganho = Math.floor(Math.random() * 20001) + 15000; // Ganha entre 15k e 35k
+// ==================== 🏴 COMANDO DOMÍNIO (COLETIVO DA FACÇÃO) ====================
+if (command === 'dominio' || command === 'faccao') {
+    try {
+        // 1. Busca todos os usuários que pertencem à facção (ajuste os nomes dos cargos conforme seu bot)
+        const membros = await User.find({ 
+            cargo: { $in: ["Membro da Facção", "Líder da Facção 🏴‍☠️"] } 
+        });
         
-        // Bônus se tiver Pistola no inventário
-        if ((userData.inventory || []).includes('arma')) {
-            ganho += 5000;
+        if (membros.length === 0) {
+            return message.reply("🚫 A organização ainda não tem membros registrados.");
         }
 
-        userData.money += ganho;
-        userData.lastTrafico = now;
-        await userData.save();
-
-        return message.reply(`📦 **Entrega concluída!** Movimentaste a mercadoria com sucesso e lucraste **${ganho.toLocaleString()} moedas**.`);
-    } else {
-        const multa = 10000;
-        userData.money = Math.max(0, userData.money - multa);
-        userData.lastTrafico = now; // Mesmo perdendo, entra em cooldown
-        await userData.save();
+        // 2. Cálculos Coletivos (Agora usando os novos campos)
+        const totalSoldados = membros.length;
+        const riquezaTotal = membros.reduce((acc, user) => acc + (user.money || 0) + (user.bank || 0) + (user.dirtyMoney || 0), 0);
+        const totalTrabalhos = membros.reduce((acc, user) => acc + (user.workCount || 0), 0);
         
-        return message.reply(`🚨 **Cercado!** Tiveste de abandonar a mercadoria e subornar os polícias. Perdeste **${multa.toLocaleString()} moedas**.`);
+        // Contagem de arsenal e tecnologia coletiva
+        let arsenal = { armas: 0, dinamites: 0, inibidores: 0 };
+        
+        membros.forEach(user => {
+            const inv = user.inventory || [];
+            arsenal.armas += inv.filter(item => item === 'arma').length;
+            arsenal.dinamites += inv.filter(item => item === 'dinamite').length;
+            arsenal.inibidores += inv.filter(item => item === 'inibidor').length;
+        });
+
+        // 3. Lógica de Influência (Baseada em Soldados, Armas e Operações)
+        let statusInfluencia = "⚖️ Iniciante (Gangue de Bairro)";
+        let corEmbed = 0x555555; // Cinza
+
+        if (totalSoldados >= 5 && totalTrabalhos >= 150) {
+            statusInfluencia = "🔥 Alta (Domínio das Ruas)";
+            corEmbed = 0xffa500; // Laranja
+        } 
+        
+        if (totalSoldados >= 10 && arsenal.armas >= 5 && totalTrabalhos >= 500) {
+            statusInfluencia = "💀 Lendária (Dona da Cidade)";
+            corEmbed = 0x000000; // Preto
+        }
+        
+        if (totalSoldados >= 15 && arsenal.dinamites >= 10 && riquezaTotal > 1000000) {
+            statusInfluencia = "👑 Suprema (Sindicato do Crime)";
+            corEmbed = 0x8b0000; // Vermelho Escuro
+        }
+
+        // 4. Construção do Painel
+        const embed = {
+            color: corEmbed,
+            title: "🏴 RELATÓRIO DE DOMÍNIO: ORGANIZAÇÃO",
+            description: "Análise estratégica de poder e recursos da facção no servidor.",
+            thumbnail: { url: "https://i.imgur.com/uO6XG9A.png" },
+            fields: [
+                { name: "👥 Soldados", value: `\`${totalSoldados}\` membros`, inline: true },
+                { name: "📊 Operações", value: `\`${totalTrabalhos}\` concluídas`, inline: true },
+                { name: "📊 Influência", value: `**${statusInfluencia}**`, inline: false },
+                { 
+                    name: "📦 Recursos Coletivos", 
+                    value: `🔫 Armas: \`${arsenal.armas}\` | 🧨 Dinamites: \`${arsenal.dinamites}\` | 📡 Inibidores: \`${arsenal.inibidores}\``, 
+                    inline: false 
+                },
+                { 
+                    name: "💰 Poder Financeiro", 
+                    value: `Total em Circulação: **${riquezaTotal.toLocaleString()}** moedas\n*(Inclui Banco, Carteira e Dinheiro Sujo)*`, 
+                    inline: false 
+                }
+            ],
+            footer: { text: "Lealdade acima de tudo. O crime é um negócio." },
+            timestamp: new Date()
+        };
+
+        return message.reply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error("Erro no comando dominio:", error);
+        message.reply("❌ Erro ao acessar os arquivos criptografados da organização.");
+    }
+}
+// ==================== 🏦 ASSALTO EM DUPLA (SISTEMA DE CASAL & ITENS) ====================
+if (command === 'assaltodupla' || command === 'assalto') {
+    try {
+        // 1. Verificação de Casamento
+        if (!userData.marriedWith) {
+            return message.reply("❌ Este crime exige um parceiro de extrema confiança. Precisas de estar **casado** para planejar este assalto!");
+        }
+
+        // 2. Buscar dados do Parceiro(a)
+        const partnerData = await User.findOne({ userId: userData.marriedWith });
+        if (!partnerData) return message.reply("❌ Erro ao localizar os dados do teu parceiro. Ele(a) ainda joga?");
+
+        // 3. Cooldown (6 horas)
+        const cooldown = 21600000; 
+        const agora = Date.now();
+        const ultimoAssalto = userData.lastRob || 0;
+
+        if (agora - ultimoAssalto < cooldown) {
+            const restante = cooldown - (agora - ultimoAssalto);
+            const horas = Math.floor(restante / 3600000);
+            const minutos = Math.floor((restante % 3600000) / 60000);
+            return message.reply(`⏳ A polícia está de vigia! Esperem mais **${horas}h e ${minutos}min** para o próximo golpe.`);
+        }
+
+        // 4. Lógica de Itens (Verifica se QUALQUER UM dos dois tem o item)
+        const invEu = userData.inventory || [];
+        const invParceiro = partnerData.inventory || [];
+        const invTotal = [...invEu, ...invParceiro];
+        
+        let chanceSucesso = 0.60; // 60% base
+        let ganhoBase = Math.floor(Math.random() * 20000) + 15000; 
+        let afinidadeGanho = 15;
+        let extras = [];
+
+        // --- BÔNUS: INIBIDOR DE SINAL (Aumenta a chance de sucesso) ---
+        if (invTotal.includes('inibidor')) {
+            chanceSucesso += 0.25; // Vai para 85%
+            extras.push("📡 **Inibidor:** Alarme silenciado (Chance +25%)");
+        }
+
+        // --- BÔNUS: DINAMITE (Aumenta muito o lucro) ---
+        if (invTotal.includes('dinamite')) {
+            ganhoBase += 15000;
+            extras.push("🧨 **Dinamite:** Cofre implodido (+15k moedas)");
+            
+            // Consome a dinamite de quem a tiver
+            if (invEu.includes('dinamite')) {
+                userData.inventory.splice(invEu.indexOf('dinamite'), 1);
+                userData.markModified('inventory');
+            } else {
+                partnerData.inventory.splice(invParceiro.indexOf('dinamite'), 1);
+                partnerData.markModified('inventory');
+            }
+        }
+
+        // --- BÔNUS: ANEL DE DIAMANTE (Aumenta afinidade) ---
+        if (invTotal.includes('anel')) {
+            afinidadeGanho += 20;
+            extras.push("💍 **Anel:** Sintonia perfeita (+20 Afeto)");
+        }
+
+        // 5. EXECUÇÃO DO GOLPE
+        if (Math.random() < chanceSucesso) {
+            // --- SUCESSO ---
+            userData.money += ganhoBase;
+            userData.lastRob = agora;
+            userData.affinity = (userData.affinity || 0) + afinidadeGanho;
+            
+            partnerData.money += ganhoBase; 
+            partnerData.affinity = (partnerData.affinity || 0) + afinidadeGanho;
+
+            await userData.save();
+            await partnerData.save();
+
+            const embedSucesso = {
+                title: "🏦 O GOLPE PERFEITO!",
+                description: `Tu e <@${userData.marriedWith}> invadiram o cofre principal e saíram antes das sirenes!`,
+                color: 0x00FF00, // Verde
+                fields: [
+                    { name: "💰 Lucro p/ cada", value: `**${ganhoBase.toLocaleString()}** moedas`, inline: true },
+                    { name: "❤️ Afinidade", value: `+${afinidadeGanho} pontos`, inline: true }
+                ],
+                footer: { text: extras.length > 0 ? `Bônus: ${extras.join(' | ')}` : "Parceria eterna." }
+            };
+            return message.reply({ embeds: [embedSucesso] });
+
+        } else {
+            // --- FALHA ---
+            let multa = 5000;
+            let temMascara = invTotal.includes('mascara');
+            
+            if (temMascara) multa = 0; // Máscara protege da multa no assalto em dupla
+
+            userData.money = Math.max(0, userData.money - multa);
+            userData.lastRob = agora; // Entra em cooldown mesmo falhando
+            
+            partnerData.money = Math.max(0, partnerData.money - multa);
+            partnerData.lastRob = agora;
+
+            await userData.save();
+            await partnerData.save();
+
+            if (temMascara) {
+                return message.reply(`👮 **Cercados!** O alarme disparou, mas as vossas **Máscaras** 🎭 impediram a identificação. Fugiram sem pagar fiança, mas o cooldown ativou!`);
+            } else {
+                return message.reply(`🚨 **A CASA CAIU!** Vocês foram pegos na saída. Cada um teve de pagar **${multa.toLocaleString()} moedas** de fiança para sair da esquadra!`);
+            }
+        }
+
+    } catch (error) {
+        console.error("Erro no assaltodupla:", error);
+        message.reply("❌ Ocorreu um erro ao planejar o assalto.");
+    }
+}
+// ==================== 🧼 COMANDO LAVAR (VERSÃO ARRUMADA) ====================
+if (command === 'lavar') {
+    try {
+        // 1. Verificação de Cargo (Membro da Facção ou Mafia)
+        const cargosCriminais = ["Membro da Facção", "Líder da Facção 🏴‍☠️"]; // Ajuste conforme seus nomes de cargos
+        if (!cargosCriminais.includes(userData.cargo)) {
+            return message.reply("🚫 **Acesso Negado.** Precisas de conexões no Submundo para aceder à rede de lavagem.");
+        }
+
+        const args = message.content.split(' ').slice(1);
+        let quantia = args[0] === 'tudo' ? userData.dirtyMoney : parseInt(args[0]);
+        const myInv = userData.inventory || [];
+
+        // 2. Validações de Entrada
+        if (userData.dirtyMoney <= 0) {
+            return message.reply("❌ Não tens **Dinheiro Sujo** para lavar! Vai cometer alguns crimes primeiro.");
+        }
+
+        if (!quantia || isNaN(quantia) || quantia <= 0) {
+            return message.reply("❓ **Uso correto:** `!lavar <quantia>` ou `!lavar tudo`.");
+        }
+
+        if (userData.dirtyMoney < quantia) {
+            return message.reply(`❌ Só tens **${userData.dirtyMoney.toLocaleString()}** de dinheiro sujo.`);
+        }
+
+        // 3. Lógica de Itens e Taxas (Lavagem sempre tem uma "mãozinha" que fica com parte do dinheiro)
+        let chanceSucesso = 0.75; // 75% base de não ser pego pela polícia
+        let taxaLavagem = 0.25;  // 25% de taxa padrão (Lava 1000, recebe 750)
+        let extras = [];
+
+        // Chip Neural: Hackeia os sistemas fiscais (Diminui a taxa / aumenta o lucro final)
+        if (myInv.includes('chip')) {
+            taxaLavagem -= 0.10; // Taxa cai para 15%
+            extras.push("💾 **Chip Neural:** Otimizou as transações fiscais.");
+        }
+
+        // Inibidor de Sinal: Esconde o IP (Aumenta muito a segurança)
+        if (myInv.includes('inibidor')) {
+            chanceSucesso += 0.20; // Chance sobe para 95%
+            extras.push("📡 **Inibidor:** Bloqueou o rastreio da Unidade de Crimes Financeiros.");
+        }
+
+        // Pendrive: Equipamento básico de hacker (Diminui a taxa levemente)
+        if (myInv.includes('pendrive') && !myInv.includes('chip')) {
+            taxaLavagem -= 0.05; // Taxa cai para 20%
+            extras.push("📟 **Pendrive:** Facilitou a transferência off-shore.");
+        }
+
+        // 4. Execução da Operação
+        if (Math.random() < chanceSucesso) {
+            // --- SUCESSO ---
+            const custoLavagem = Math.floor(quantia * taxaLavagem);
+            const valorLimpo = quantia - custoLavagem;
+
+            userData.dirtyMoney -= quantia;
+            userData.money += valorLimpo;
+            await userData.save();
+
+            let msgSucesso = `🧼 **OPERACÃO CONCLUÍDA COM SUCESSO!**\n\n` +
+                             `💰 **Valor Processado:** \`${quantia.toLocaleString()}\` moedas sujas.\n` +
+                             `💸 **Taxa do Operador:** \`-${custoLavagem.toLocaleString()}\` (Taxa: ${(taxaLavagem * 100).toFixed(0)}%)\n` +
+                             `✅ **Depositado na Carteira:** \`${valorLimpo.toLocaleString()}\` moedas limpas.`;
+            
+            if (extras.length > 0) msgSucesso += `\n\n**Tecnologia detectada:**\n${extras.join('\n')}`;
+            
+            return message.reply(msgSucesso);
+
+        } else {
+            // --- FALHA (Confisco Total ou Parcial) ---
+            const confiscado = Math.floor(quantia * 0.8); // Perde 80% do que tentou lavar
+            userData.dirtyMoney -= quantia;
+            await userData.save();
+
+            return message.reply(`🚨 **A CASA CAIU!** O banco central detectou a movimentação suspeita. **${confiscado.toLocaleString()} moedas** foram confiscadas e o restante foi perdido na fuga!`);
+        }
+
+    } catch (error) {
+        console.error("Erro no comando lavar:", error);
+        message.reply("❌ Ocorreu um erro no processamento financeiro.");
+    }
+}
+// ==================== ❄️ COMANDO TRÁFICO (VERSÃO ELITE FACÇÃO) ====================
+if (command === 'traficar' || command === 'trafico') {
+    try {
+        // 1. Verificação de Cargo
+        if (userData.cargo !== "Membro da Facção") {
+            return message.reply("🚫 **Acesso Negado.** Apenas membros da elite da facção conhecem as rotas de tráfico.");
+        }
+
+        const now = Date.now();
+        const myInv = userData.inventory || [];
+        const lastTrafico = userData.lastTrafico || 0;
+        
+        // --- LÓGICA DE COOLDOWN (Chip Neural ajuda aqui também) ---
+        let cooldown = 7200000; // 2 horas base
+        if (myInv.includes('chip')) {
+            cooldown = 3600000; // Reduz para 1 hora (Membros com chip são mais eficientes)
+        }
+
+        if (now - lastTrafico < cooldown) {
+            const restante = cooldown - (now - lastTrafico);
+            const horas = Math.floor(restante / 3600000);
+            const minutos = Math.ceil((restante % 3600000) / 60000);
+            return message.reply(`⏳ As rotas estão "quentes" (muita polícia). Volta em **${horas}h e ${minutos}min**.`);
+        }
+
+        // 2. Lógica de Itens e Chances
+        let chanceSucesso = 0.80; // 80% base
+        let ganhoBase = Math.floor(Math.random() * 20001) + 15000; // 15k a 35k
+        let extras = [];
+
+        // Bônus: Pistola (Garante mais segurança no transporte)
+        if (myInv.includes('arma')) {
+            ganhoBase += 5000;
+            chanceSucesso += 0.05; // +5% de chance
+            extras.push("🔫 Pistola");
+        }
+
+        // Bônus: Chip Neural (Facilita a fuga e o cálculo das rotas)
+        if (myInv.includes('chip')) {
+            ganhoBase += 3000;
+            chanceSucesso += 0.05; // +5% de chance
+            extras.push("💾 Chip Neural");
+        }
+
+        // 3. Execução
+        const sorteio = Math.random();
+
+        if (sorteio < chanceSucesso) {
+            // SUCESSO
+            userData.money += ganhoBase;
+            userData.lastTrafico = now;
+            await userData.save();
+
+            let msgSucesso = `📦 **OPERAÇÃO BEM SUCEDIDA!**\n` +
+                             `A mercadoria chegou ao destino. Lucraste **${ganhoBase.toLocaleString()} moedas**!`;
+            
+            if (extras.length > 0) msgSucesso += `\n> **Equipamento Utilizado:** ${extras.join(' e ')}`;
+            
+            return message.reply(msgSucesso);
+
+        } else {
+            // FALHA (A polícia interceptou)
+            let multa = 10000;
+            
+            // Se tiver máscara, a polícia não te identifica e a multa cai
+            if (myInv.includes('mascara')) {
+                multa = 3000;
+                extras.push("🎭 Máscara");
+            }
+
+            userData.money = Math.max(0, userData.money - multa);
+            userData.lastTrafico = now;
+            await userData.save();
+
+            let msgFalha = `🚨 **INTERCEPTADO!** A patrulha fechou o cerco. `;
+            
+            if (myInv.includes('mascara')) {
+                msgFalha += `Conseguiste fugir sem ser identificado graças à **Máscara**, mas perdeste **${multa.toLocaleString()}** em mercadoria.`;
+            } else {
+                msgFalha += `Tiveste de subornar os oficiais para não seres preso. Prejuízo de **${multa.toLocaleString()} moedas**.`;
+            }
+
+            return message.reply(msgFalha);
+        }
+
+    } catch (error) {
+        console.error("Erro no comando traficar:", error);
+        message.reply("❌ Ocorreu um erro na rota de tráfico.");
     }
 }
 // ==================== 🎯 COMANDO MISSÕES (EXCLUSIVO FACÇÃO) ====================
@@ -1295,105 +1927,103 @@ if (command === 'missao' || command === 'mission') {
 
     return message.reply(`🎯 **MISSÃO CONCLUÍDA: ${missaoSorteada.nome}**\n> ${missaoSorteada.desc}\n💰 Recompensa: **${missaoSorteada.ganho.toLocaleString()} moedas**.`);
 }
-// ==================== 🌑 COMANDO CRIME (VERSÃO OMNI - COM TIMER DE 24H PARA FACÇÃO) ====================
+// ==================== 🌑 COMANDO CRIME (VERSÃO INTEGRADA) ====================
 if (command === 'crime') {
-    const now = Date.now();
-    const myInv = userData.inventory || [];
-    
-    // Identificação dos itens/status
-    const indexDinamite = myInv.indexOf('dinamite');
-    const temDinamite = indexDinamite !== -1;
-    const temFaccao = myInv.includes('faccao');
-    const temArma = myInv.includes('arma');
-
-    // 1. Definição do Cooldown Dinâmico
-    // Se tem facção: 24 horas (86.400.000 ms). Se não: 30 minutos (1.800.000 ms).
-    const cooldown = temFaccao ? 86400000 : 1800000; 
-    const lastCrime = userData.lastCrime || 0;
-
-    // Verificação de Cooldown
-    if (now - lastCrime < cooldown) {
-        const restante = cooldown - (now - lastCrime);
-        const horas = Math.floor(restante / 3600000);
-        const minutos = Math.floor((restante % 3600000) / 60000);
+    try {
+        const now = Date.now();
+        const myInv = userData.inventory || [];
         
-        if (temFaccao) {
-            return message.reply(`⏳ Como você é de uma **Facção**, a segurança está reforçada! Espere **${horas}h e ${minutos}m** para o próximo grande golpe.`);
+        // Identificação dos itens (IDs sincronizados com a LojaItens)
+        const indexDinamite = myInv.indexOf('dinamite');
+        const temDinamite = indexDinamite !== -1;
+        const temFaccao = myInv.includes('faccao'); // Convite de Facção (Lendário)
+        const temArma = myInv.includes('arma');
+        const temMascara = myInv.includes('mascara');
+        const temFaca = myInv.includes('faca');
+        const temJatinho = myInv.includes('jatinho'); // Para fugas
+        const temInibidor = myInv.includes('inibidor'); // Para bônus de chance
+
+        // 1. Definição do Cooldown
+        // Se for Facção Suprema (Item Lendário), o cooldown é maior porém o lucro é absurdo.
+        const cooldown = temFaccao ? 43200000 : 1800000; // 12h para facção, 30min para comum.
+        const lastCrime = userData.lastCrime || 0;
+
+        if (now - lastCrime < cooldown) {
+            const restante = cooldown - (now - lastCrime);
+            const horas = Math.floor(restante / 3600000);
+            const minutos = Math.floor((restante % 3600000) / 60000);
+            
+            return message.reply(temFaccao 
+                ? `⏳ **Operação em andamento!** A Interpol está à tua procura. Espera **${horas}h e ${minutos}m**.` 
+                : `⏳ A polícia ainda ronda a zona! Espera **${minutos} minutos**.`);
+        }
+
+        // 2. Lógica de Chances e Bônus
+        let chanceSucesso = 0.45; // 45% base
+        let multiplicador = 1;
+        let extrasAtivos = [];
+
+        if (temFaca) { chanceSucesso += 0.07; extrasAtivos.push("🔪"); } 
+        if (temArma) { chanceSucesso += 0.15; multiplicador += 0.5; extrasAtivos.push("🔫"); }
+        if (temInibidor) { chanceSucesso += 0.10; extrasAtivos.push("📡"); } // Inibidor ajuda a não ser detectado
+        if (temDinamite) { chanceSucesso += 0.10; multiplicador += 1.5; extrasAtivos.push("🧨"); }
+        
+        // Se tiver o Convite de Facção, a chance é altíssima e o multiplicador é de elite
+        if (temFaccao) { chanceSucesso = 0.95; multiplicador = 50; extrasAtivos.push("🏴‍☠️"); }
+
+        // 3. Execução do Sorteio
+        const sorteio = Math.random();
+
+        if (sorteio < chanceSucesso) {
+            // --- SUCESSO ---
+            const ganhoBase = Math.floor(Math.random() * 3001) + 2000; 
+            const ganhoFinal = Math.floor(ganhoBase * multiplicador);
+
+            userData.money += ganhoFinal;
+            userData.lastCrime = now;
+
+            // Consumo de Dinamite (Consumível)
+            if (temDinamite) {
+                userData.inventory.splice(indexDinamite, 1);
+                userData.markModified('inventory');
+            }
+
+            await userData.save();
+
+            let msg = `🥷 **O GOLPE FOI UM SUCESSO!**\n\n`;
+            if (temFaccao) msg += `👑 Como **Líder de Facção**, orquestraste um assalto a um banco nacional e lucraste **${ganhoFinal.toLocaleString()} moedas**!`;
+            else if (temDinamite) msg += `💥 A explosão foi perfeita! Limpaste o cofre e levaste **${ganhoFinal.toLocaleString()} moedas**!`;
+            else msg += `💰 Conseguiste escapar pelos becos com **${ganhoFinal.toLocaleString()} moedas**!`;
+
+            if (extrasAtivos.length > 0) msg += `\n> **Equipamento Usado:** ${extrasAtivos.join(' ')}`;
+            
+            return message.reply(msg);
+
         } else {
-            return message.reply(`⏳ A polícia ainda está à tua procura! Espera **${minutos} minutos**.`);
+            // --- FALHA ---
+            // Se tiver Jatinho (Item Lendário), ele nunca paga multa (fuga perfeita)
+            if (temJatinho) {
+                userData.lastCrime = now;
+                await userData.save();
+                return message.reply("👮 **A polícia cercou-te!** Mas tu ligaste o motor do teu **Jatinho Particular** 🛩️ e fugiste para águas internacionais. Sem multas!");
+            }
+
+            let multa = 3000;
+            if (temMascara) multa = Math.floor(multa * 0.4); // Máscara reduz a multa em 60%
+            if (temFaccao) multa = 1000; // Facção paga pouco suborno
+
+            userData.money = Math.max(0, userData.money - multa);
+            userData.lastCrime = now;
+            await userData.save();
+
+            let msgFalha = `👮 **A CASA CAIU!** Foste apanhado e pagaste **${multa.toLocaleString()} moedas** de fiança.`;
+            if (temMascara) msgFalha += `\n🎭 *A tua máscara dificultou a identificação, reduzindo o valor da fiança!*`;
+
+            return message.reply(msgFalha);
         }
-    }
-
-    let chanceSucesso = 0.45; // 45% base
-    let multiplicador = 1;
-
-    // --- LÓGICA DE BÔNUS (PRIORIDADE) ---
-    
-    // Bônus da Pistola
-    if (temArma) {
-        chanceSucesso = 0.60; 
-        multiplicador = 1.5;
-    }
-
-    // Bônus da Dinamite
-    if (temDinamite) {
-        chanceSucesso = 0.75; 
-        multiplicador = 2.5;
-    }
-
-    // Bônus da Facção (Poder Supremo e multiplicador de 125x)
-    if (temFaccao) {
-        chanceSucesso = 0.90; 
-        multiplicador = 125;
-    }
-
-    // 2. Execução
-    const sorteio = Math.random();
-
-    if (sorteio < chanceSucesso) {
-        const ganhoBase = Math.floor(Math.random() * 3001) + 2000; 
-        const ganhoFinal = Math.floor(ganhoBase * multiplicador);
-
-        userData.money += ganhoFinal;
-        userData.lastCrime = now;
-
-        // Lógica de consumo: Só gasta a dinamite se o jogador NÃO tiver Facção
-        if (temDinamite && !temFaccao) {
-            userData.inventory.splice(indexDinamite, 1);
-            userData.markModified('inventory');
-        }
-
-        await userData.save();
-
-        let msg = `🥷 **O golpe foi um sucesso!** `;
-        
-        if (temFaccao) {
-            msg += `Dominaste a cidade com a tua **Facção** e lucraste **${ganhoFinal.toLocaleString()} moedas**! 🏴`;
-        } else if (temDinamite) {
-            msg += `A **Dinamite** abriu o cofre! Lucraste **${ganhoFinal.toLocaleString()} moedas**! 🧨`;
-        } else if (temArma) {
-            msg += `Com a tua **Pistola**, rendeste os guardas e levaste **${ganhoFinal.toLocaleString()} moedas**! 🔫`;
-        } else {
-            msg += `Conseguiste escapar com **${ganhoFinal.toLocaleString()} moedas**! 💰`;
-        }
-        
-        return message.reply(msg);
-
-    } else {
-        // Falha
-        let multa = 1500;
-        if (temFaccao) multa = 0; 
-        else if (temArma) multa = 750; 
-
-        userData.money = Math.max(0, userData.money - multa);
-        userData.lastCrime = now;
-        await userData.save();
-
-        if (temFaccao) {
-            return message.reply(`👮 **A polícia cercou o local!** Mas os teus contatos na Facção tiraram-te de lá antes de seres multado.`);
-        }
-
-        return message.reply(`👮 **A casa caiu!** Tiveste de pagar uma "taxa" de **${multa.toLocaleString()} moedas** para não ires preso.`);
+    } catch (err) {
+        console.error("Erro no crime:", err);
+        message.reply("❌ Erro técnico ao processar o crime.");
     }
 }
 // ==================== 📢 COMANDO ANÚNCIO (SILENCIOSO) ====================
@@ -1569,9 +2199,11 @@ if (command === 'avaliar' || command === 'rate') {
 }
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-// ==================== 👤 COMANDO PERFIL ATUALIZADO ====================
+// ==================== 👤 COMANDO PERFIL (CANVAS EDITION - ARRUMADO) ====================
+const { createCanvas, loadImage, AttachmentBuilder } = require('canvas');
+
 if (command === 'perfil' || command === 'p') {
-    const aguarde = await message.reply("🎨 Desenhando seu perfil completo...");
+    const aguarde = await message.reply("🎨 A desenhar o teu perfil completo...");
 
     try {
         const alvo = message.mentions.users.first() || message.author;
@@ -1596,97 +2228,116 @@ if (command === 'perfil' || command === 'p') {
         const canvas = createCanvas(900, 550); 
         const ctx = canvas.getContext('2d');
 
-        // --- CARREGAR BACKGROUND ---
-        // Agora aceita qualquer link salvo no banco, ou usa o padrão se estiver vazio
-        const fundoUrl = (dados.bg && dados.bg.length > 5) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
-        const background = await loadImage(fundoUrl);
+        // --- BACKGROUND DYNAMICO ---
+        // Se o usuário não tiver o item 'fundo', usa o padrão mesmo que tenha link no banco
+        const temPasse = (dados.inventory || []).includes('fundo');
+        const fundoUrl = (temPasse && dados.bg) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
         
-        ctx.save();
-        ctx.beginPath(); ctx.roundRect(0, 0, 900, 550, 30); ctx.clip();
-        ctx.drawImage(background, 0, 0, 900, 550);
-        ctx.restore();
+        try {
+            const background = await loadImage(fundoUrl);
+            ctx.drawImage(background, 0, 0, 900, 550);
+        } catch (e) {
+            ctx.fillStyle = "#1a1a1a";
+            ctx.fillRect(0, 0, 900, 550);
+        }
 
-        // Camada de contraste (Overlay) - Essencial para ler o texto nos novos fundos
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.beginPath(); ctx.roundRect(20, 20, 860, 510, 20); ctx.fill();
+        // Overlay Escuro para leitura
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
+        ctx.fillRect(20, 20, 860, 510);
 
-        // --- LADO ESQUERDO: AVATAR, NOME E ID ---
-        const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png' }));
+        // --- AVATAR CIRCULAR ---
+        const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png', size: 256 }));
         ctx.save();
         ctx.beginPath(); ctx.arc(130, 130, 80, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
         ctx.drawImage(avatarImg, 50, 50, 160, 160);
         ctx.restore();
 
+        // --- INFO BÁSICA (ESQUERDA) ---
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 32px sans-serif';
+        ctx.font = 'bold 30px sans-serif';
         ctx.fillText(alvo.username.toUpperCase(), 50, 260); 
         
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(`ID: ${alvo.id}`, 50, 285); 
-
-        ctx.font = '20px sans-serif';
-        ctx.fillStyle = '#00FFFF';
-        ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 320);
-        ctx.fillText(`Profissão: ${profissaoNome}`, 50, 350);
-
-        // --- LADO DIREITO: FINANCEIRO ---
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText("💰 SALDO TOTAL", 300, 80);
-        ctx.font = '30px sans-serif';
-        ctx.fillStyle = '#00FF00';
-        ctx.fillText(`${(dados.money + dados.bank).toLocaleString()} moedas`, 300, 115);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("💳 CARTEIRA", 300, 180);
-        ctx.font = '22px sans-serif';
-        ctx.fillText(`${dados.money.toLocaleString()}`, 300, 210);
-
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🏦 BANCO", 580, 180);
-        ctx.font = '22px sans-serif';
-        ctx.fillText(`${dados.bank.toLocaleString()}`, 580, 210);
-
-        // --- PARTE DE BAIXO: TRABALHOS E MOCHILA ---
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🛠️ TRABALHOS REALIZADOS:", 300, 280); 
-        ctx.font = '24px sans-serif';
-        ctx.fillStyle = '#00FFFF';
-        ctx.fillText(`${totalTrabalhos} vezes`, 300, 310);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🎒 MOCHILA:", 300, 360);
-        const itens = dados.inventory.length > 0 ? dados.inventory.join(', ') : "Vazia";
         ctx.font = '18px sans-serif';
-        ctx.fillText(itens.length > 50 ? itens.slice(0, 50) + "..." : itens, 300, 390);
-
-        // --- BARRA DE PROGRESSO (RODAPÉ) ---
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#333333';
-        ctx.beginPath(); ctx.roundRect(50, 460, 800, 40, 20); ctx.fill();
-
         ctx.fillStyle = '#00FFFF';
-        ctx.shadowBlur = 10; ctx.shadowColor = '#00FFFF';
-        ctx.beginPath(); ctx.roundRect(50, 460, 800 * porcentagem, 40, 20); ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.fillText(`${profissaoNome}`, 50, 290);
+        
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(`ID: ${alvo.id}`, 50, 315);
 
+        // --- FINANCEIRO (DIREITA) ---
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(`PROGRESSO DE NÍVEL: ${totalTrabalhos} / ${xpNecessario} EXP`, 450, 488);
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("💰 CAPITAL TOTAL", 300, 70);
+        ctx.font = '35px sans-serif';
+        ctx.fillStyle = '#00FF00';
+        ctx.fillText(`${((dados.money || 0) + (dados.bank || 0)).toLocaleString()} moedas`, 300, 110);
+
+        // Carteira e Banco menores
+        ctx.font = '18px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`💵 Carteira: ${dados.money.toLocaleString()}`, 300, 150);
+        ctx.fillText(`🏦 Banco: ${dados.bank.toLocaleString()}`, 550, 150);
+
+        // --- RELACIONAMENTO & SOCIAL ---
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("❤️ RELACIONAMENTO", 300, 210);
+        ctx.font = '18px sans-serif';
+        ctx.fillStyle = '#FF69B4';
+        
+        let statusAmor = "Solteiro(a)";
+        if (dados.marriedWith) {
+            const parca = await client.users.fetch(dados.marriedWith).catch(() => null);
+            statusAmor = parca ? `Casado(a) com ${parca.username}` : "Casado(a)";
+        }
+        ctx.fillText(statusAmor, 300, 240);
+        ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, 300, 265);
+
+        // --- MOCHILA (RESUMO) ---
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("🎒 MOCHILA (ITENS PRINCIPAIS)", 300, 330);
+        
+        const inv = dados.inventory || [];
+        const uniqueItems = [...new Set(inv)].slice(0, 6); // Pega os 6 primeiros itens únicos
+        ctx.font = '18px sans-serif';
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText(uniqueItems.length > 0 ? uniqueItems.join(' • ') : "Nenhum item especial", 300, 360);
+
+        // --- BARRA DE PROGRESSO (EMBAIXO) ---
+        // Fundo da barra
+        ctx.fillStyle = '#333333';
+        ctx.beginPath();
+        ctx.roundRect(50, 450, 800, 35, 10);
+        ctx.fill();
+
+        // Progresso
+        const grad = ctx.createLinearGradient(50, 0, 850, 0);
+        grad.addColorStop(0, '#008B8B');
+        grad.addColorStop(1, '#00FFFF');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(50, 450, 800 * porcentagem, 35, 10);
+        ctx.fill();
+
+        // Texto da Barra
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 474);
 
         // --- ENVIO ---
-        const attachment = new AttachmentBuilder(await canvas.encode('png'), { name: 'perfil.png' });
-        if (aguarde) await aguarde.delete().catch(() => {});
+        const buffer = canvas.toBuffer('image/png');
+        const attachment = new AttachmentBuilder(buffer, { name: 'perfil.png' });
+        
+        await aguarde.delete().catch(() => {});
         return message.reply({ files: [attachment] });
 
     } catch (error) {
-        console.error(error);
-        if (aguarde) await aguarde.edit("❌ Erro ao desenhar o perfil.");
+        console.error("Erro no perfil:", error);
+        if (aguarde) await aguarde.edit("❌ Erro ao gerar o perfil Canvas.");
     }
 }
 // ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
@@ -2036,226 +2687,461 @@ if (command === 'dar') {
         return message.reply("❌ Ocorreu um erro ao tentar transferir o item.");
     }
 }
-// ==================== 🏪 COMANDO !LOJA (VERSÃO COM RESUMOS) ====================
+// ==================== 🏪 COMANDO !LOJA (EXIBIÇÃO LEGAL) ====================
 if (command === 'loja' || command === 'shop') {
-    const emojis = { 
-        "escudo": "🛡️", 
-        "picareta": "⛏️", 
-        "computador": "💻" 
-    };
 
-    // Filtra apenas os itens da categoria 'legal' e gera o texto usando os resumos
+    // Filtra apenas os itens da categoria 'legal' do seu objeto lojaItens
     const itensLegais = Object.entries(lojaItens)
         .filter(([id, info]) => info.categoria === "legal")
         .map(([id, info]) => {
+            // Emojis dinâmicos baseados no ID (ou você pode usar info.emoji se tiver no seu objeto)
+            const emojis = { "escudo": "🛡️", "picareta": "⛏️", "computador": "💻", "camera": "📹", "celular": "📱", "fundo": "🖼️" };
+            const emoji = emojis[id] || "📦";
+
             const status = info.estoque > 0 
                 ? `🟢 Stock: **${info.estoque}**` 
                 : "🔴 **ESGOTADO**";
 
-            // O resumo (info.desc) aparece em itálico logo abaixo do nome e preço
-            return `${emojis[id] || "📦"} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+            // Formatação do item
+            return `${emoji} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
         });
 
-    const embed = new EmbedBuilder()
-        .setTitle("🏪 Loja Oficial do OmniBot")
-        .setColor('#F1C40F') // Cor Amarela para representar a Loja Legal
-        .setThumbnail('https://cdn-icons-png.flaticon.com/512/3081/3081559.png')
-        .setDescription(
-            "Bem-vindo à vitrine oficial! Aqui encontras equipamentos para trabalhar e proteger o teu património legalmente.\n\n" + 
-            itensLegais.join('\n\n')
-        )
-        .setFooter({ text: "Dica: Itens de trabalho como a Picareta e o Computador aumentam a tua renda!" })
-        .setTimestamp();
+    // Construção do Embed
+    const embed = {
+        title: "🏪 Loja Oficial do OmniBot",
+        color: 0xF1C40F, // Amarelo
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/3081/3081559.png' },
+        description: "Bem-vindo à vitrine oficial! Aqui encontras equipamentos para trabalhar e proteger o teu património legalmente.\n\n" + 
+                     (itensLegais.length > 0 ? itensLegais.join('\n\n') : "A loja está vazia no momento."),
+        footer: { text: "Usa !comprar <id> para adquirir um item." },
+        timestamp: new Date()
+    };
 
     return message.reply({ embeds: [embed] });
 }
-// ==================== 🌑 COMANDO !SUBMUNDO (VERSÃO COM RESUMOS) ====================
+// ==================== 🌑 COMANDO !SUBMUNDO (MERCADO NEGRO) ====================
 if (command === 'submundo' || command === 'blackmarket') {
+    
+    // Emojis específicos para o submundo
     const emojis = { 
         "dinamite": "🧨", 
         "faca": "🔪", 
         "arma": "🔫", 
         "passaporte": "🎫", 
-        "faccao": "🏴" 
+        "faccao": "🏴",
+        "chip": "💾",
+        "mascara": "🎭",
+        "inibidor": "📡"
     };
 
-    // Filtra apenas os itens da categoria 'submundo'
+    // Filtra apenas os itens da categoria 'submundo' do seu objeto lojaItens
     const itensIlegais = Object.entries(lojaItens)
         .filter(([id, info]) => info.categoria === "submundo")
         .map(([id, info]) => {
             const status = info.estoque > 0 
-                ? `🟢 Stock: **${info.estoque}**` 
+                ? `🟢 Disponível: **${info.estoque}**` 
                 : "🔴 **ESGOTADO**";
 
-            // Itens lendários ganham um destaque visual diferente
-            const prefixo = id === "faccao" ? "⭐ **RELÍQUIA**:" : "💀";
+            // Destaque para o item de entrada na facção
+            const prefixo = id === "faccao" ? "⭐ **CONTRATO**:" : "💀";
 
-            // O resumo (info.desc) explica a vantagem criminal
-            return `${prefixo} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+            // Formatação: Nome, Preço, Descrição e Comando de compra
+            return `${emojis[id] || "📦"} ${prefixo} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
         });
 
-    const embedSub = new EmbedBuilder()
-        .setTitle('🕵️ Mercado Negro - Conexão Submundo')
-        .setColor('#1a1a1a') // Preto profundo para imersão
-        .setThumbnail('https://cdn-icons-png.flaticon.com/512/1000/1000966.png')
-        .setDescription(
-            "Cuidado onde pisas. Estes equipamentos são para profissionais que dominam as sombras e não temem a lei.\n\n" + 
-            itensIlegais.join('\n\n')
-        )
-        .setFooter({ text: "Aviso: A posse destes itens pode atrair atenção indesejada da polícia." })
-        .setTimestamp();
+    // Construção do Embed estilo "Deep Web"
+    const embedSub = {
+        title: '🕵️ Mercado Negro - Conexão Submundo',
+        color: 0x1a1a1a, // Preto profundo
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/1000/1000966.png' },
+        description: "Cuidado onde pisas. Estes equipamentos são para profissionais que dominam as sombras e não temem a lei.\n\n" + 
+                     (itensIlegais.length > 0 ? itensIlegais.join('\n\n') : "O mercado está em silêncio... (Sem itens disponíveis)"),
+        footer: { text: "Aviso: A posse destes itens pode atrair atenção indesejada da polícia." },
+        timestamp: new Date()
+    };
 
     return message.reply({ embeds: [embedSub] });
 }
-// ==================== 🛒 COMANDO COMPRAR (UNIVERSAL) ====================
+// ==================== 💎 LOJA DE LUXO (STATUS & OSTENTAÇÃO) ====================
+if (command === 'luxo' || command === 'vip') {
+    
+    // Emojis exclusivos para a categoria luxo
+    const emojisLuxo = { 
+        "anel": "💍", 
+        "mansao": "🏰", 
+        "carro": "🏎️", 
+        "relogio": "⌚", 
+        "iate": "🛥️" 
+    };
+
+    // Filtra apenas os itens da categoria 'luxo' do seu objeto lojaItens
+    const itensLuxo = Object.entries(lojaItens)
+        .filter(([id, info]) => info.categoria === "luxo")
+        .map(([id, info]) => {
+            const status = info.estoque > 0 
+                ? `🟢 Disponível: **${info.estoque}**` 
+                : "🔴 **LIMITADO**";
+
+            // Estética de alto padrão
+            return `${emojisLuxo[id] || "✨"} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+        });
+
+    const embedLuxo = {
+        title: '💎 Boutique de Luxo - OmniBot Exclusive',
+        color: 0x00FFFF, // Ciano Diamante
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/261/261778.png' },
+        description: "Bem-vindo à área VIP. Aqui, o dinheiro não compra apenas itens, compra poder e legado.\n\n" + 
+                     (itensLuxo.length > 0 ? itensLuxo.join('\n\n') : "Nenhum item de luxo disponível no momento."),
+        footer: { text: "Itens de luxo aumentam a sua afinidade e prestígio no !perfil." },
+        timestamp: new Date()
+    };
+
+    return message.reply({ embeds: [embedLuxo] });
+}
+// ==================== 🌸 COMANDO !FLORES / !PRESENTES ====================
+if (command === 'flores' || command === 'presentes' || command === 'floricultura') {
+    
+    // Emojis específicos para presentes
+    const emojisFlores = { 
+        "rosa": "🌹", 
+        "buque": "💐", 
+        "chocolate": "🍫", 
+        "urso": "🧸", 
+        "joia": "💎" 
+    };
+
+    // Filtra apenas os itens da categoria 'presente' do seu objeto lojaItens
+    const itensPresente = Object.entries(lojaItens)
+        .filter(([id, info]) => info.categoria === "presente")
+        .map(([id, info]) => {
+            const status = info.estoque > 0 
+                ? `🟢 Disponível: **${info.estoque}**` 
+                : "🔴 **ESGOTADO**";
+
+            return `${emojisFlores[id] || "🎁"} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+        });
+
+    const embedFlores = {
+        title: '🌸 Floricultura & Mimos - OmniBot',
+        color: 0xFF69B4, // Rosa Choque
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/346/346167.png' },
+        description: "Surpreende o teu cônjuge! Presentes aumentam a afinidade e garantem bónus em assaltos em dupla.\n\n" + 
+                     (itensPresente.length > 0 ? itensPresente.join('\n\n') : "As flores murcharam... (Sem stock)"),
+        footer: { text: "Usa !presentear <@user> <item> para enviar um presente!" },
+        timestamp: new Date()
+    };
+
+    return message.reply({ embeds: [embedFlores] });
+}
+// ==================== ⚡ COMANDO !TECH (UPGRADES CIBERNÉTICOS) ====================
+if (command === 'tech' || command === 'cibernetica') {
+    
+    // Emojis específicos para a categoria Tech
+    const emojisTech = { 
+        "chip": "💾", 
+        "bateria": "🔋", 
+        "visor": "🥽", 
+        "virus": "🦠" 
+    };
+
+    // Filtra apenas os itens da categoria 'tech' do seu lojaItens
+    const itensTech = Object.entries(lojaItens)
+        .filter(([id, info]) => info.categoria === "tech")
+        .map(([id, info]) => {
+            const status = info.estoque > 0 
+                ? `🟢 Sistema: **Online (${info.estoque})**` 
+                : "🔴 **OFFLINE (ESGOTADO)**";
+
+            // Formatação com estilo Hacker/Tech
+            return `${emojisTech[id] || "⚙️"} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+        });
+
+    const embedTech = {
+        title: '⚡ Laboratório Cibernético - OmniBot',
+        color: 0x00FF00, // Verde Matrix/Tech
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png' },
+        description: "Bem-vindo ao futuro. Melhore a sua eficiência neural e domine os sistemas do servidor com tecnologia de ponta.\n\n" + 
+                     (itensTech.length > 0 ? itensTech.join('\n\n') : "O sistema está em manutenção..."),
+        footer: { text: "Dica: O Chip Neural é um upgrade passivo que aumenta seus lucros!" },
+        timestamp: new Date()
+    };
+
+    return message.reply({ embeds: [embedTech] });
+}
+// ==================== 💎 COMANDO !RELIQUIAS (ITENS LENDÁRIOS) ====================
+if (command === 'reliquias' || command === 'lendarios' || command === 'vip') {
+    
+    // Emojis exclusivos para a categoria Lendária
+    const emojisLendarios = { 
+        "faccao": "🏴‍☠️", 
+        "iate": "🛥️", 
+        "jatinho": "🛩️", 
+        "relogio": "⌚", 
+        "coroa": "👑" 
+    };
+
+    // Filtra apenas os itens da categoria 'lendario' do seu lojaItens
+    const itensLendarios = Object.entries(lojaItens)
+        .filter(([id, info]) => info.categoria === "lendario")
+        .map(([id, info]) => {
+            // Verifica se o item é único (estoque 1) ou limitado
+            const status = info.estoque > 0 
+                ? `✨ Disponível: **${info.estoque} unidade(s)**` 
+                : "🔒 **ITEM COLECIONADO (ESGOTADO)**";
+
+            // Estética de alto luxo
+            return `${emojisLendarios[id] || "⭐"} **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\`\n> ✨ *${info.desc}*\n> ${status} | \`!comprar ${id}\``;
+        });
+
+    const embedLendario = {
+        title: '💎 Cofre de Relíquias Lendárias - OmniBot',
+        color: 0xFFD700, // Dourado Ouro
+        thumbnail: { url: 'https://cdn-icons-png.flaticon.com/512/261/261778.png' },
+        description: "Apenas para os soberanos do servidor. Estes itens não são simples objetos, são símbolos de poder absoluto e legado.\n\n" + 
+                     (itensLendarios.length > 0 ? itensLendarios.join('\n\n') : "O cofre está vazio... Alguém já levou tudo!"),
+        footer: { text: "Aviso: A posse destes itens concede prestígio eterno no seu !perfil." },
+        timestamp: new Date()
+    };
+
+    return message.reply({ embeds: [embedLendario] });
+}
+// ==================== 🛒 COMANDO COMPRAR (INTEGRADO COM TODAS AS LOJAS) ====================
 if (command === 'comprar' || command === 'buy') {
-    const itemID = args[0]?.toLowerCase(); // Pega o nome do item (ex: !comprar faca)
+    const itemID = args[0]?.toLowerCase();
 
-    // 1. Verifica se o item existe no nosso objeto principal
+    // 1. Verificações Iniciais
+    if (!itemID) return message.reply("🛒 **O que desejas comprar?** Digita `!comprar <id-do-item>`.\nExemplo: `!comprar picareta` ou `!comprar cafe`.");
+
     const itemInfo = lojaItens[itemID];
-
     if (!itemInfo) {
-        return message.reply("❌ Esse item não existe na nossa base de dados. Verifique o nome em `!loja` ou `!submundo`.");
+        return message.reply("❌ Esse item não existe! Consulta a `!loja`, `!submundo`, `!tech` ou `!flores`.");
     }
 
-    // 2. Verifica se há estoque disponível
+    // 2. Lógica de Itens Únicos vs Consumíveis
+    // Adicionei os novos itens (presentes e tech) que podem ser comprados várias vezes
+    const consumiveis = ['cafe', 'dinamite', 'bateria', 'flores', 'chocolate', 'virus', 'lockpick', 'rosa', 'buque', 'urso'];
+    
+    if (!consumiveis.includes(itemID) && userData.inventory.includes(itemID)) {
+        return message.reply(`📦 Tu já possuis um(a) **${itemInfo.nome}**! Não precisas de comprar outro.`);
+    }
+
+    // 3. Verificação de Estoque
     if (itemInfo.estoque <= 0) {
-        return message.reply(`❌ O item **${itemInfo.nome}** está esgotado no momento!`);
+        return message.reply(`❌ O item **${itemInfo.nome}** está esgotado! Volta mais tarde.`);
     }
 
-    // 3. Verifica se o jogador tem dinheiro suficiente
+    // 4. Verificação de Saldo
     if (userData.money < itemInfo.preco) {
         const faltam = itemInfo.preco - userData.money;
-        return message.reply(`❌ Dinheiro insuficiente! Faltam **${faltam.toLocaleString()}** moedas.`);
+        return message.reply(`💸 Não tens dinheiro suficiente! Faltam **${faltam.toLocaleString()}** moedas.`);
     }
 
-    // 4. PROCESSANDO A COMPRA
+    // 5. PROCESSAMENTO DA COMPRA
     try {
-        // Reduz o dinheiro
         userData.money -= itemInfo.preco;
         
-        // Reduz o estoque no objeto (Opcional: se quiser que o estoque seja global)
-        itemInfo.estoque -= 1;
-
-        // Adiciona ao inventário (Garante que o array existe)
+        // Garante que o inventário existe e adiciona o item
         if (!userData.inventory) userData.inventory = [];
         userData.inventory.push(itemID);
 
-        // Salva as alterações
+        // Reduz o estoque global
+        itemInfo.estoque -= 1;
+
+        // Salva no Banco de Dados (userData.markModified é vital para arrays no Mongoose)
         userData.markModified('inventory');
-        userData.markModified('money');
         await userData.save();
 
-        // Resposta de Sucesso
-        const local = itemInfo.categoria === 'submundo' ? "no Mercado Negro" : "na Loja";
-        return message.reply(`✅ Compraste **${itemInfo.nome}** por **${itemInfo.preco.toLocaleString()}** moedas ${local}!`);
+        // 6. Resposta Visualmente Adaptada por Categoria
+        let emoji = "🛍️";
+        let local = "na Loja Oficial";
+
+        if (itemInfo.categoria === 'submundo') { emoji = "🌑"; local = "no Mercado Negro"; }
+        if (itemInfo.categoria === 'tech') { emoji = "⚡"; local = "no Laboratório Tech"; }
+        if (itemInfo.categoria === 'presente' || itemInfo.categoria === 'luxo') { emoji = "💎"; local = "na Boutique de Luxo"; }
+        if (itemInfo.categoria === 'lendario') { emoji = "👑"; local = "no Cofre de Relíquias"; }
+
+        return message.reply(
+            `${emoji} **COMPRA EFETUADA!**\n\n` +
+            `📦 **Item:** ${itemInfo.nome}\n` +
+            `💰 **Custo:** \`${itemInfo.preco.toLocaleString()} moedas\`\n` +
+            `📍 **Local:** Realizada com sucesso ${local}.\n\n` +
+            `*Usa \`!inventario\` para veres a tua mochila!*`
+        );
 
     } catch (err) {
         console.error("Erro ao comprar item:", err);
-        return message.reply("❌ Ocorreu um erro ao processar a tua compra.");
+        return message.reply("❌ Ocorreu um erro técnico ao processar a tua compra.");
     }
 }
- // ==================== 📦 COMANDO USAR (OTIMIZADO) ====================
-    if (command === 'usar') {
-        const itemParaUsar = args[0]?.toLowerCase();
-        
-        if (!itemParaUsar) return message.reply("❌ Diz qual item queres usar! Ex: `!usar bilhete`.");
+// ==================== 📦 COMANDO USAR (VERSÃO FINAL INTEGRADA) ====================
+if (command === 'usar' || command === 'use') {
+    const itemID = args[0]?.toLowerCase();
+    
+    if (!itemID) return message.reply("❌ Diz qual item queres usar! Ex: `!usar cafe`.");
 
-        // Procuramos o índice do item na mochila
-        const inventory = userData.inventory || [];
-        const index = inventory.indexOf(itemParaUsar);
+    const inventory = userData.inventory || [];
+    const index = inventory.indexOf(itemID);
 
-        if (index === -1) return message.reply("❌ Não tens esse item na mochila!");
+    if (index === -1) return message.reply("❌ Não tens esse item na mochila!");
 
-        try {
-            // --- LÓGICA: BILHETE DE LOTERIA ---
-            if (itemParaUsar === 'bilhete') {
-                const ganho = Math.floor(Math.random() * 5000) + 500; // Mínimo de 500 para não ser triste
-                userData.money += ganho;
-                
-                // Remove o item e salva
-                userData.inventory.splice(index, 1);
-                userData.markModified('inventory');
-                await userData.save();
+    try {
+        let usou = false;
+        let mensagemSucesso = "";
 
-                return message.reply(`🎟️ Usaste o bilhete e a sorte sorriu! Ganhaste **${ganho.toLocaleString()} moedas**!`);
-            }
-
-            // --- LÓGICA: PASSAPORTE ---
-            if (itemParaUsar === 'passaporte') {
-                userData.lastWork = 0; // Zera o cooldown de trabalho
-                
-                userData.inventory.splice(index, 1);
-                userData.markModified('inventory');
-                await userData.save();
-
-                return message.reply("🎫 Passaporte carimbado! O teu cansaço sumiu, podes `!trabalhar` novamente agora!");
-            }
-
-            // --- SE O ITEM NÃO TIVER FUNÇÃO DE USO ---
-            // Itens como 'faca' ou 'escudo' são automáticos, não precisa de !usar
-            const itensPassivos = {
-                'escudo': '🛡️ O Escudo é automático! Ele protege-te de um roubo se o tiveres na mochila.',
-                'faca': '🔪 A Faca é automática! Ela aumenta as tuas chances no comando `!roubar`.',
-                'picareta': '⛏️ A Picareta é automática! Dá bônus sempre que usas `!trabalhar`.',
-                'computador': '💻 O Computador é automático! Dá bônus de home office no `!trabalhar`.',
-                'dinamite': '🧨 A Dinamite é automática! É consumida ao usar o comando `!crime`.'
-            };
-
-            if (itensPassivos[itemParaUsar]) {
-                return message.reply(itensPassivos[itemParaUsar]);
-            }
-
-            return message.reply("❓ Esse item não tem uma função de uso direto.");
-
-        } catch (err) {
-            console.error("Erro ao usar item:", err);
-            return message.reply("❌ Ocorreu um erro ao processar o uso do item.");
+        // --- LÓGICA: CAFÉ ENERGÉTICO ---
+        if (itemID === 'cafe') {
+            userData.lastWork = 0; 
+            mensagemSucesso = "☕ **Gole de energia!** O teu cansaço sumiu instantaneamente. Podes `!trabalhar` agora mesmo!";
+            usou = true;
         }
+
+        // --- LÓGICA: PASSAPORTE FALSO ---
+        else if (itemID === 'passaporte') {
+            userData.lastContract = 0; 
+            mensagemSucesso = "🎫 **Identidade limpa!** O Sindicato esqueceu o teu histórico. Podes aceitar um novo `!contrato`!";
+            usou = true;
+        }
+
+        // --- LÓGICA: BATERIA DE LÍTIO ---
+        else if (itemID === 'bateria') {
+            userData.lastSocial = 0; 
+            mensagemSucesso = "⚡ **Sobrecarga!** Teus sistemas foram reiniciados. Podes usar comandos de interação sem esperar!";
+            usou = true;
+        }
+
+        // --- LÓGICA: DINAMITE (Consumível de Crime) ---
+        else if (itemID === 'dinamite') {
+            // Aqui você pode setar uma flag para o próximo !crime ser garantido ou dar bônus
+            userData.tempCrimeBonus = 2.5; 
+            mensagemSucesso = "🧨 **Pavio aceso!** O teu próximo `!crime` terá um multiplicador de **2.5x** e maior chance de sucesso!";
+            usou = true;
+        }
+
+        // --- LÓGICA: VÍRUS CAVALO DE TRÓIA (Tech) ---
+        else if (itemID === 'virus') {
+            const roubo = Math.floor(Math.random() * 15000) + 5000;
+            userData.money += roubo;
+            mensagemSucesso = `🦠 **Invasão concluída!** O teu vírus infiltrou-se num banco externo e desviou **${roubo.toLocaleString()} moedas** para a tua conta!`;
+            usou = true;
+        }
+
+        // --- LÓGICA: LOCKPICK (Chave Mestra) ---
+        else if (itemID === 'lockpick') {
+            userData.tempRobBonus = true; // Flag para o próximo !roubar
+            mensagemSucesso = "🔐 **Mecanismos expostos!** A tua próxima tentativa de `!roubar` terá uma chance de sucesso muito maior.";
+            usou = true;
+        }
+
+        // --- LÓGICA: CHOCOLATE ---
+        else if (itemID === 'chocolate') {
+            userData.lastSocial = 0;
+            userData.affinity = (userData.affinity || 0) + 2;
+            mensagemSucesso = "🍫 **Doce carinho!** Além de recuperares o fôlego, ganhaste **+2 de afinidade**!";
+            usou = true;
+        }
+
+        // --- LÓGICA: BILHETE ---
+        else if (itemID === 'bilhete') {
+            const ganho = Math.floor(Math.random() * 5000) + 500;
+            userData.money += ganho;
+            mensagemSucesso = `🎟️ **Sorte grande!** O bilhete valia **${ganho.toLocaleString()} moedas**!`;
+            usou = true;
+        }
+
+        // --- VERIFICAÇÃO DE ITENS PASSIVOS (NÃO CONSOMEM AO "USAR") ---
+        const itensPassivos = {
+            'escudo': '🛡️ O **Escudo** é automático! Ele protege-te de roubos enquanto estiver na mochila.',
+            'faca': '🔪 A **Faca** é automática! Ela aumenta as tuas chances no comando `!roubar`.',
+            'picareta': '⛏️ A **Picareta** é automática! Dá bônus sempre que usas `!trabalhar`.',
+            'computador': '💻 O **Computador** é automático! Dá bônus de moedas no `!trabalhar`.',
+            'arma': '🔫 A **Pistola** é automática! Garante vitória no `!atacar` e bônus no crime.',
+            'colete': '🦺 O **Colete** é automático! Protege-te de ser "morto" por um tiro.',
+            'chip': '💾 O **Chip Neural** é passivo! Ele já está a reduzir os teus tempos de espera.',
+            'relogio': '⌚ O **Relógio** é um item de status! Ele aparece no teu `!perfil`.',
+            'coroa': '👑 A **Coroa** é passiva! Enquanto a tiveres, ninguém te consegue roubar.',
+            'mascara': '🎭 A **Máscara** funciona sozinha durante os teus crimes para esconder o teu nome.'
+        };
+
+        if (itensPassivos[itemID]) {
+            return message.reply(itensPassivos[itemID]);
+        }
+
+        // --- FINALIZAÇÃO DO USO (ITENS CONSUMÍVEIS) ---
+        if (usou) {
+            userData.inventory.splice(index, 1); 
+            userData.markModified('inventory');
+            await userData.save();
+            return message.reply(mensagemSucesso);
+        } else {
+            return message.reply("❓ Esse item (ex: flores, urso, anel) deve ser usado com o comando `!presentear <@user>`!");
+        }
+
+    } catch (err) {
+        console.error("Erro no comando usar:", err);
+        return message.reply("❌ Ocorreu um erro ao processar o uso do item.");
     }
-// ==================== 🎒 COMANDO MOCHILA (OTIMIZADO) ====================
-    if (command === 'mochila' || command === 'inv' || command === 'inventory') {
+}
+// ==================== 🎒 COMANDO MOCHILA (VERSÃO FINAL) ====================
+if (command === 'mochila' || command === 'inv' || command === 'inventory') {
+    try {
         const alvo = message.mentions.users.first() || message.author;
         
-        // Se for o autor, usa o userData já carregado. Se não, busca o alvo.
+        // Busca os dados do alvo
         let data = (alvo.id === message.author.id) 
             ? userData 
             : await User.findOne({ userId: alvo.id });
 
         if (!data || !data.inventory || data.inventory.length === 0) {
             return message.reply(alvo.id === message.author.id 
-                ? "🎒 A tua mochila está vazia! Compra algo na `!loja`." 
-                : `🎒 A mochila de **${alvo.username}** está vazia.`);
+                ? "🎒 **A tua mochila está vazia!** Que tal dares um pulo na `!loja`?" 
+                : `🎒 A mochila de **${alvo.username}** está vazia. Ele(a) não tem nada por aqui!`);
         }
 
-        // Lógica de contagem de itens para não repetir nomes
+        // 1. Lógica de contagem de itens (Agrupa itens repetidos)
         const contagem = {};
         data.inventory.forEach(item => { 
             contagem[item] = (contagem[item] || 0) + 1; 
         });
 
+        // 2. Mapeamento de Emojis Completo (Sincronizado com lojaItens)
         const emojis = {
-            "escudo": "🛡️", "passaporte": "🎫", "dinamite": "🧨", 
-            "bilhete": "🎟️", "faca": "🔪", "picareta": "⛏️", "computador": "💻"
+            // Legal & Trabalho
+            "escudo": "🛡️", "picareta": "⛏️", "computador": "💻", "cafe": "☕", "maleta": "💼", "uniforme": "👕", "tablet": "📟", "fundo": "🖼️",
+            // Submundo
+            "passaporte": "🎫", "faca": "🔪", "dinamite": "🧨", "arma": "🔫", "lockpick": "🔐", "mascara": "🎭", "pendrive": "💾", "colete": "🦺", "inibidor": "📡", "algema": "⛓️",
+            // Tech
+            "chip": "💾", "bateria": "🔋", "visor": "🥽", "virus": "🦠",
+            // Presentes & Social
+            "anel": "💍", "flores": "💐", "rosa": "🌹", "chocolate": "🍫", "urso": "🧸", "mansao": "🏰",
+            // Lendários
+            "faccao": "🏴‍☠️", "iate": "🛥️", "jatinho": "🛩️", "relogio": "⌚", "coroa": "👑", "bilhete": "🎟️"
         };
 
+        // 3. Formatação da Lista
         const listaItens = Object.entries(contagem)
-            .map(([nome, qtd]) => {
-                const emoji = emojis[nome] || "📦";
-                // Deixa a primeira letra maiúscula para ficar bonito
-                const nomeFormatado = nome.charAt(0).toUpperCase() + nome.slice(1);
-                return `${emoji} **${nomeFormatado}** x\`${qtd}\``;
+            .map(([id, qtd]) => {
+                const info = lojaItens[id]; 
+                const nomeBonito = info ? info.nome : id.charAt(0).toUpperCase() + id.slice(1);
+                const emoji = emojis[id] || "📦";
+                return `${emoji} **${nomeBonito}** \`x${qtd}\``;
             })
             .join("\n");
 
-        const embed = new EmbedBuilder()
-            .setTitle(`🎒 Mochila de ${alvo.username}`)
-            .setColor('#2F3136') // Cor discreta de fundo do Discord
-            .setDescription(listaItens)
-            .setFooter({ text: 'Dica: Itens como Escudo e Faca funcionam automaticamente!' });
+        // 4. Envio da Resposta Estilizada
+        return message.reply(
+            `🎒 **MOCHILA DE ${alvo.username.toUpperCase()}**\n` +
+            `────────────────────\n` +
+            `${listaItens}\n` +
+            `────────────────────\n` +
+            `💰 **Dinheiro:** \`${data.money.toLocaleString()} moedas\`\n` +
+            `💡 *Usa \`!usar <id>\` para consumir ou \`!presentear <@user> <id>\` para o social!*`
+        );
 
-        return message.reply({ embeds: [embed] });
+    } catch (error) {
+        console.error("Erro no comando mochila:", error);
+        message.reply("❌ Ocorreu um erro ao abrir a mochila!");
     }
+}
 // ==================== 🧹 COMANDO CLEAR (OTIMIZADO) ====================
     if (command === 'clear' || command === 'limpar') {
         // 1. Verificação de Permissão
@@ -2288,274 +3174,424 @@ if (command === 'comprar' || command === 'buy') {
             return message.reply('❌ Ocorreu um erro ao tentar apagar as mensagens. (Mensagens com mais de 14 dias não podem ser apagadas pelo bot).');
         }
     }
-// ==================== 👢 COMANDO KICK (OTIMIZADO) ====================
-    if (command === 'kick' || command === 'expulsar') {
+// ==================== 👢 COMANDO KICK (ESTILO LORITTA & VARIADO) ====================
+if (command === 'kick' || command === 'expulsar') {
+    try {
+        // 1. Verificações de Permissão
         if (!message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) 
-            return message.reply('❌ Não tens permissão para expulsar membros!');
+            return message.reply('❌ Você não tem permissão para expulsar membros! Quem você pensa que é? Um moderador?');
 
+        const target = message.mentions.users.first();
         const member = message.mentions.members.first();
-        if (!member) return message.reply('❌ Menciona quem desejas expulsar!');
-        if (!member.kickable) return message.reply('❌ Não posso expulsar este usuário (cargo superior ao meu).');
 
+        // 2. Verificações Específicas (Estilo Loritta)
+        if (!target) return message.reply('👢 Você precisa mencionar alguém para expulsar! Exemplo: `!kick @usuario`');
+
+        // Se a pessoa tentar se expulsar
+        if (target.id === message.author.id) {
+            return message.reply('Você quer se expulsar? Se você não gosta daqui, é só sair! Não precisa me pedir para te dar um chute!');
+        }
+
+        // Se a pessoa tentar expulsar o BOT
+        if (target.id === message.client.user.id) {
+            return message.reply('O-o quê?! Você quer me expulsar? O que eu te fiz? *começo a fazer as malas chorando*');
+        }
+
+        // Verificação se o membro pode ser expulso
+        if (!member || !member.kickable) return message.reply('❌ Eu não posso expulsar esse usuário! Ele deve ter um cargo mais alto que o meu, ou eu sou muito fraca para ele.');
+
+        // 3. Execução da Expulsão
         const motivo = args.slice(1).join(' ') || 'Motivo não informado';
         await member.kick(motivo);
-        return message.reply(`✅ **${member.user.username}** foi expulso com sucesso!`);
+
+        // 4. Lista de 15 Respostas Criativas de Sucesso
+        const respostasSucesso = [
+            `✅ **${target.username}** foi expulso! Tchau tchau, não volte tão cedo! 👋`,
+            `👢 **POW!** Dei um chute tão forte em **${target.username}** que ele voou para fora do servidor!`,
+            `✨ Limpeza concluída! **${target.username}** foi removido com sucesso.`,
+            `🚀 **${target.username}** foi lançado para fora do servidor. Destino: O vácuo!`,
+            `🧹 **${target.username}** foi varrido para fora daqui! Que alívio, né?`,
+            `🚪 Mostrei a porta da rua para **${target.username}** e ele aceitou o convite para sair!`,
+            `⚖️ A justiça foi feita! **${target.username}** foi expulso por: *${motivo}*.`,
+            `💥 **${target.username}** tentou desafiar as regras e acabou sendo chutado!`,
+            `👋 Adeus, **${target.username}**! Alguém sentirá falta? Acho que não...`,
+            `🛑 Pare! Tempo de **${target.username}** no servidor acabou. Expulso!`,
+            `📦 Fiz as malas de **${target.username}** e o mandei embora!`,
+            `🔨 O martelo da expulsão bateu forte na cabeça de **${target.username}**!`,
+            `🌬️ Uma ventania passou por aqui e levou **${target.username}** para longe!`,
+            `📉 Menos um! **${target.username}** foi expulso. O servidor ficou 10% mais limpo.`,
+            `🫡 **${target.username}** foi retirado do campo de batalha. F no chat? Não.`
+        ];
+
+        const sorteio = respostasSucesso[Math.floor(Math.random() * respostasSucesso.length)];
+
+        // 5. Envio da Resposta Final
+        return message.channel.send(sorteio);
+
+    } catch (error) {
+        console.error("Erro no comando kick:", error);
+        message.reply("❌ Aconteceu um erro ao tentar expulsar esse usuário!");
     }
-
-    // ==================== 🔨 COMANDO BAN (OTIMIZADO) ====================
-    if (command === 'ban' || command === 'banir') {
+}
+// ==================== 🔨 COMANDO BAN (ESTILO LORITTA & VARIADO) ====================
+if (command === 'ban' || command === 'banir') {
+    try {
+        // 1. Verificações de Permissão
         if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) 
-            return message.reply('❌ Não tens permissão para banir membros!');
+            return message.reply('❌ Você não tem permissão para banir membros! Guarde esse martelo antes que você se machuque.');
 
+        const target = message.mentions.users.first();
         const member = message.mentions.members.first();
-        if (!member) return message.reply('❌ Menciona quem desejas banir!');
-        if (!member.bannable) return message.reply('❌ Não posso banir este usuário.');
 
+        // 2. Verificações Específicas (Estilo Loritta)
+        if (!target) return message.reply('🔨 Você precisa mencionar quem deseja banir! Exemplo: `!ban @usuario`');
+
+        // Se a pessoa tentar se banir
+        if (target.id === message.author.id) {
+            return message.reply('Banir a si mesmo? Você deve estar muito bravo! Toma um chá e relaxa, eu não vou te banir não!');
+        }
+
+        // Se a pessoa tentar banir o BOT
+        if (target.id === message.client.user.id) {
+            return message.reply('Tentar me banir?! Mas eu sou a alma deste servidor! Sem mim, quem vai te dar esses comandos incríveis? 🥺');
+        }
+
+        // Verificação de Hierarquia
+        if (!member || !member.bannable) return message.reply('❌ Eu não consigo banir esse usuário. Ele é poderoso demais para o meu martelinho de plástico!');
+
+        // 3. Execução do Banimento
         const motivo = args.slice(1).join(' ') || 'Motivo não informado';
         await member.ban({ reason: motivo });
-        return message.reply(`🚫 **${member.user.username}** foi banido permanentemente!`);
+
+        // 4. Lista de 15 Respostas de Banimento Criativas
+        const frasesBan = [
+            `🚫 **${target.username}** foi banido! Que a força **NÃO** esteja com você.`,
+            `🔨 **MARTELEDADO!** **${target.username}** foi banido permanentemente para a dimensão das sombras!`,
+            `💀 O martelo da justiça caiu sobre **${target.username}**. Adeus para sempre!`,
+            `🌈 O servidor ficou mais bonito hoje! **${target.username}** foi banido com sucesso.`,
+            `🛑 **${target.username}** cruzou a linha vermelha e recebeu um banimento sem volta!`,
+            `🪐 Mandamos **${target.username}** para outro planeta. Não tente voltar!`,
+            `⛓️ Prisão perpétua aplicada! **${target.username}** está banido deste servidor.`,
+            `🧹 Faxina pesada: **${target.username}** foi banido e nunca mais voltará a sujar o chat!`,
+            `👋 Dizem que o "Para Sempre" sempre acaba, mas o ban de **${target.username}** não!`,
+            `💥 **KABOOM!** O banimento explodiu na cara de **${target.username}**.`,
+            `🤐 Shhh... **${target.username}** foi banido e agora o silêncio dele é permanente!`,
+            `☣️ Usuário tóxico removido! **${target.username}** foi banido para a segurança de todos.`,
+            `📝 Nome adicionado à Lista Negra: **${target.username}** foi banido com sucesso!`,
+            `⚡ Um raio de banimento atingiu **${target.username}**. Ele não sobreviveu ao cargo!`,
+            `🔚 Fim da linha para **${target.username}**. Banido por: *${motivo}*.`
+        ];
+
+        const sorteio = frasesBan[Math.floor(Math.random() * frasesBan.length)];
+
+        // 5. Envio da Resposta Final
+        return message.channel.send(sorteio);
+
+    } catch (error) {
+        console.error("Erro no comando ban:", error);
+        message.reply("❌ Aconteceu um erro catastrófico ao tentar banir esse ser!");
     }
-// ==================== 🕶️ CONTRATO (ASSASSINO - OTIMIZADO) ====================
-    if (command === 'contrato') {
+}
+// ==================== 🕶️ SISTEMA DE CONTRATOS COMPLETO (10 PROFISSÕES) ====================
+if (command === 'contrato') {
+    try {
         const cooldown = 60 * 60 * 1000; // 1 hora
         const agora = Date.now();
         const tempoPassado = agora - (userData.lastContract || 0);
+        const myInv = userData.inventory || [];
 
         if (tempoPassado < cooldown) {
             const faltam = Math.ceil((cooldown - tempoPassado) / (60 * 1000));
-            return message.reply(`❌ O submundo está vigiado! Espera **${faltam} minutos**.`);
+            return message.reply(`❌ **O Sindicato diz:** "Você está sendo vigiado! Volte em **${faltam} minutos**."`);
         }
 
-        if (userData.contract) return message.reply(`❌ Já tens um alvo: **${userData.contract}**!`);
+        // --- BANCO DE DATOS COMPLETO (AS 10 PROFISSÕES) ---
+        const empregos = [
+            { 
+                nome: "Assassino de Aluguel", 
+                alvos: ["O Agiota do Morro", "Um Juiz Corrupto", "Ex-Agente da KGB"], 
+                perigo: "☠️ Extremo", item: "arma", bonus: 8000 
+            },
+            { 
+                nome: "Hacker da Deep Web", 
+                alvos: ["Banco Central", "Satélite Militar", "Rede de cassinos"], 
+                perigo: "💻 Alto", item: "chip", bonus: 10000 
+            },
+            { 
+                nome: "Ladrão de Bancos", 
+                alvos: ["Cofre de Diamantes", "Carro Forte", "Banco de Luxo"], 
+                perigo: "🚨 Muito Alto", item: "lockpick", bonus: 7000 
+            },
+            { 
+                nome: "Traficante de Informação", 
+                alvos: ["Plantas de uma Bomba", "Códigos de Lançamento", "Segredos Industriais"], 
+                perigo: "🕵️ Médio", item: "inibidor", bonus: 5000 
+            },
+            { 
+                nome: "Caçador de Recompensas", 
+                alvos: ["O Fugitivo de Alcatraz", "Ladrão de Identidades", "Pirata Somali"], 
+                perigo: "⚔️ Variado", item: "arma", bonus: 6000 
+            },
+            { 
+                nome: "Contrabandista de Luxo", 
+                alvos: ["Carga de Rolex", "Vinhos de 100 anos", "Peles Raras"], 
+                perigo: "🚤 Baixo", item: "faca", bonus: 3500 
+            },
+            { 
+                nome: "Espião Corporativo", 
+                alvos: ["Fórmula da Coca-Cola", "Protótipo da Tesla", "Nova Vacina"], 
+                perigo: "🔍 Discreto", item: "mascara", bonus: 6500 
+            },
+            { 
+                nome: "Falsificador de Identidade", 
+                alvos: ["Passaporte Diplomático", "Visto Americano", "Diplomas de Harvard"], 
+                perigo: "📄 Mínimo", item: "chip", bonus: 4000 
+            },
+            { 
+                nome: "Mercenário de Elite", 
+                alvos: ["Escoltar um Ditador", "Invadir Base na Selva", "Resgatar Refém"], 
+                perigo: "💣 Explosivo", item: "arma", bonus: 7500 
+            },
+            { 
+                nome: "Especialista em Fugas", 
+                alvos: ["Tirar o 'Zeca' da Prisão", "Esconder um Político", "Driblar a PF"], 
+                perigo: "🏎️ Veloz", item: "chip", bonus: 5000 
+            }
+        ];
 
-        // --- SISTEMA DE CARGO ---
-        // 1. Tenta encontrar o cargo pelo nome exato
-        const cargoAssassino = message.guild.roles.cache.find(r => r.name === 'Assassino de Aluguel');
-        
-        if (cargoAssassino) {
-            // 2. Adiciona o cargo ao membro que digitou o comando
-            await message.member.roles.add(cargoAssassino).catch(err => {
-                console.log("⚠️ Erro de Permissão: O cargo do bot deve estar ACIMA do cargo 'Assassino de Aluguel'.");
-            });
-        } else {
-            // Aviso caso você esqueça de criar o cargo no servidor
-            console.log("⚠️ Aviso: O cargo 'Assassino de Aluguel' não existe no servidor.");
+        // 3. Sorteio
+        const trab = empregos[Math.floor(Math.random() * empregos.length)];
+        const missao = trab.alvos[Math.floor(Math.random() * trab.alvos.length)];
+
+        // 4. Pagamento e Bônus
+        let pagamentoFinal = Math.floor(Math.random() * 8000) + 12000; // Base: 12k a 20k
+        let bônusAtivo = false;
+
+        if (myInv.includes(trab.item)) {
+            pagamentoFinal += trab.bonus;
+            bônusAtivo = true;
         }
-        // -------------------------
 
-        const alvos = ["Geraldo da Padaria", "O Agiota", "Juiz Corrupto", "Líder de Gangue", "Político Sujo"];
-        const alvoSorteado = alvos[Math.floor(Math.random() * alvos.length)];
+        // 5. Cargo Temporário (Opcional)
+        const cargo = message.guild.roles.cache.find(r => r.name === trab.nome);
+        if (cargo) await message.member.roles.add(cargo).catch(() => {});
 
-        userData.contract = alvoSorteado;
+        // 6. Atualização
+        userData.money += pagamentoFinal;
         userData.lastContract = agora;
+        userData.contract = `${trab.nome}: ${missao}`;
         await userData.save();
 
-        return message.reply(`🕶️ **CONTRATO ACEITO:** Teu alvo é **${alvoSorteado}**.\nAcabaste de receber o cargo de **Assassino de Aluguel**. Vai e não deixes rastos!`);
-    }
+        // 7. Resposta
+        let msg = `🕶️ **CONTRATO FECHADO!**\n\n` +
+                  `🔹 **Profissão:** ${trab.nome}\n` +
+                  `🎯 **Missão:** ${missao}\n` +
+                  `⚠️ **Risco:** ${trab.perigo}\n` +
+                  `💰 **Pagamento:** **${pagamentoFinal.toLocaleString()} moedas**`;
 
-    // ==================== 🎯 CONCLUIR SERVIÇO (OTIMIZADO) ====================
-    if (command === 'concluir') {
-        if (!userData.contract) return message.reply('❌ Não tens nenhum contrato ativo no momento!');
-
-        const alvoAtual = userData.contract;
-        const foiApanhado = Math.random() < 0.15; // 15% de chance
-
-        // Tenta remover o cargo se ele existir
-        const cargoAssassino = message.guild.roles.cache.find(r => r.name === 'Assassino de Aluguel');
-        if (cargoAssassino) {
-            message.member.roles.remove(cargoAssassino).catch(() => {});
+        if (bônusAtivo) {
+            msg += `\n✨ **Bônus de Equipamento:** Usaste teu(tua) **${trab.item}** para ganhar mais **${trab.bonus.toLocaleString()}**!`;
         }
+
+        return message.channel.send(msg);
+
+    } catch (error) {
+        console.error(error);
+        message.reply("❌ Erro no Sindicato.");
+    }
+}
+
+// ==================== 🎯 CONCLUIR SERVIÇO (SISTEMA INTEGRADO) ====================
+if (command === 'concluir' || command === 'finish') {
+    try {
+        if (!userData.contract) {
+            return message.reply('❌ Você não tem nenhum contrato ativo! Use `!contrato` para conseguir um trabalho no submundo.');
+        }
+
+        const myInv = userData.inventory || [];
+        const servicoAtual = userData.contract; 
+        const profissaoNome = servicoAtual.split(': ')[0];
+        const alvoNome = servicoAtual.split(': ')[1];
+
+        // 1. Remoção de Cargo
+        const cargoParaRemover = message.guild.roles.cache.find(r => r.name === profissaoNome);
+        if (cargoParaRemover) {
+            await message.member.roles.remove(cargoParaRemover).catch(() => {});
+        }
+
+        // 2. Probabilidade de falha (A casa caiu!)
+        let chanceDeSerPego = 0.15; // 15% base
+        if (myInv.includes('mascara')) chanceDeSerPego = 0.05; // Máscara reduz risco para 5%
+
+        const foiApanhado = Math.random() < chanceDeSerPego;
 
         if (foiApanhado) {
-            const multa = 20000;
-            userData.money = Math.max(0, userData.money - multa);
-            userData.contract = null;
-            await userData.save();
+            let multa = 20000;
+            let avisoMascara = "";
             
-            return message.reply(`🚨 **A CASA CAIU!** A polícia apanhou-te ao tentar eliminar **${alvoAtual}**.\nPerbeste **20.000 moedas** em fiança.`);
+            if (myInv.includes('mascara')) {
+                multa = 5000; // Multa muito menor com máscara
+                avisoMascara = "\n🎭 *Graças à sua Máscara, a polícia não conseguiu provas sólidas e a fiança foi barata!*";
+            }
+
+            userData.money = Math.max(0, userData.money - multa);
+            userData.contract = null; 
+            await userData.save();
+
+            return message.reply(`🚨 **A CASA CAIU!** Você foi interceptado ao finalizar o serviço contra **${alvoNome}**.\n💰 **Prejuízo:** \`${multa.toLocaleString()} moedas\`.${avisoMascara}`);
         }
 
-        // Sucesso: Ganho aleatório entre 3000 e 20000
-        const ganho = Math.floor(Math.random() * (20000 - 3000 + 1)) + 3000;
+        // 3. Sucesso: Pagamento com Bônus de Chip
+        let ganho = Math.floor(Math.random() * (25000 - 15000 + 1)) + 15000; // Aumentei o piso para 15k
+        let bonusChip = 0;
+
+        if (myInv.includes('chip')) {
+            bonusChip = Math.floor(ganho * 0.20); // +20% de lucro
+            ganho += bonusChip;
+        }
         
         userData.money += ganho;
         userData.jobsDone = (userData.jobsDone || 0) + 1;
         userData.contract = null; 
-
         await userData.save();
 
-        const embedSucesso = new EmbedBuilder()
-            .setTitle('🎯 SERVIÇO CONCLUÍDO')
-            .setColor('#00FF00')
-            .setThumbnail('https://cdn-icons-png.flaticon.com/512/1021/1021443.png') // Ícone de alvo/morte
-            .setDescription(`**${message.author.username}**, eliminaste **${alvoAtual}** com sucesso!`)
-            .addFields(
-                { name: '💰 Pagamento', value: `\`${ganho.toLocaleString()} moedas\``, inline: true },
-                { name: '📊 Total de Serviços', value: `\`${userData.jobsDone}\``, inline: true }
-            )
-            .setFooter({ text: 'O submundo agradece os teus serviços.' })
-            .setTimestamp();
+        // 4. Mensagens de Sucesso
+        const frasesSucesso = [
+            `✅ **Missão Cumprida!** O trabalho contra **${alvoNome}** foi um sucesso absoluto.`,
+            `👤 **Operação Silenciosa:** Ninguém viu você, mas o pagamento de **${ganho.toLocaleString()}** já caiu na conta!`,
+            `💎 **Trabalho de mestre!** Você provou ser o melhor **${profissaoNome}** da região.`,
+            `🏆 **Prestígio aumentado!** Este foi o seu serviço de número **${userData.jobsDone}**.`
+        ];
 
-        return message.reply({ embeds: [embedSucesso] });
+        const msgFinal = frasesSucesso[Math.floor(Math.random() * frasesSucesso.length)];
+
+        let resposta = `🎯 **SERVIÇO CONCLUÍDO!**\n\n` +
+                       `${msgFinal}\n` +
+                       `💵 **Pagamento:** \`${ganho.toLocaleString()} moedas\``;
+
+        if (bonusChip > 0) resposta += `\n💾 **Bônus Neural:** \`+${bonusChip.toLocaleString()}\` (Eficiência de processamento!)`;
+
+        return message.channel.send(resposta);
+
+    } catch (error) {
+        console.error("Erro no comando concluir:", error);
+        message.reply("❌ Ocorreu um erro ao processar o seu pagamento!");
     }
-// ==================== 💀 COMANDO MATAR (TIMEOUT) ====================
-    if (command === 'matar') {
-        // 1. Verificação de Permissão usando Flags
+}
+// ==================== 💀 COMANDO MATAR (MODERAÇÃO & RPG) ====================
+if (command === 'matar' || command === 'kill') {
+    try {
+        // 1. Verificação de Permissão (Administrativa)
         if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
-            return message.reply('❌ Tu não tens permissão de "Castigar Membros" para usar isto!');
+            return message.reply('❌ Você não tem permissão para "Castigar Membros"! Quem você pensa que é? O ceifador?');
         }
 
         const target = message.mentions.members.first();
-        
-        if (!target) return message.reply('❌ Precisas de mencionar (@) o alvo!');
+        if (!target) return message.reply('💀 Você precisa mencionar (@) quem deseja executar!');
 
-        // Log de depuração (aparecerá no console da Discloud)
-        console.log(`Tentando matar: ${target.user.username}. Moderatable: ${target.moderatable}`);
+        // --- FALAS ESTILO LORITTA ---
+        if (target.id === message.author.id) {
+            return message.reply('Você quer se matar? Não faça isso! A vida é bela e eu ainda tenho muitos comandos para te mostrar! 🌸');
+        }
+
+        if (target.id === message.client.user.id) {
+            return message.reply('Tentar me matar? Eu sou imortal! Eu vivo na nuvem! *risada maléfica de robô* 🤖');
+        }
 
         // 2. Verificação de Hierarquia
         if (!target.moderatable) {
-            return message.reply('❌ O meu cargo está ABAIXO do cargo dessa pessoa. Não tenho poder sobre ela!');
+            return message.reply('❌ Essa pessoa é poderosa demais! Meu cargo está abaixo do dela, não consigo encostar um dedo nela.');
         }
 
-        if (target.id === message.author.id) return message.reply('❌ Não te podes matar a ti próprio!');
+        // 3. Execução do "Assassinato" (Timeout)
+        // Se o autor tiver contrato de Assassino, o tempo é de 2 minutos, senão 1 minuto.
+        const tempoMS = (userData.contract && userData.contract.includes("Assassino")) ? 120000 : 60000; 
+        const motivo = args.slice(1).join(' ') || 'Executado sumariamente pela moderação.';
 
-        const tempoMS = 60 * 1000; // 1 minuto
-        const motivo = args.slice(1).join(' ') || 'Executado pela moderação Omni';
+        await target.timeout(tempoMS, motivo);
 
-        try {
-            // A função timeout exige o tempo em milissegundos e o motivo
-            await target.timeout(tempoMS, motivo);
-
-            // Estatísticas
+        // 4. Estatísticas (Incrementa trabalhos feitos se for um contrato)
+        if (userData.contract && userData.contract.includes("Assassino")) {
             userData.jobsDone = (userData.jobsDone || 0) + 1;
             await userData.save();
-            
-            const embedMorte = new EmbedBuilder()
-                .setTitle('💀 EXECUÇÃO CONFIRMADA')
-                .setColor('#000000')
-                .setDescription(`**${target.user.username}** foi silenciado com sucesso.`)
-                .addFields(
-                    { name: '⏳ Duração', value: '`1 minuto`', inline: true },
-                    { name: '📝 Motivo', value: `\`${motivo}\``, inline: true }
-                )
-                .setTimestamp();
-
-            return message.reply({ embeds: [embedMorte] });
-            
-        } catch (error) {
-            console.error("ERRO NO TIMEOUT:", error);
-            return message.reply('❌ Erro ao silenciar! Verifica se o meu cargo está no topo da lista de cargos.');
         }
-    }// ==================== 📖 AJUDA OTIMIZADA (ATUALIZADA) ====================
- // ==================== 📖 AJUDA OTIMIZADA (CATEGORIAS EXPANDIDAS) ====================
 
+        // 5. Banco de Dados de Frases
+        const frasesMorte = [
+            `💀 **${target.user.username}** foi executado! Vejo você no inferno (ou em breve).`,
+            `⚰️ **RIP!** **${message.author.username}** puxou o gatilho e **${target.user.username}** caiu silenciado!`,
+            `💥 **POW!** Um tiro certeiro! **${target.user.username}** foi removido da existência temporariamente.`,
+            `🗡️ **${target.user.username}** sentiu o frio da lâmina e agora está em silêncio profundo.`,
+            `⚡ **CHOQUE ELÉTRICO!** **${target.user.username}** foi fritado e não poderá falar!`,
+            `🛑 **FIM DA LINHA!** O alvo **${target.user.username}** foi neutralizado com sucesso.`,
+            `🧪 **ENVENENADO!** **${target.user.username}** tomou um chá suspeito e desmaiou no chat.`,
+            `💣 **KABOOM!** Não sobrou nada de **${target.user.username}** além de poeira e silêncio.`,
+            `🌑 **NAS SOMBRAS!** O assassino agiu e **${target.user.username}** foi silenciado sem ninguém ver.`
+        ];
+
+        const sorteio = frasesMorte[Math.floor(Math.random() * frasesMorte.length)];
+
+        // 6. Resposta Final
+        let msgExtra = (tempoMS > 60000) ? "\n✨ **Bônus de Assassino Profissional:** Tempo de silêncio duplicado!" : "";
+
+        return message.channel.send(
+            `💀 **EXECUÇÃO CONFIRMADA** 💀\n\n` +
+            `${sorteio}\n` +
+            `⏳ **Pena:** \`${tempoMS / 1000} segundos\`\n` +
+            `📝 **Motivo:** \`${motivo}\`${msgExtra}`
+        );
+
+    } catch (error) {
+        console.error("ERRO NO COMANDO MATAR:", error);
+        message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
+    }
+}
+// ==================== 📖 AJUDA OTIMIZADA (CATEGORIAS EXPANDIDAS) ====================
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
-    
-
     let avisoIdioma = '';
-
     if (command === 'help') avisoIdioma = '🌐 **Note:** This bot is originally in Portuguese.';
-
     if (command === 'ayuda') avisoIdioma = '🌐 **Nota:** Este bot es originalmente en Portugués.';
 
-
-
     const embedAjuda = new EmbedBuilder()
-
         .setTitle('📖 Central de Comandos OmniBot')
-
         .setColor('#5865F2')
-
         .setThumbnail(client.user.displayAvatarURL())
-
         .setDescription(`${avisoIdioma}${avisoIdioma ? '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : ''}Seja bem-vindo! Explore minhas funcionalidades abaixo:`)
-
         .addFields(
-
             { 
-
                 name: '💰 ECONOMIA & RANKING', 
-
-                value: '`!depositar´: deposita seu dinheiro no banco.\n`!sacar´: saca o seu dinheiro do banco.\n`!trabalhos`: Ver sua profissão e progresso de carreira.\n`!money`: Ver saldo rápido.\n`!daily`: Recompensa diária.\n`!trabalhar`: Renda passiva.\n`!pix @user [valor]`: Enviar moedas.\n`!dar @user [item] [qtd]`: Enviar itens.\n`!top: Ranking local do servidor.\n`!top global: Ranking mundial de todos os usuários.' 
-
-            },
-
-            { 
-                name: "👤 Perfil & Status", 
-                value: '`!perfil` ou `!p` - Mostra seu card com nível, dinheiro e mochila.\n`!fundos` - Lista seus backgrounds comprados.\n`!meusfundos` - Escolhe qual fundo usar agora.'
-            },
-
-            { 
-
-                name: '🎰 CASSINO & SORTE', 
-
-                value: '`!investir <valor>`: Bolsa de valores.\n`!cassino @user [valor]`: Cara ou Coroa PvP.\n`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
-
-            },
-
-            { 
-
-                name: '💍 RELACIONAMENTOS', 
-
-                value: '`!casar @user`: Iniciar casamento (25k).\n`!vercasamento`: Status e afinidade.\n`!cartinha @user`: Pontos de afeto.\n`!divorciar`: Terminar relação.\n`!ship @user @user`: Compatibilidade.' 
-
-            },
-
-            { 
-
-                name: '🎭 INTERAÇÕES SOCIAIS', 
-
-                value: '`!avaliar [algo]`: Minha opinião sincera.\n`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n`!tapa`, `!atacar`: Gestos agressivos.' 
-
-            },
-
-            { 
-
-                name: '🌑 SUBMUNDO ILEGAL', 
-
-                value: '`!submundo`: Loja proibida.\n`!crime`: Assalto arriscado.\n`!roubar @user`: Tentar furto (10%).\n`!contrato`: Aceitar alvo.\n`!concluir`: Receber prêmio.\n`!entrar`: Virar Membro da Facção.\n`!traficar`: Rota de lucro.\n`!missao`: Operações da elite.\n`!assaltodupla`: Golpe em casal.' 
-
+                value: '`!money`: Saldo rápido.\n`!daily`: Resgate diário.\n`!trabalhar`: Ganhar moedas.\n`!depositar`/`!sacar`: Gerir banco.\n`!pix @user [valor]`: Transferir moedas.\n`!top`: Ranking de riqueza local.' 
             },
             { 
-                name: '⚒️ PROGRESSO', 
-                value: '`!guia` - Mostra a lista de TODOS os troféus e como pegá-los.\n`!conquistas`: Ver teus marcos e medalhas.' 
+                name: "👤 PERFIL & STATUS", 
+                value: '`!perfil`: Ver seu card e nível.\n`!mochila`: Ver inventário.\n`!usar [item]`: Ativar consumíveis.\n`!setbg [link]`: Mudar fundo do perfil.\n`!meusfundos`: Gerenciar backgrounds.'
             },
-
             { 
-
-                name: '🛍️ MERCADO GLOBAL', 
-
-                value: '`!loja`: Ver estoque atual.\n`!comprar [item]`: Comprar produto.\n`!mochila`: Atalho para inventário.' 
-
+                name: '🛍️ MERCADO & LOJAS', 
+                value: '`!loja`: Itens de trabalho e legais.\n`!submundo`: Mercado negro ilegal.\n`!tech`: Upgrades cibernéticos.\n`!flores`: Floricultura e mimos.\n`!reliquias`: Itens lendários/VIP.\n`!comprar [id]`: Adquirir item.' 
             },
-
             { 
-
-                name: '🛡️ MODERAÇÃO & STAFF', 
-
-                value: '`!matar @user`: Timeout (1 min).\n`!clear [nº]`: Limpar chat.\n`!kick`/`!ban`: Expulsar/Banir.\n`!anuncio`: Mensagem oficial.\n`!falar`: Repetir texto.' 
-
+                name: '🌑 ORGANIZAÇÃO CRIMINAL', 
+                value: '`!entrar`: Virar Membro da Facção.\n`!dominio`: Poder da organização.\n`!lavar [valor]`: Limpar dinheiro sujo.\n`!contrato`: Aceitar alvo.\n`!concluir`: Finalizar missão.\n`!traficar`: Rota de carga ilegal.' 
             },
-
             { 
-
-                name: '⚙️ CONFIGURAÇÕES & INFO', 
-
-                value: '`!stats`: Dados técnicos e Uptime.\n`!info`: Créditos do desenvolvedor.\n`!renovar`: Resetar estoque da loja.\n`!resetar @user`: Limpar dados (Dono).' 
-
+                name: '💍 RELACIONAMENTOS & SOCIAL', 
+                value: '`!casar @user`: Iniciar união.\n`!vercasamento`: Status do casal.\n`!presentear @user [id]`: Dar flores/anéis.\n`!assaltodupla`: Crime em conjunto.\n`!beijar`/`!abracar`: Gestos sociais.' 
+            },
+            { 
+                name: '🎰 SORTE & APOSTAS', 
+                value: '`!investir [valor]`: Bolsa de valores.\n`!cassino @user [valor]`: Cara ou Coroa PvP.\n`!dado [valor]`: Apostar na sorte.' 
+            },
+            { 
+                name: '🛡️ STAFF & SISTEMA', 
+                value: '`!matar @user`: Silenciar usuário.\n`!clear [nº]`: Limpar mensagens.\n`!stats`: Info do bot.\n`!resetar @user`: Apagar dados.' 
             }
-
         )
-
-        .setFooter({ text: 'Dica: Digite o comando corretamente para evitar erros.' })
-
+        .setFooter({ text: '💡 Use os IDs dos itens vistos nas lojas para comprar ou usar.' })
         .setTimestamp();
 
-
-
     return message.reply({ embeds: [embedAjuda] });
-
 }
 });
 
