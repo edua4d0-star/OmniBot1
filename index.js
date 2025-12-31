@@ -2214,7 +2214,7 @@ if (command === 'avaliar' || command === 'rate') {
 }
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-// ==================== 👤 COMANDO PERFIL (FIXED & ALIGNED) ====================
+// ==================== 👤 COMANDO PERFIL (FONTE DINÂMICA) ====================
 if (command === 'perfil' || command === 'p') {
     const aguarde = await message.reply("🎨 A desenhar o teu perfil...");
 
@@ -2240,71 +2240,72 @@ if (command === 'perfil' || command === 'p') {
         const canvas = createCanvas(900, 550); 
         const ctx = canvas.getContext('2d');
 
-        // --- BACKGROUND (RESTAURADO) ---
-        // Aqui eu removi a trava do item 'fundo'. Ele vai ler o seu 'dados.bg' direto.
-        const fundoPadrao = "https://i.imgur.com/yG1r44O.jpeg"; 
-        const linkFundo = (dados.bg && dados.bg.startsWith('http')) ? dados.bg : fundoPadrao;
-
+        // --- BACKGROUND ---
+        const linkFundo = (dados.bg && dados.bg.startsWith('http')) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
         try {
             const imageBackground = await loadImage(linkFundo);
             ctx.drawImage(imageBackground, 0, 0, 900, 550);
         } catch (e) {
-            // Se o seu link quebrar, ele usa uma cor sólida para não dar erro
-            ctx.fillStyle = "#1a1a1a";
-            ctx.fillRect(0, 0, 900, 550);
+            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 900, 550);
         }
 
-        // Overlay Escuro (Melhorado para transparência elegante)
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
-        ctx.beginPath();
-        ctx.roundRect(25, 25, 850, 500, 20);
-        ctx.fill();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.beginPath(); ctx.roundRect(20, 20, 860, 510, 25); ctx.fill();
 
         // --- AVATAR ---
         const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png', size: 256 }));
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(135, 135, 85, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(avatarImg, 50, 50, 170, 170);
+        ctx.beginPath(); ctx.arc(140, 140, 90, 0, Math.PI * 2); ctx.clip();
+        ctx.drawImage(avatarImg, 50, 50, 180, 180);
         ctx.restore();
 
-        // --- TEXTOS (LADO ESQUERDO) ---
+        // --- FUNÇÃO PARA DIMINUIR O NOME SE FOR GRANDE ---
+        const aplicarFonteDinamica = (context, text, maxWidth, baseSize) => {
+            let size = baseSize;
+            do {
+                context.font = `bold ${size}px sans-serif`;
+                size--;
+            } while (context.measureText(text).width > maxWidth && size > 10);
+            return context.font;
+        };
+
+        // --- TEXTOS (COLUNA ESQUERDA) ---
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px sans-serif';
-        ctx.fillText(alvo.username.toUpperCase(), 50, 270); 
+        
+        // Nome com ajuste automático de tamanho (Máximo 300px de largura)
+        ctx.font = aplicarFonteDinamica(ctx, alvo.username.toUpperCase(), 300, 28);
+        ctx.fillText(alvo.username.toUpperCase(), 50, 280); 
 
         ctx.font = '22px sans-serif';
         ctx.fillStyle = '#00FFFF';
-        ctx.fillText(profissaoNome, 50, 305);
+        ctx.fillText(profissaoNome, 50, 315);
 
         ctx.font = '16px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 340);
-        ctx.fillText(`ID: ${alvo.id}`, 50, 365);
+        ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 355);
+        ctx.fillText(`ID: ${alvo.id}`, 50, 385);
 
-        // --- FINANCEIRO (DIREITA) ---
-        const xCol = 330;
+        // --- COLUNA DE INFO (DIREITA) ---
+        const xInfo = 380; 
+
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("💰 CAPITAL TOTAL", xCol, 80);
+        ctx.fillText("💰 CAPITAL TOTAL", xInfo, 85);
         
-        ctx.font = 'bold 36px sans-serif';
+        ctx.font = 'bold 38px sans-serif';
         ctx.fillStyle = '#00FF00';
         const total = (dados.money || 0) + (dados.bank || 0) + (dados.dirtyMoney || 0);
-        ctx.fillText(`${total.toLocaleString()} moedas`, xCol, 125);
+        ctx.fillText(`${total.toLocaleString()} moedas`, xInfo, 130);
 
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`💵 Carteira: ${(dados.money || 0).toLocaleString()}`, xCol, 170);
-        ctx.fillText(`🏦 Banco: ${(dados.bank || 0).toLocaleString()}`, xCol + 230, 170);
+        ctx.fillText(`💵 Carteira: ${(dados.money || 0).toLocaleString()}`, xInfo, 175);
+        ctx.fillText(`🏦 Banco: ${(dados.bank || 0).toLocaleString()}`, xInfo + 220, 175);
 
-        // --- RELACIONAMENTO ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("❤️ RELACIONAMENTO", xCol, 240);
+        ctx.fillText("❤️ RELACIONAMENTO", xInfo, 245);
         
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#FF69B4';
@@ -2315,47 +2316,36 @@ if (command === 'perfil' || command === 'p') {
                 txtRel = `Casado(a) com ${conjuge.username}`;
             } catch { txtRel = "Casado(a)"; }
         }
-        ctx.fillText(txtRel, xCol, 275);
-        ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, xCol, 305);
+        ctx.fillText(txtRel, xInfo, 280);
+        ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, xInfo, 310);
 
-        // --- MOCHILA ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🎒 MOCHILA (ITENS)", xCol, 370);
+        ctx.fillText("🎒 MOCHILA (ITENS)", xInfo, 375);
         
         const inv = (dados.inventory && dados.inventory.length > 0) 
             ? [...new Set(dados.inventory)].slice(0, 5).join(' • ') 
             : "Vazia";
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(inv, xCol, 405);
+        ctx.fillText(inv, xInfo, 410);
 
         // --- BARRA DE PROGRESSO ---
         ctx.fillStyle = '#333333';
-        ctx.beginPath();
-        ctx.roundRect(50, 460, 800, 35, 15);
-        ctx.fill();
-
+        ctx.beginPath(); ctx.roundRect(50, 460, 800, 40, 15); ctx.fill();
         ctx.fillStyle = '#00FFFF';
-        ctx.beginPath();
-        ctx.roundRect(50, 460, 800 * porcentagem, 35, 15);
-        ctx.fill();
+        ctx.beginPath(); ctx.roundRect(50, 460, 800 * porcentagem, 40, 15); ctx.fill();
+        ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 487);
 
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 483);
-
-        // --- ENVIO ---
         const buffer = canvas.toBuffer('image/png');
         const attachment = new AttachmentBuilder(buffer, { name: 'perfil.png' });
-        
         if (aguarde) await aguarde.delete().catch(() => {});
         return message.reply({ files: [attachment] });
 
     } catch (error) {
-        console.error("Erro Perfil:", error);
-        if (aguarde) aguarde.edit("❌ Erro ao gerar a imagem do perfil.");
+        console.error(error);
+        if (aguarde) aguarde.edit("❌ Erro ao gerar perfil.");
     }
 }
 // ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
