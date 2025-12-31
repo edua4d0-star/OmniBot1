@@ -5,8 +5,9 @@ const UserSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
 
     // ==================== 💰 ECONOMIA & BANCO ====================
-    money: { type: Number, default: 0 },       // Dinheiro na mão
+    money: { type: Number, default: 0 },       // Dinheiro na mão (Limpo)
     bank: { type: Number, default: 0 },        // Dinheiro no banco
+    dirtyMoney: { type: Number, default: 0 },  // [ADICIONADO] Dinheiro Sujo (Lavagem)
     lastWork: { type: Number, default: 0 },    
     workCount: { type: Number, default: 0 },   
     lastInvest: { type: Number, default: 0 },  
@@ -27,13 +28,14 @@ const UserSchema = new mongoose.Schema({
     marriedWith: { type: String, default: null }, 
     affinity: { type: Number, default: 0 }, 
     lastAssaltoDupla: { type: Number, default: 0 }, 
+    lastGift: { type: Number, default: 0 },        // [ADICIONADO] Cooldown de presentes
 
     // ==================== 🎯 CONTRATOS & CRIMES ====================
     contract: { type: String, default: null }, 
     lastContract: { type: Number, default: 0 }, 
-    jobsDone: { type: Number, default: 0 },    // Essencial para conquista Hitman
-    lastKill: { type: Number, default: 0 },    // Essencial para conquista Primeiro Sangue
-    lastRob: { type: Number, default: 0 },     // Essencial para conquista Ladrão de Galinha
+    jobsDone: { type: Number, default: 0 },    
+    lastKill: { type: Number, default: 0 },    
+    lastRob: { type: Number, default: 0 },     
     lastCrime: { type: Number, default: 0 }
 });
 
