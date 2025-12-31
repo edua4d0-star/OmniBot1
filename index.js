@@ -1,9 +1,24 @@
 require('dotenv').config();
 const express = require('express'); 
 const mongoose = require('mongoose');
+const path = require('path');
+
+// 🎨 Configuração do Canvas (Usando napi-rs que é mais estável no Render)
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, Options, PermissionsBitField } = require('discord.js');
-const path = require('path'); 
+
+// 🤖 Configuração do Discord.js (AttachmentBuilder já está aqui, não precisa repetir)
+const { 
+    Client, 
+    GatewayIntentBits, 
+    EmbedBuilder, 
+    ActionRowBuilder, 
+    ButtonBuilder, 
+    ButtonStyle, 
+    StringSelectMenuBuilder, 
+    AttachmentBuilder, 
+    Options, 
+    PermissionsBitField 
+} = require('discord.js');
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
@@ -2200,8 +2215,6 @@ if (command === 'avaliar' || command === 'rate') {
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 // ==================== 👤 COMANDO PERFIL (CANVAS EDITION - ARRUMADO) ====================
-const { createCanvas, loadImage, AttachmentBuilder } = require('canvas');
-
 if (command === 'perfil' || command === 'p') {
     const aguarde = await message.reply("🎨 A desenhar o teu perfil completo...");
 
