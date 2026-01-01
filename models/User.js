@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
     // ==================== 💰 ECONOMIA & BANCO ====================
     money: { type: Number, default: 0 },       // Dinheiro na mão (Limpo)
     bank: { type: Number, default: 0 },        // Dinheiro no banco
-    dirtyMoney: { type: Number, default: 0 },  // [ADICIONADO] Dinheiro Sujo (Lavagem)
+    dirtyMoney: { type: Number, default: 0 },  // Dinheiro Sujo (Lavagem)
     lastWork: { type: Number, default: 0 },    
     workCount: { type: Number, default: 0 },   
     lastInvest: { type: Number, default: 0 },  
@@ -24,11 +24,16 @@ const UserSchema = new mongoose.Schema({
     lastTrafico: { type: Number, default: 0 }, 
     lastMission: { type: Number, default: 0 }, 
 
-    // ==================== 💖 RELACIONAMENTO ====================
+    // ==================== 💖 RELACIONAMENTO (ATUALIZADO) ====================
     marriedWith: { type: String, default: null }, 
     affinity: { type: Number, default: 0 }, 
+    marriageDate: { type: String, default: null },      // [ADICIONADO] Dia/Mês/Ano do Casamento
+    coupleBio: { type: String, default: "Unidos pelo destino." }, // [ADICIONADO] Bio do Card
+    activeBadge: { type: String, default: "🌱 Iniciante" },     // [ADICIONADO] Insígnia Ativa
+    traicoes: { type: Number, default: 0 },             // [ADICIONADO] Contador para insígnias
+    lastSocial: { type: Number, default: 0 },           // [ADICIONADO] Cooldown de Tapa/Atacar
     lastAssaltoDupla: { type: Number, default: 0 }, 
-    lastGift: { type: Number, default: 0 },        // [ADICIONADO] Cooldown de presentes
+    lastGift: { type: Number, default: 0 },             // Cooldown de presentes
 
     // ==================== 🎯 CONTRATOS & CRIMES ====================
     contract: { type: String, default: null }, 
