@@ -5,18 +5,19 @@ const UserSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
 
     // ==================== 💰 ECONOMIA & BANCO ====================
-    money: { type: Number, default: 0 },       // Dinheiro na mão (Limpo)
-    bank: { type: Number, default: 0 },        // Dinheiro no banco
-    dirtyMoney: { type: Number, default: 0 },  // Dinheiro Sujo (Lavagem)
+    money: { type: Number, default: 0 },       
+    bank: { type: Number, default: 0 },        
+    dirtyMoney: { type: Number, default: 0 },  
+    cassinoGasto: { type: Number, default: 0 }, // [ADICIONADO] Essencial para a insígnia 'Viciados'
     lastWork: { type: Number, default: 0 },    
     workCount: { type: Number, default: 0 },   
     lastInvest: { type: Number, default: 0 },  
     lastDaily: { type: Number, default: 0 },   
 
     // ==================== 🎒 INVENTÁRIO & ESTÉTICA ====================
-    inventory: { type: [String], default: [] },   // Itens da mochila
-    bg: { type: String, default: "" },             // Link do fundo atual equipado
-    bgInventory: { type: [String], default: [] }, // LISTA DE IDS DOS FUNDOS COMPRADOS
+    inventory: { type: [String], default: [] },   
+    bg: { type: String, default: "" },             
+    bgInventory: { type: [String], default: [] }, 
 
     // ==================== 🌑 SISTEMA DE FACÇÃO ====================
     cargo: { type: String, default: "Civil" }, 
@@ -27,13 +28,13 @@ const UserSchema = new mongoose.Schema({
     // ==================== 💖 RELACIONAMENTO (ATUALIZADO) ====================
     marriedWith: { type: String, default: null }, 
     affinity: { type: Number, default: 0 }, 
-    marriageDate: { type: String, default: null },      // [ADICIONADO] Dia/Mês/Ano do Casamento
-    coupleBio: { type: String, default: "Unidos pelo destino." }, // [ADICIONADO] Bio do Card
-    activeBadge: { type: String, default: "🌱 Iniciante" },     // [ADICIONADO] Insígnia Ativa
-    traicoes: { type: Number, default: 0 },             // [ADICIONADO] Contador para insígnias
-    lastSocial: { type: Number, default: 0 },           // [ADICIONADO] Cooldown de Tapa/Atacar
+    marriageDate: { type: String, default: null },      
+    coupleBio: { type: String, default: "Unidos pelo destino." }, 
+    activeBadge: { type: String, default: "🌱 Iniciante" },     
+    traicoes: { type: Number, default: 0 },             
+    lastSocial: { type: Number, default: 0 },           
     lastAssaltoDupla: { type: Number, default: 0 }, 
-    lastGift: { type: Number, default: 0 },             // Cooldown de presentes
+    lastGift: { type: Number, default: 0 },             
 
     // ==================== 🎯 CONTRATOS & CRIMES ====================
     contract: { type: String, default: null }, 
