@@ -699,102 +699,56 @@ if (command === 'top') {
 
         return message.reply({ embeds: [embedVoto], components: [botaoVoto] });
     }
-    // ==================== ❤️ COMANDO SHIP (OTIMIZADO) ====================
-    if (command === 'ship') {
-        const users = message.mentions.users.map(u => u);
+// ==================== ❤️ COMANDO SHIP (COM EASTER EGG) ====================
+if (command === 'ship') {
+    const users = message.mentions.users.map(u => u);
 
-        if (users.length < 2) {
-            return message.reply('❌ Precisas de mencionar duas pessoas para ver a compatibilidade! Ex: `!ship @user1 @user2`');
-        }
+    if (users.length < 2) {
+        return message.reply('❌ Precisas de mencionar duas pessoas para ver a compatibilidade! Ex: `!ship @user1 @user2`');
+    }
 
-        const user1 = users[0];
-        const user2 = users[1];
+    const user1 = users[0];
+    const user2 = users[1];
 
-        // Lógica para a porcentagem ser sempre a mesma para o mesmo par (Seed baseada nos IDs)
-        // Isso evita spam, pois o resultado não muda se repetirem o comando.
+    // IDs ESPECIAIS (Easter Egg)
+    const idEspecial1 = "1362260490818027683";
+    const idEspecial2 = "857667179040997437";
+
+    const ehCasalEspecial = (user1.id === idEspecial1 && user2.id === idEspecial2) || 
+                            (user1.id === idEspecial2 && user2.id === idEspecial1);
+
+    let lovePercent;
+    let bar;
+    let status;
+
+    if (ehCasalEspecial) {
+        // Resultado para o casal especial
+        lovePercent = "∞"; // Infinito
+        bar = "❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥";
+        status = "⚠️ **ERRO CRÍTICO:** A compatibilidade de vocês quebra o limite de qualquer número! É o destino.";
+    } else {
+        // Lógica normal para outros casais
         const combinedId = (BigInt(user1.id) + BigInt(user2.id)).toString();
-        const lovePercent = parseInt(combinedId.substring(combinedId.length - 2)) || Math.floor(Math.random() * 101);
-
-        // Barra de progresso visual (Simples e leve)
+        lovePercent = parseInt(combinedId.substring(combinedId.length - 2)) || Math.floor(Math.random() * 101);
+        
         const progress = Math.floor(lovePercent / 10);
-        const bar = "❤️".repeat(progress) + "🖤".repeat(10 - progress);
+        bar = "❤️".repeat(progress) + "🖤".repeat(10 - progress);
 
-        let status = "";
         if (lovePercent < 20) status = "💔 Horrível. Nem tentem.";
         else if (lovePercent < 50) status = "😐 Talvez como amigos...";
         else if (lovePercent < 80) status = "🔔 Há esperança! Um jantar resolvia.";
         else if (lovePercent < 95) status = "💖 Que casal lindo! Já podem casar.";
         else status = "💍 ALMAS GÊMEAS! O amor da vida toda.";
-
-        const embed = new EmbedBuilder()
-            .setTitle('💘 Calculadora do Amor Omni')
-            .setColor('#FF1493')
-            .setDescription(`Será que **${user1.username}** e **${user2.username}** combinam?\n\n**${lovePercent}%** [${bar}]\n\n> ${status}`)
-            .setFooter({ text: 'Dica: Usem !casar se o amor for real!' });
-
-        return message.reply({ embeds: [embed] });
     }
 
-// ==================== 💍 COMANDO CASAR (ALTAMENTE OTIMIZADO) ====================
-    if (command === 'casar') {
-        const target = message.mentions.users.first();
-        const custo = 25000;
+    const embed = new EmbedBuilder()
+        .setTitle('💘 Calculadora do Amor Omni')
+        .setColor(ehCasalEspecial ? '#FFD700' : '#FF1493') // Dourado se for o casal especial
+        .setDescription(`Será que **${user1.username}** e **${user2.username}** combinam?\n\n**${lovePercent}%** [${bar}]\n\n> ${status}`)
+        .setFooter({ text: 'Dica: Usem !casar se o amor for real!' });
 
-        if (!target) return message.reply('❌ Precisas de marcar (@) a pessoa!');
-        if (target.id === message.author.id) return message.reply('❌ Não te podes casar contigo próprio!');
-        if (target.bot) return message.reply('❌ Robôs não têm sentimentos... nem moedas!');
-
-        // 1. Verificações rápidas antes do botão
-        if (userData.money < custo) return message.reply(`❌ Não tens **${custo.toLocaleString()} moedas** para as taxas.`);
-        if (userData.marriedWith) return message.reply('❌ Já estás casado(a)! Divorcia-te primeiro.');
-
-        let targetData = await User.findOne({ userId: target.id });
-        if (!targetData) targetData = await User.create({ userId: target.id });
-
-        if (targetData.marriedWith) return message.reply('❌ Essa pessoa já está casada!');
-        if (targetData.money < custo) return message.reply(`❌ ${target.username} não tem moedas suficientes para a cerimônia.`);
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('aceitar_casar').setLabel('Aceitar Casamento').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('recusar_casar').setLabel('Recusar').setStyle(ButtonStyle.Danger)
-        );
-
-        const pedido = await message.reply({
-            content: `💍 **PEDIDO DE CASAMENTO**\n${target}, aceitas casar com ${message.author}?\n⚠️ *Custo: **${custo.toLocaleString()} moedas** de cada.*`,
-            components: [row]
-        });
-
-        const filter = i => i.user.id === target.id;
-        const collector = pedido.createMessageComponentCollector({ filter, time: 60000 });
-
-        collector.on('collect', async i => {
-            if (i.customId === 'aceitar_casar') {
-                // RE-VERIFICAÇÃO DE SALDO (Segurança anti-exploit)
-                const freshAuthor = await User.findOne({ userId: message.author.id });
-                const freshTarget = await User.findOne({ userId: target.id });
-
-                if (freshAuthor.money < custo || freshTarget.money < custo) {
-                    return i.update({ content: '❌ Alguém gastou o dinheiro durante o pedido! Casamento cancelado.', components: [] });
-                }
-
-                // Atualiza os dois de uma vez
-                freshAuthor.money -= custo;
-                freshAuthor.marriedWith = target.id;
-                freshAuthor.affinity = 0;
-
-                freshTarget.money -= custo;
-                freshTarget.marriedWith = message.author.id;
-                freshTarget.affinity = 0;
-
-                await freshAuthor.save();
-                await freshTarget.save();
-
-                return i.update({ content: `💖 **VIVAM OS NOIVOS!** ${message.author} e ${target} casaram-se oficialmente! 🎉`, components: [] });
-            } else {
-                return i.update({ content: `💔 O pedido foi recusado...`, components: [] });
-            }
-        });
-    }
+    return message.reply({ embeds: [embed] });
+}
     // ==================== 💔 COMANDO DIVORCIAR (COM CONFIRMAÇÃO) ====================
     if (command === 'divorciar') {
         const conjugeId = userData.marriedWith;
