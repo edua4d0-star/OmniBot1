@@ -2214,7 +2214,7 @@ if (command === 'avaliar' || command === 'rate') {
 }
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-// ==================== 👤 COMANDO PERFIL (FONTE DINÂMICA) ====================
+// ==================== 👤 COMANDO PERFIL (VERSÃO FINAL OTIMIZADA) ====================
 if (command === 'perfil' || command === 'p') {
     const aguarde = await message.reply("🎨 A desenhar o teu perfil...");
 
@@ -2222,7 +2222,7 @@ if (command === 'perfil' || command === 'p') {
         const alvo = message.mentions.users.first() || message.author;
         let dados = await User.findOne({ userId: alvo.id }) || await User.create({ userId: alvo.id });
 
-        // --- LÓGICA DE NÍVEL ---
+        // --- LÓGICA DE NÍVEL & PROFISSÃO ---
         const totalTrabalhos = dados.workCount || 0;
         const metas = [30, 70, 130, 200, 300, 420, 550, 700, 850, 1000];
         let nivelIdx = metas.findIndex(m => totalTrabalhos < m);
@@ -2240,26 +2240,33 @@ if (command === 'perfil' || command === 'p') {
         const canvas = createCanvas(900, 550); 
         const ctx = canvas.getContext('2d');
 
-        // --- BACKGROUND ---
+        // --- BACKGROUND (Dinâmico) ---
+        // Se o usuário não tiver fundo, usa o padrão azul escuro
         const linkFundo = (dados.bg && dados.bg.startsWith('http')) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
         try {
             const imageBackground = await loadImage(linkFundo);
             ctx.drawImage(imageBackground, 0, 0, 900, 550);
         } catch (e) {
-            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 900, 550);
+            ctx.fillStyle = "#1a1a1a"; 
+            ctx.fillRect(0, 0, 900, 550);
         }
 
+        // Overlay Escuro Arredondado para dar leitura ao texto
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.beginPath(); ctx.roundRect(20, 20, 860, 510, 25); ctx.fill();
+        ctx.beginPath(); 
+        ctx.roundRect(20, 20, 860, 510, 25); 
+        ctx.fill();
 
-        // --- AVATAR ---
+        // --- AVATAR CIRCULAR ---
         const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png', size: 256 }));
         ctx.save();
-        ctx.beginPath(); ctx.arc(140, 140, 90, 0, Math.PI * 2); ctx.clip();
+        ctx.beginPath(); 
+        ctx.arc(140, 140, 90, 0, Math.PI * 2); 
+        ctx.clip();
         ctx.drawImage(avatarImg, 50, 50, 180, 180);
         ctx.restore();
 
-        // --- FUNÇÃO PARA DIMINUIR O NOME SE FOR GRANDE ---
+        // --- FUNÇÃO AJUSTE DE FONTE ---
         const aplicarFonteDinamica = (context, text, maxWidth, baseSize) => {
             let size = baseSize;
             do {
@@ -2269,12 +2276,12 @@ if (command === 'perfil' || command === 'p') {
             return context.font;
         };
 
-        // --- TEXTOS (COLUNA ESQUERDA) ---
+        // --- COLUNA ESQUERDA (Identidade) ---
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         
-        // Nome com ajuste automático de tamanho (Máximo 300px de largura)
-        ctx.font = aplicarFonteDinamica(ctx, alvo.username.toUpperCase(), 300, 28);
+        // Nome com ajuste automático (Não passa de 310px)
+        ctx.font = aplicarFonteDinamica(ctx, alvo.username.toUpperCase(), 310, 28);
         ctx.fillText(alvo.username.toUpperCase(), 50, 280); 
 
         ctx.font = '22px sans-serif';
@@ -2286,23 +2293,26 @@ if (command === 'perfil' || command === 'p') {
         ctx.fillText(`Status: ${dados.cargo || "Civil"}`, 50, 355);
         ctx.fillText(`ID: ${alvo.id}`, 50, 385);
 
-        // --- COLUNA DE INFO (DIREITA) ---
-        const xInfo = 380; 
+        // --- COLUNA DIREITA (Economia & Social) ---
+        const xInfo = 390; // Um pouco mais para a direita para segurança
 
+        // Saldo Total
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("💰 Saldo Total", xInfo, 85);
+        ctx.fillText("💰 SALDO TOTAL", xInfo, 85);
         
         ctx.font = 'bold 38px sans-serif';
         ctx.fillStyle = '#00FF00';
         const total = (dados.money || 0) + (dados.bank || 0) + (dados.dirtyMoney || 0);
         ctx.fillText(`${total.toLocaleString()} moedas`, xInfo, 130);
 
+        // Detalhamento Bancário
         ctx.font = '18px sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.fillText(`💵 Carteira: ${(dados.money || 0).toLocaleString()}`, xInfo, 175);
         ctx.fillText(`🏦 Banco: ${(dados.bank || 0).toLocaleString()}`, xInfo + 220, 175);
 
+        // Relacionamento
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
         ctx.fillText("❤️ RELACIONAMENTO", xInfo, 245);
@@ -2319,6 +2329,7 @@ if (command === 'perfil' || command === 'p') {
         ctx.fillText(txtRel, xInfo, 280);
         ctx.fillText(`✨ Afinidade: ${dados.affinity || 0}`, xInfo, 310);
 
+        // Mochila
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
         ctx.fillText("🎒 MOCHILA (ITENS)", xInfo, 375);
@@ -2330,22 +2341,28 @@ if (command === 'perfil' || command === 'p') {
         ctx.fillStyle = '#aaaaaa';
         ctx.fillText(inv, xInfo, 410);
 
-        // --- BARRA DE PROGRESSO ---
+        // --- BARRA DE PROGRESSO (Final) ---
         ctx.fillStyle = '#333333';
         ctx.beginPath(); ctx.roundRect(50, 460, 800, 40, 15); ctx.fill();
+        
         ctx.fillStyle = '#00FFFF';
         ctx.beginPath(); ctx.roundRect(50, 460, 800 * porcentagem, 40, 15); ctx.fill();
-        ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif';
+        
+        ctx.textAlign = 'center'; 
+        ctx.fillStyle = '#ffffff'; 
+        ctx.font = 'bold 18px sans-serif';
         ctx.fillText(`PROGRESSO DE CARREIRA: ${totalTrabalhos} / ${xpNecessario} TRABALHOS`, 450, 487);
 
+        // --- ENVIO ---
         const buffer = canvas.toBuffer('image/png');
         const attachment = new AttachmentBuilder(buffer, { name: 'perfil.png' });
+        
         if (aguarde) await aguarde.delete().catch(() => {});
         return message.reply({ files: [attachment] });
 
     } catch (error) {
-        console.error(error);
-        if (aguarde) aguarde.edit("❌ Erro ao gerar perfil.");
+        console.error("Erro Perfil:", error);
+        if (aguarde) aguarde.edit("❌ Erro ao gerar a imagem do perfil.");
     }
 }
 // ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
@@ -2437,7 +2454,7 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS ATUALIZADA ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS ATUALIZADA (VERSÃO BUNNY) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
         // --- JUJUTSU KAISEN ---
@@ -2489,7 +2506,8 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         "28": { nome: "Travis", preco: 50000, url: "https://i.imgur.com/6Rbe2OL.jpeg" },
         "29": { nome: "Donovan", preco: 50000, url: "https://i.imgur.com/wFco1Kz.jpeg" },
         "30": { nome: "Travis & Donovan", preco: 85000, url: "https://i.imgur.com/1VkMQ7z.jpeg" },
-        "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" }
+        "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" },
+        "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" } // [ADICIONADO]
     };
 
     let dados = await User.findOne({ userId: message.author.id });
@@ -2504,8 +2522,9 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 
         const embedLoja = new EmbedBuilder()
             .setTitle("🏪 Loja de Planos de Fundo")
-            .setColor("#00FFFF")
-            .setDescription("Para comprar: `!fundo [número]`\n\n" + listaFormatada)
+            .setColor("#FF69B4") // Rosa para o tema Bunny
+            .setDescription("Personalize seu `!perfil`!\nPara comprar: `!fundo [número]`\n\n" + listaFormatada)
+            .setImage("https://i.imgur.com/ybc3vvV.png") // Banner Bunny
             .setFooter({ text: "Use !meusfundos para ver sua coleção!" });
 
         return message.reply({ embeds: [embedLoja] });
@@ -2514,7 +2533,6 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundoEscolhido = fundos[opcao];
     if (!fundoEscolhido) return message.reply("❌ Código não encontrado na loja.");
 
-    // Verifica se já tem o fundo no inventário
     if (dados.bgInventory && dados.bgInventory.includes(opcao)) {
         dados.bg = fundoEscolhido.url;
         await dados.save();
@@ -2522,9 +2540,8 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
     }
 
     const saldoTotal = (dados.money || 0) + (dados.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem dinheiro suficiente.");
+    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem moedas suficientes.");
 
-    // Sistema de Cobrança (prioriza carteira, depois banco)
     if (dados.money >= fundoEscolhido.preco) {
         dados.money -= fundoEscolhido.preco;
     } else {
@@ -2533,7 +2550,6 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         dados.bank -= restante;
     }
 
-    // Salva o fundo atual e adiciona ao inventário
     dados.bg = fundoEscolhido.url;
     if (!dados.bgInventory) dados.bgInventory = [];
     dados.bgInventory.push(opcao);
@@ -2541,7 +2557,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 
     return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**!`);
 }
-// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V2 - FIX DUPLICADOS) ====================
+// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V3 - BUNNY INCLUÍDO) ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
         let dadosPerfil = await User.findOne({ userId: message.author.id });
@@ -2578,37 +2594,36 @@ if (command === 'meusfundos' || command === 'bgs') {
             "28": { nome: "Travis", url: "https://i.imgur.com/6Rbe2OL.jpeg" },
             "29": { nome: "Donovan", url: "https://i.imgur.com/wFco1Kz.jpeg" },
             "30": { nome: "Travis & Donovan", url: "https://i.imgur.com/1VkMQ7z.jpeg" },
-            "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" }
+            "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" },
+            "32": { nome: "Bunny 🐰", url: "https://i.imgur.com/ybc3vvV.png" } // [NOVO ITEM]
         };
 
-        // --- SOLUÇÃO DO ERRO: Remover IDs duplicados antes de mapear ---
-        const bgsComprados = [...new Set(dadosPerfil.bgInventory || [])];
+        // --- SOLUÇÃO: Remover IDs duplicados e garantir que existem na lista de fundos ---
+        const bgsRaw = dadosPerfil.bgInventory || [];
+        const bgsComprados = [...new Set(bgsRaw)].filter(id => fundos[id]);
 
         if (bgsComprados.length === 0) {
-            return message.reply("❌ Você não tem nenhum fundo! Compre um na loja usando `!fundo`.");
+            return message.reply("❌ Você não tem nenhum fundo na sua coleção! Compre um na loja usando `!fundo`.");
         }
 
         const embed = new EmbedBuilder()
             .setTitle("🖼️ Sua Coleção de Backgrounds")
             .setColor("#00FF00")
-            .setDescription("Selecione abaixo o fundo que deseja equipar no seu perfil.");
+            .setDescription("Selecione abaixo o fundo que deseja equipar no seu perfil.")
+            .setFooter({ text: `Você possui ${bgsComprados.length} fundos.` });
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('selecionar_fundo')
             .setPlaceholder('Escolha um fundo para equipar...')
             .addOptions(
                 bgsComprados
-                    .filter(id => fundos[id]) 
-                    .slice(0, 25) // O Discord aceita no máximo 25 opções por menu
+                    .slice(0, 25) // Limite do Discord
                     .map(id => ({
                         label: fundos[id].nome,
                         value: id,
+                        emoji: '🖼️'
                     }))
             );
-
-        if (selectMenu.options.length === 0) {
-            return message.reply("❌ Seus fundos são antigos ou incompatíveis.");
-        }
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
         const msg = await message.reply({ embeds: [embed], components: [row] });
@@ -2621,17 +2636,24 @@ if (command === 'meusfundos' || command === 'bgs') {
             const infoFundo = fundos[selecionado];
 
             if (infoFundo) {
-                // Usando findOneAndUpdate para evitar o VersionError de novo
+                // Atualização segura para evitar conflitos de versão
                 await User.findOneAndUpdate(
                     { userId: message.author.id },
-                    { $set: { bg: infoFundo.url } }
+                    { $set: { bg: infoFundo.url } },
+                    { new: true }
                 );
                 
                 await i.update({ 
-                    content: `✅ Sucesso! Fundo **${infoFundo.nome}** equipado.`, 
+                    content: `✅ Sucesso! O fundo **${infoFundo.nome}** foi equipado no seu perfil.`, 
                     embeds: [], 
                     components: [] 
                 });
+            }
+        });
+
+        collector.on('end', (collected, reason) => {
+            if (reason === 'time' && collected.size === 0) {
+                msg.edit({ content: '⏳ O tempo para escolher acabou.', components: [] }).catch(() => {});
             }
         });
 
