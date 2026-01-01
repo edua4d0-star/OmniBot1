@@ -2454,7 +2454,7 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS ATUALIZADA (VERSÃO BUNNY) ====================
+// ==================== 🖼️ LOJA DE BACKGROUNDS (TEXTO LIMPO) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
         // --- JUJUTSU KAISEN ---
@@ -2507,7 +2507,7 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         "29": { nome: "Donovan", preco: 50000, url: "https://i.imgur.com/wFco1Kz.jpeg" },
         "30": { nome: "Travis & Donovan", preco: 85000, url: "https://i.imgur.com/1VkMQ7z.jpeg" },
         "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" },
-        "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" } // [ADICIONADO]
+        "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" }
     };
 
     let dados = await User.findOne({ userId: message.author.id });
@@ -2522,9 +2522,8 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
 
         const embedLoja = new EmbedBuilder()
             .setTitle("🏪 Loja de Planos de Fundo")
-            .setColor("#FF69B4") // Rosa para o tema Bunny
+            .setColor("#00FFFF") 
             .setDescription("Personalize seu `!perfil`!\nPara comprar: `!fundo [número]`\n\n" + listaFormatada)
-            .setImage("https://i.imgur.com/ybc3vvV.png") // Banner Bunny
             .setFooter({ text: "Use !meusfundos para ver sua coleção!" });
 
         return message.reply({ embeds: [embedLoja] });
