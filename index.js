@@ -970,117 +970,191 @@ if (command === 'casar') {
         message.reply("❌ Erro ao realizar o casamento.");
     }
 }
-// ==================== 💍 CONFIGURAR CASAMENTO (BIO & INSÍGNIAS) ====================
+// ==================== 💍 CONFIGURAR CASAMENTO (VERSÃO 40 INSÍGNIAS) ====================
 if (command === 'configcasamento' || command === 'casamentoconfig') {
     try {
         let dados = await User.findOne({ userId: message.author.id });
         
         if (!dados || !dados.marriedWith) {
-            return message.reply("❌ Precisas de estar casado para configurar o card! Use `!casar @user`.");
+            return message.reply("❌ Precisas de estar casado para configurar o card!");
         }
 
         const conjugeId = dados.marriedWith;
         const subCommand = args[0]?.toLowerCase();
-        const valor = args.slice(1).join(" ");
+        const valor = args.slice(1).join(" ").toLowerCase();
 
-        // --- MENU PRINCIPAL ---
+        // --- MENU PRINCIPAL (AJUDA RÁPIDA) ---
         if (!subCommand) {
             const embedInfo = new EmbedBuilder()
                 .setTitle("⚙️ Personalizar Matrimônio")
                 .setColor("#FF69B4")
-                .setDescription("Personaliza como o teu card aparece no `!vercasamento`.")
+                .setDescription("Personaliza o teu card de casal.")
                 .addFields(
                     { name: "📝 Bio do Casal", value: `\`${dados.coupleBio || "Não definida"}\` \n Use: \`!configcasamento bio [frase]\`` },
-                    { name: "🏅 Insígnia Ativa", value: `\`${dados.activeBadge || "Nenhuma"}\` \n Use: \`!configcasamento insignia [nome]\`` },
-                    { name: "📜 Insígnias Disponíveis", value: 
-                        "• `Iniciante` (Livre)\n" +
-                        "• `Amantes` (100 Afinidade)\n" +
-                        "• `Eternos` (500 Afinidade)\n" +
-                        "• `Perigoso` (10 Traições)\n" +
-                        "• `Fiel` (0 Traições + 200 Afinidade)" }
+                    { name: "🏅 Insígnia Ativa", value: `\`${dados.activeBadge || "Nenhuma"}\`` },
+                    { name: "🏆 Lista Completa", value: "Usa `!insignias` para ver as 40 opções e requisitos!" }
                 )
-                .setFooter({ text: "A bio e a insígnia aparecem para ambos!" });
+                .setFooter({ text: "Use: !configcasamento insignia [id]" });
 
             return message.reply({ embeds: [embedInfo] });
         }
 
         // --- LÓGICA DA BIO ---
         if (subCommand === 'bio') {
-            if (!valor) return message.reply("❌ Digita a nova frase do casal!");
-            if (valor.length > 50) return message.reply("❌ Bio muito longa! Máximo 50 caracteres.");
+            const frase = args.slice(1).join(" ");
+            if (!frase) return message.reply("❌ Digita a nova frase!");
+            if (frase.length > 50) return message.reply("❌ Máximo 50 caracteres.");
 
-            await User.updateOne({ userId: message.author.id }, { $set: { coupleBio: valor } });
-            await User.updateOne({ userId: conjugeId }, { $set: { coupleBio: valor } });
-
-            return message.reply(`✅ Bio atualizada: *"${valor}"*`);
+            await User.updateOne({ userId: message.author.id }, { $set: { coupleBio: frase } });
+            await User.updateOne({ userId: conjugeId }, { $set: { coupleBio: frase } });
+            return message.reply(`✅ Bio atualizada para: *"${frase}"*`);
         }
+        // --- LÓGICA DAS INSÍGNIAS ---
+        if (subCommand === 'insignia' || subCommand === 'badge') {
+            if (!valor) return message.reply("❌ Digita o ID da insígnia! Ex: `!configcasamento insignia amantes`.");
 
-// --- LÓGICA DAS INSÍGNIAS EXPANDIDA ---
-if (subCommand === 'insignia' || subCommand === 'badge') {
-    const badgeReq = valor.toLowerCase();
-    let podeUsar = false;
-    let nomeBadge = "";
+            const listaInsignias = {
+                // AFINIDADE
+                'iniciante': { nome: '🌱 Iniciante', req: () => true },
+                'noivos': { nome: '💍 Noivos', req: (d) => d.affinity >= 50 },
+                'amantes': { nome: '💖 Amantes', req: (d) => d.affinity >= 100 },
+                'apaixonados': { nome: '🔥 Apaixonados', req: (d) => d.affinity >= 200 },
+                'romanticos': { nome: '🌹 Românticos', req: (d) => d.affinity >= 300 },
+                'luademel': { nome: '🍯 Lua de Mel', req: (d) => d.affinity >= 400 },
+                'brilhantes': { nome: '✨ Brilhantes', req: (d) => d.affinity >= 500 },
+                'docinhos': { nome: '🍭 Docinhos', req: (d) => d.affinity >= 600 },
+                'misticos': { nome: '🔮 Místicos', req: (d) => d.affinity >= 700 },
+                'cupidos': { nome: '🏹 Cupidos', req: (d) => d.affinity >= 850 },
+                'eternos': { nome: '♾️ Eternos', req: (d) => d.affinity >= 1000 },
+                'realeza': { nome: '👑 Realeza', req: (d) => d.affinity >= 1500 },
+                'inquebraveis': { nome: '💎 Inquebráveis', req: (d) => d.affinity >= 2000 },
+                'galacticos': { nome: '🌌 Galácticos', req: (d) => d.affinity >= 3000 },
+                'solares': { nome: '☀️ Solares', req: (d) => d.affinity >= 4000 },
+                'abduzidos': { nome: '🛸 Abduzidos', req: (d) => d.affinity >= 5000 },
+                'blindados': { nome: '🛡️ Blindados', req: (d) => d.affinity >= 7000 },
+                'interstelares': { nome: '🪐 Interstelares', req: (d) => d.affinity >= 10000 },
+                'lendarios': { nome: '🎇 Lendários', req: (d) => d.affinity >= 15000 },
+                'divinos': { nome: '🔱 Divinos', req: (d) => d.affinity >= 20000 },
 
-    // 1. INSÍGNIAS DE AFINIDADE (AFETO)
-    if (badgeReq === 'iniciante') {
-        podeUsar = true; nomeBadge = "🌱 Iniciante";
-    } else if (badgeReq === 'amantes') {
-        if (dados.affinity >= 100) { podeUsar = true; nomeBadge = "💖 Amantes"; }
-        else return message.reply("❌ Precisas de **100 de afinidade**!");
-    } else if (badgeReq === 'eternos') {
-        if (dados.affinity >= 1000) { podeUsar = true; nomeBadge = "♾️ Eternos"; }
-        else return message.reply("❌ Precisas de **1000 de afinidade**!");
-    } 
+                // CONDUTA / TRAIÇÃO
+                'fiel': { nome: '🛡️ Fiel', req: (d) => (d.traicoes || 0) === 0 && d.affinity >= 200 },
+                'tentacao': { nome: '🐍 Tentação', req: (d) => (d.traicoes || 0) >= 1 },
+                'flagrados': { nome: '📸 Flagrados', req: (d) => (d.traicoes || 0) >= 3 },
+                'perigoso': { nome: '😈 Perigoso', req: (d) => (d.traicoes || 0) >= 10 },
+                'infiel': { nome: '👺 Infiel', req: (d) => (d.traicoes || 0) >= 20 },
+                'viuvo': { nome: '💀 Viúvo Negro', req: (d) => (d.traicoes || 0) >= 50 },
+                'liberal': { nome: '🔓 Liberal', req: (d) => (d.traicoes || 0) >= 5 && d.affinity >= 500 },
+                'toxic': { nome: '☣️ Tóxicos', req: (d) => d.affinity <= 5 },
+                'justos': { nome: '⚖️ Justiceiros', req: (d) => d.policial === true }, // Exemplo se for policia
+                'solitario': { nome: '🕯️ Solitários', req: () => true },
 
-    // 2. INSÍGNIAS DE TEMPO (FIDELIDADE AO TEMPO)
-    else if (badgeReq === 'recente') {
-        podeUsar = true; nomeBadge = "🥚 Recém-Casados";
-    } else if (badgeReq === 'Bodas de Prata') { // Exemplo de lógica de tempo se tiver o marriageDate salvo
-        // Esta lógica exige converter a marriageDate em objeto Date, se quiser posso te ajudar depois
-        podeUsar = true; nomeBadge = "🥈 Bodas de Prata"; 
-    }
+                // RIQUEZA (Saldo Banco + Mão)
+                'pobres': { nome: '💸 Pobres', req: (d) => (d.money + (d.bank || 0)) < 1000 },
+                'estaveis': { nome: '💵 Estáveis', req: (d) => (d.money + (d.bank || 0)) >= 50000 },
+                'burgueses': { nome: '💳 Burgueses', req: (d) => (d.money + (d.bank || 0)) >= 500000 },
+                'elite': { nome: '🥂 Elite', req: (d) => (d.money + (d.bank || 0)) >= 1000000 },
+                'sugar': { nome: '💎 Sugar Couple', req: (d) => (d.money + (d.bank || 0)) >= 5000000 },
+                'nobres': { nome: '🏰 Nobres', req: (d) => (d.money + (d.bank || 0)) >= 10000000 },
+                'magnatas': { nome: '🏛️ Magnatas', req: (d) => (d.money + (d.bank || 0)) >= 50000000 },
+                'donos': { nome: '🌍 Donos do Mundo', req: (d) => (d.money + (d.bank || 0)) >= 100000000 },
+                'viciados': { nome: '🎰 Viciados', req: (d) => d.cassinoGasto >= 1000000 },
+                'gado': { nome: '🤡 Gado', req: () => true }
+            };
 
-    // 3. INSÍGNIAS DE COMPORTAMENTO (TRAIÇÃO/BRIGAS)
-    else if (badgeReq === 'perigoso') {
-        if ((dados.traicoes || 0) >= 10) { podeUsar = true; nomeBadge = "😈 Perigoso"; }
-        else return message.reply("❌ Precisas de **10 traições** cometidas!");
-    } else if (badgeReq === 'fiel') {
-        if ((dados.traicoes || 0) === 0 && dados.affinity >= 200) { podeUsar = true; nomeBadge = "🛡️ Fiel"; }
-        else return message.reply("❌ Requisito: **0 traições** e **200 afinidade**!");
-    } else if (badgeReq === 'toxic') {
-        if (dados.affinity <= 5) { podeUsar = true; nomeBadge = "☣️ Relação Tóxica"; }
-        else return message.reply("❌ Esta insígnia é só para quem tem quase **0 de afinidade**!");
-    }
+            const selecao = listaInsignias[valor];
 
-    // 4. INSÍGNIAS DE RIQUEZA (ECONOMIA)
-    else if (badgeReq === 'burgueses') {
-        if (dados.money >= 1000000) { podeUsar = true; nomeBadge = "💰 Burgueses"; }
-        else return message.reply("❌ Precisas de **1.000.000 de moedas** na mão!");
-    } else if (badgeReq === 'sugar') {
-        if (dados.money >= 5000000) { podeUsar = true; nomeBadge = "💎 Sugar Couple"; }
-        else return message.reply("❌ Precisas de **5.000.000 de moedas**!");
-    }
+            if (!selecao) return message.reply("❌ Essa insígnia não existe! Use `!insignias` para ver a lista.");
 
-    // 5. INSÍGNIAS DE "COMBATE" (PARA QUEM ATACA/APANHA)
-    else if (badgeReq === 'resistentes') {
-        // Se você criar um contador de ataques recebidos
-        podeUsar = true; nomeBadge = "🥊 Entre Tapas e Beijos";
-    }
+            // Validação do Requisito
+            if (!selecao.req(dados)) {
+                return message.reply(`❌ Não tens os requisitos para **${selecao.nome}**!`);
+            }
 
-    // SALVAMENTO
-    if (podeUsar) {
-        await User.updateOne({ userId: message.author.id }, { $set: { activeBadge: nomeBadge } });
-        await User.updateOne({ userId: conjugeId }, { $set: { activeBadge: nomeBadge } });
-        return message.reply(`✅ Insígnia equipada: **${nomeBadge}**!`);
-    } else {
-        return message.reply("❌ Insígnia não encontrada. Verifique a lista no menu principal.");
-    }
-  }
+            // SALVAMENTO DUPLO (Para o casal)
+            await User.updateOne({ userId: message.author.id }, { $set: { activeBadge: selecao.nome } });
+            await User.updateOne({ userId: conjugeId }, { $set: { activeBadge: selecao.nome } });
+
+            return message.reply(`✅ Insígnia **${selecao.nome}** equipada para o casal!`);
+        }
 
     } catch (error) {
         console.error(error);
-        message.reply("❌ Erro ao configurar.");
+        message.reply("❌ Erro ao configurar casamento.");
     }
+}
+// ==================== 🏆 COMANDO LISTAR INSÍGNIAS (40 OPÇÕES) ====================
+if (command === 'insignias' || command === 'medalhas') {
+    
+    // Objeto com a lógica de todas as insígnias para o sistema reconhecer
+    const listaInsignias = {
+        // --- AFETO (Afinidade) ---
+        'iniciante': { nome: '🌱 Iniciante', req: '0 pts' },
+        'noivos': { nome: '💍 Noivos', req: '50 pts' },
+        'amantes': { nome: '💖 Amantes', req: '100 pts' },
+        'apaixonados': { nome: '🔥 Apaixonados', req: '200 pts' },
+        'romanticos': { nome: '🌹 Românticos', req: '300 pts' },
+        'luademel': { nome: '🍯 Lua de Mel', req: '400 pts' },
+        'brilhantes': { nome: '✨ Brilhantes', req: '50 pts' },
+        'docinhos': { nome: '🍭 Docinhos', req: '600 pts' },
+        'misticos': { nome: '🔮 Místicos', req: '700 pts' },
+        'cupidos': { nome: '🏹 Cupidos', req: '850 pts' },
+        'eternos': { nome: '♾️ Eternos', req: '1000 pts' },
+        'realeza': { nome: '👑 Realeza', req: '1500 pts' },
+        'inquebraveis': { nome: '💎 Inquebráveis', req: '2000 pts' },
+        'galacticos': { nome: '🌌 Galácticos', req: '3000 pts' },
+        'solares': { nome: '☀️ Solares', req: '4000 pts' },
+        'abduzidos': { nome: '🛸 Abduzidos', req: '5000 pts' },
+        'blindados': { nome: '🛡️ Blindados', req: '7000 pts' },
+        'interstelares': { nome: '🪐 Interstelares', req: '10k pts' },
+        'lendarios': { nome: '🎇 Lendários', req: '15k pts' },
+        'divinos': { nome: '🔱 Divinos', req: '20k pts' },
+
+        // --- CONDUTA (Traições) ---
+        'fiel': { nome: '🛡️ Fiel', req: '0 Traições + 200 pts' },
+        'tentacao': { nome: '🐍 Tentação', req: '1 Traição' },
+        'flagrados': { nome: '📸 Flagrados', req: '3 Traições' },
+        'perigoso': { nome: '😈 Perigoso', req: '10 Traições' },
+        'infiel': { nome: '👺 Infiel', req: '20 Traições' },
+        'viuvo': { nome: '💀 Viúvo Negro', req: '50 Traições' },
+        'liberal': { nome: '🔓 Liberal', req: '5 Traições + 500 pts' },
+        'toxic': { nome: '☣️ Tóxicos', req: '< 5 Afinidade' },
+        'justos': { nome: '⚖️ Justiceiros', req: 'Prender traidor' },
+        'solitario': { nome: '🕯️ Solitários', req: 'Sem interação' },
+
+        // --- RIQUEZA (Dinheiro) ---
+        'pobres': { nome: '💸 Pobres', req: '< 1k' },
+        'estaveis': { nome: '💵 Estáveis', req: '50k' },
+        'burgueses': { nome: '💳 Burgueses', req: '500k' },
+        'elite': { nome: '🥂 Elite', req: '1M' },
+        'sugar': { nome: '💎 Sugar Couple', req: '5M' },
+        'nobres': { nome: '🏰 Nobres', req: '10M' },
+        'magnatas': { nome: '🏛️ Magnatas', req: '50M' },
+        'donos': { nome: '🌍 Donos do Mundo', req: '100M' },
+        'viciados': { nome: '🎰 Viciados', req: 'Gastar 1M Cassino' },
+        'gado': { nome: '🤡 Gado', req: 'Livre' }
+    };
+
+    const embedInsignias = new EmbedBuilder()
+        .setTitle('🏆 Galeria de Insígnias (40 Opções)')
+        .setColor('#FFD700')
+        .setDescription('Usa `!configcasamento insignia [id]` para equipar!')
+        .addFields(
+            { 
+                name: '💖 AFETO (Afinidade)', 
+                value: '`iniciante`, `noivos`, `amantes`, `apaixonados`, `romanticos`, `luademel`, `brilhantes`, `docinhos`, `misticos`, `cupidos`, `eternos`, `realeza`, `inquebraveis`, `galacticos`, `solares`, `abduzidos`, `blindados`, `interstelares`, `lendarios`, `divinos`'
+            },
+            { 
+                name: '⚖️ CONDUTA (Traição/Crise)', 
+                value: '`fiel`, `tentacao`, `flagrados`, `perigoso`, `infiel`, `viuvo`, `liberal`, `toxic`, `justos`, `solitario`'
+            },
+            { 
+                name: '💰 RIQUEZA & ZUEIRA', 
+                value: '`pobres`, `estaveis`, `burgueses`, `elite`, `sugar`, `nobres`, `magnatas`, `donos`, `viciados`, `gado`'
+            }
+        )
+        .setFooter({ text: 'Consulta os requisitos com o Staff ou no manual!' });
+
+    return message.reply({ embeds: [embedInsignias] });
 }
 // ==================== 💍 COMANDO VERCASAMENTO (VERSÃO COM INSÍGNIAS) ====================
 if (command === 'vercasamento' || command === 'marry') {
@@ -1146,15 +1220,31 @@ if (command === 'vercasamento' || command === 'marry') {
         ctx.fillText(message.author.username.toUpperCase(), 220, 315);
         ctx.fillText(conjugeUser ? conjugeUser.username.toUpperCase() : "ALMA GÊMEA", 680, 315);
 
-        // --- EXIBIÇÃO DA INSÍGNIA (NOVO) ---
+        // --- EXIBIÇÃO DA INSÍGNIA (AJUSTADO PARA 40 OPÇÕES) ---
         const insignia = dadosUser.activeBadge || "🌱 Iniciante";
+
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; // Fundo da insígnia
-        ctx.roundRect(325, 220, 250, 45, 10);
+        // Sombra para dar profundidade à medalha
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+
+        // Criar o fundo da insígnia (Retângulo Arredondado)
+        ctx.fillStyle = 'rgba(30, 30, 30, 0.8)'; 
+        ctx.beginPath();
+        ctx.roundRect(325, 215, 250, 45, 15); // Posição ajustada
         ctx.fill();
-        ctx.font = 'bold 22px Arial';
-        ctx.fillStyle = '#FFD700'; // Cor Dourada para destaque
-        ctx.fillText(insignia, 450, 250);
+
+        // Borda da insígnia (Dourada para dar destaque de conquista)
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Texto da Insígnia
+        ctx.font = 'bold 20px Arial'; 
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowBlur = 0; // Remove sombra do texto para legibilidade
+        ctx.textAlign = 'center';
+        ctx.fillText(insignia.toUpperCase(), 450, 245);
         ctx.restore();
 
         // Bio do Casal
@@ -4003,6 +4093,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 '`!casar @user`: Iniciar união (25k).\n' +
                 '`!vercasamento`: Card, afinidade e insígnias.\n' +
                 '`!configcasamento`: Mudar bio e medalhas.\n' +
+                '`!insignias`: Galeria com as 40 conquistas de casal.\n' +
                 '`!presentear @user [id]`: Dar presentes (+Afinidade).\n' +
                 '`!cartinha @user`: Enviar carta de afeto.\n' +
                 '`!trair @user`: Encontro secreto (Risco!)\n' +
