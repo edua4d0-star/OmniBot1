@@ -807,199 +807,559 @@ if (command === 'ship') {
             }
         });
     }
-
-// ==================== 💍 VER CASAMENTO (OTIMIZADO) ====================
-    if (command === 'vercasamento' || command === 'casamento') {
-        const conjugeId = userData.marriedWith;
-
-        // 1. Se não tiver casado, nem faz busca no banco (Economiza RAM)
-        if (!conjugeId) {
-            return message.reply('❌ Não estás casado(a)! Usa `!casar @user` para pedires alguém em casamento.');
+    // ==================== 😈 COMANDO TRAIR (SISTEMA DE RISCO) ====================
+if (command === 'trair' || command === 'cheating') {
+    try {
+        const target = message.mentions.users.first();
+        
+        // 1. Verificações Básicas
+        if (!userData.marriedWith) {
+            return message.reply("❌ Não podes trair se não estiveres casado(a)! Estás livre para ficar com quem quiseres.");
         }
 
-        // 2. Lógica de Status baseada na Afinidade
-        const afinidade = userData.affinity || 0;
-        let status = '💍 Recém-Casados';
-        let cor = '#FF69B4'; // Rosa padrão
+        if (!target) return message.reply("❌ Com quem queres trair o teu cônjuge? Menciona alguém!");
+        if (target.id === message.author.id) return message.reply("🤔 Isso não é traição, é apenas... solidão?");
+        if (target.id === userData.marriedWith) return message.reply("❤️ Isso não é traição! Estás a sair com o teu próprio cônjuge.");
+        if (target.bot) return message.reply("🤖 Trair com um robô? Que estranho...");
 
-        if (afinidade > 500) {
-            status = '💎 Amor Eterno';
-            cor = '#00FFFF'; // Ciano para níveis altos
-        } else if (afinidade > 100) {
-            status = '💖 Casal Apaixonado';
-            cor = '#FF0000'; // Vermelho
-        } else if (afinidade > 50) {
-            status = '🌹 Relação Estável';
+        // 2. Cooldown (Para não floodar traição)
+        const agora = Date.now();
+        const cooldown = 3600000; // 1 hora
+        if (agora - (userData.lastCrime || 0) < cooldown) {
+            return message.reply("⏳ Estás sob vigilância! Espera um pouco antes de te aventurares novamente.");
         }
 
-        const embed = new EmbedBuilder()
-            .setTitle('📜 Certidão de Casamento Omni')
-            .setColor(cor)
-            .setThumbnail('https://cdn-icons-png.flaticon.com/512/3656/3656861.png') // Ícone de alianças
-            .addFields(
-                { name: '❤️ Cônjuge', value: `<@${conjugeId}>`, inline: true },
-                { name: '💖 Afinidade', value: `**${afinidade}** pontos`, inline: true },
-                { name: '📊 Status', value: `\`${status}\``, inline: false }
-            )
-            .setFooter({ text: 'Dica: Aumenta a afinidade com !beijar ou !cartinha' })
-            .setTimestamp();
+        // 3. Lógica de Sorteio (50% de chance de ser pego)
+        const foiPego = Math.random() < 0.50;
+        userData.lastCrime = agora; // Usa o mesmo timer de crimes ou cria userData.lastTraicao
 
-        return message.reply({ embeds: [embed] });
+        if (foiPego) {
+            // --- CONSEQUÊNCIA: FOI PEGO ---
+            const perdaAfinidade = Math.floor(Math.random() * 15) + 10; // Perde 10-25 pts
+            
+            userData.affinity = Math.max(0, (userData.affinity || 0) - perdaAfinidade);
+            userData.traicoes = (userData.traicoes || 0) + 1; // Aumenta o contador de traições
+
+            // Sincroniza a perda com o cônjuge no banco
+            await User.updateOne(
+                { userId: userData.marriedWith }, 
+                { $set: { affinity: userData.affinity } }
+            );
+
+            await userData.save();
+
+            return message.reply(
+                `📸 **FOSTE APANHADO(A)!**\n` +
+                `Alguém viu-te num encontro com ${target.username} e contou tudo ao teu cônjuge!\n` +
+                `💔 Perderam **${perdaAfinidade}** pontos de afinidade.\n` +
+                `🔥 O teu contador de traições subiu para **${userData.traicoes}**!`
+            );
+
+        } else {
+            // --- SUCESSO: DISCRETO ---
+            userData.traicoes = (userData.traicoes || 0) + 1;
+            await userData.save();
+
+            return message.reply(
+                `🤫 **DISCRETO...**\n` +
+                `Tiveste um encontro secreto com ${target.username} e ninguém desconfiou de nada.\n` +
+                `🔥 O teu nível de perigo subiu! (Traições: **${userData.traicoes}**)`
+            );
+        }
+
+    } catch (error) {
+        console.error("Erro no comando trair:", error);
+        message.reply("❌ Ocorreu um erro ao processar a traição.");
+    }
+}
+// ==================== 💍 COMANDO CASAR (VERSÃO FINAL COM DATA) ====================
+if (command === 'casar') {
+    const target = message.mentions.users.first();
+    const custo = 25000;
+    const fundoPadraoCasal = "https://i.imgur.com/bcaHfu4.png";
+
+    // 1. Verificações Básicas
+    if (!target) return message.reply('❌ Precisas de mencionar (@) a pessoa com quem te queres casar!');
+    if (target.id === message.author.id) return message.reply('❌ Não te podes casar contigo próprio!');
+    if (target.bot) return message.reply('❌ Robôs não têm sentimentos para casar.');
+
+    try {
+        let userData = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
+        let targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+
+        // 2. Verificações de Estado Civil e Dinheiro
+        if (userData.marriedWith) return message.reply('❌ Já estás casado(a)!');
+        if (targetData.marriedWith) return message.reply(`❌ **${target.username}** já está casado(a)!`);
+
+        if (userData.money < custo) return message.reply(`❌ Não tens **${custo.toLocaleString()} moedas** para as taxas.`);
+        if (targetData.money < custo) return message.reply(`❌ **${target.username}** não tem as **${custo.toLocaleString()} moedas** necessárias.`);
+
+        // 3. Criação dos Botões
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('aceitar_casar').setLabel('Aceitar Casamento').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('recusar_casar').setLabel('Recusar').setStyle(ButtonStyle.Danger)
+        );
+
+        const pedido = await message.reply({
+            content: `💍 **PEDIDO DE CASAMENTO**\n${target}, aceitas casar com ${message.author}?\n⚠️ *Custo da cerimónia: **${custo.toLocaleString()} moedas** de cada um.*`,
+            components: [row]
+        });
+
+        const filter = i => i.user.id === target.id;
+        const collector = pedido.createMessageComponentCollector({ filter, time: 60000 });
+
+        collector.on('collect', async i => {
+            if (i.customId === 'aceitar_casar') {
+                const freshAuthor = await User.findOne({ userId: message.author.id });
+                const freshTarget = await User.findOne({ userId: target.id });
+
+                if (freshAuthor.money < custo || freshTarget.money < custo) {
+                    return i.update({ content: '❌ Alguém ficou sem dinheiro! Casamento cancelado.', components: [] });
+                }
+
+                // --- DATA DO CASAMENTO (Dia/Mês/Ano) ---
+                const agora = new Date();
+                const dataHoje = `${agora.getDate()}/${agora.getMonth() + 1}/${agora.getFullYear()}`;
+
+                // Atualiza o Autor
+                await User.findOneAndUpdate(
+                    { userId: message.author.id },
+                    { 
+                        $inc: { money: -custo }, 
+                        $set: { 
+                            marriedWith: target.id, 
+                            affinity: 0, 
+                            marriageDate: dataHoje, // Salva ex: "01/01/2026"
+                            bgCasal: fundoPadraoCasal 
+                        } 
+                    }
+                );
+
+                // Atualiza o Alvo
+                await User.findOneAndUpdate(
+                    { userId: target.id },
+                    { 
+                        $inc: { money: -custo }, 
+                        $set: { 
+                            marriedWith: message.author.id, 
+                            affinity: 0, 
+                            marriageDate: dataHoje, 
+                            bgCasal: fundoPadraoCasal 
+                        } 
+                    }
+                );
+
+                return i.update({ 
+                    content: `💖 **VIVAM OS NOIVOS!**\n${message.author} e ${target} casaram-se no dia **${dataHoje}**! 🎉\nUsem \`!vercasamento\` para ver o vosso perfil de casal.`, 
+                    components: [] 
+                });
+
+            } else {
+                return i.update({ content: `💔 O pedido foi recusado por ${target.username}.`, components: [] });
+            }
+        });
+
+        collector.on('end', (collected, reason) => {
+            if (reason === 'time' && collected.size === 0) {
+                pedido.edit({ content: '⏳ O pedido expirou no altar...', components: [] }).catch(() => {});
+            }
+        });
+
+    } catch (error) {
+        console.error("Erro no Casar:", error);
+        message.reply("❌ Erro ao realizar o casamento.");
+    }
+}
+// ==================== 💍 CONFIGURAR CASAMENTO (BIO & INSÍGNIAS) ====================
+if (command === 'configcasamento' || command === 'casamentoconfig') {
+    try {
+        let dados = await User.findOne({ userId: message.author.id });
+        
+        if (!dados || !dados.marriedWith) {
+            return message.reply("❌ Precisas de estar casado para configurar o card! Use `!casar @user`.");
+        }
+
+        const conjugeId = dados.marriedWith;
+        const subCommand = args[0]?.toLowerCase();
+        const valor = args.slice(1).join(" ");
+
+        // --- MENU PRINCIPAL ---
+        if (!subCommand) {
+            const embedInfo = new EmbedBuilder()
+                .setTitle("⚙️ Personalizar Matrimônio")
+                .setColor("#FF69B4")
+                .setDescription("Personaliza como o teu card aparece no `!vercasamento`.")
+                .addFields(
+                    { name: "📝 Bio do Casal", value: `\`${dados.coupleBio || "Não definida"}\` \n Use: \`!configcasamento bio [frase]\`` },
+                    { name: "🏅 Insígnia Ativa", value: `\`${dados.activeBadge || "Nenhuma"}\` \n Use: \`!configcasamento insignia [nome]\`` },
+                    { name: "📜 Insígnias Disponíveis", value: 
+                        "• `Iniciante` (Livre)\n" +
+                        "• `Amantes` (100 Afinidade)\n" +
+                        "• `Eternos` (500 Afinidade)\n" +
+                        "• `Perigoso` (10 Traições)\n" +
+                        "• `Fiel` (0 Traições + 200 Afinidade)" }
+                )
+                .setFooter({ text: "A bio e a insígnia aparecem para ambos!" });
+
+            return message.reply({ embeds: [embedInfo] });
+        }
+
+        // --- LÓGICA DA BIO ---
+        if (subCommand === 'bio') {
+            if (!valor) return message.reply("❌ Digita a nova frase do casal!");
+            if (valor.length > 50) return message.reply("❌ Bio muito longa! Máximo 50 caracteres.");
+
+            await User.updateOne({ userId: message.author.id }, { $set: { coupleBio: valor } });
+            await User.updateOne({ userId: conjugeId }, { $set: { coupleBio: valor } });
+
+            return message.reply(`✅ Bio atualizada: *"${valor}"*`);
+        }
+
+// --- LÓGICA DAS INSÍGNIAS EXPANDIDA ---
+if (subCommand === 'insignia' || subCommand === 'badge') {
+    const badgeReq = valor.toLowerCase();
+    let podeUsar = false;
+    let nomeBadge = "";
+
+    // 1. INSÍGNIAS DE AFINIDADE (AFETO)
+    if (badgeReq === 'iniciante') {
+        podeUsar = true; nomeBadge = "🌱 Iniciante";
+    } else if (badgeReq === 'amantes') {
+        if (dados.affinity >= 100) { podeUsar = true; nomeBadge = "💖 Amantes"; }
+        else return message.reply("❌ Precisas de **100 de afinidade**!");
+    } else if (badgeReq === 'eternos') {
+        if (dados.affinity >= 1000) { podeUsar = true; nomeBadge = "♾️ Eternos"; }
+        else return message.reply("❌ Precisas de **1000 de afinidade**!");
+    } 
+
+    // 2. INSÍGNIAS DE TEMPO (FIDELIDADE AO TEMPO)
+    else if (badgeReq === 'recente') {
+        podeUsar = true; nomeBadge = "🥚 Recém-Casados";
+    } else if (badgeReq === 'Bodas de Prata') { // Exemplo de lógica de tempo se tiver o marriageDate salvo
+        // Esta lógica exige converter a marriageDate em objeto Date, se quiser posso te ajudar depois
+        podeUsar = true; nomeBadge = "🥈 Bodas de Prata"; 
     }
 
-// ==================== 💌 COMANDO CARTINHA (OTIMIZADO) ====================
-    if (command === 'cartinha' || command === 'letter') {
-        const conjugeId = userData.marriedWith;
+    // 3. INSÍGNIAS DE COMPORTAMENTO (TRAIÇÃO/BRIGAS)
+    else if (badgeReq === 'perigoso') {
+        if ((dados.traicoes || 0) >= 10) { podeUsar = true; nomeBadge = "😈 Perigoso"; }
+        else return message.reply("❌ Precisas de **10 traições** cometidas!");
+    } else if (badgeReq === 'fiel') {
+        if ((dados.traicoes || 0) === 0 && dados.affinity >= 200) { podeUsar = true; nomeBadge = "🛡️ Fiel"; }
+        else return message.reply("❌ Requisito: **0 traições** e **200 afinidade**!");
+    } else if (badgeReq === 'toxic') {
+        if (dados.affinity <= 5) { podeUsar = true; nomeBadge = "☣️ Relação Tóxica"; }
+        else return message.reply("❌ Esta insígnia é só para quem tem quase **0 de afinidade**!");
+    }
 
-        // 1. Verificações de Segurança
-        if (!conjugeId) return message.reply('❌ Só podes enviar cartinhas se estiveres casado(a)!');
-        
-        const target = message.mentions.users.first();
-        if (!target || target.id !== conjugeId) {
-            return message.reply(`❌ Precisas de marcar o teu cônjuge (<@${conjugeId}>) para lhe enviares uma cartinha!`);
+    // 4. INSÍGNIAS DE RIQUEZA (ECONOMIA)
+    else if (badgeReq === 'burgueses') {
+        if (dados.money >= 1000000) { podeUsar = true; nomeBadge = "💰 Burgueses"; }
+        else return message.reply("❌ Precisas de **1.000.000 de moedas** na mão!");
+    } else if (badgeReq === 'sugar') {
+        if (dados.money >= 5000000) { podeUsar = true; nomeBadge = "💎 Sugar Couple"; }
+        else return message.reply("❌ Precisas de **5.000.000 de moedas**!");
+    }
+
+    // 5. INSÍGNIAS DE "COMBATE" (PARA QUEM ATACA/APANHA)
+    else if (badgeReq === 'resistentes') {
+        // Se você criar um contador de ataques recebidos
+        podeUsar = true; nomeBadge = "🥊 Entre Tapas e Beijos";
+    }
+
+    // SALVAMENTO
+    if (podeUsar) {
+        await User.updateOne({ userId: message.author.id }, { $set: { activeBadge: nomeBadge } });
+        await User.updateOne({ userId: conjugeId }, { $set: { activeBadge: nomeBadge } });
+        return message.reply(`✅ Insígnia equipada: **${nomeBadge}**!`);
+    } else {
+        return message.reply("❌ Insígnia não encontrada. Verifique a lista no menu principal.");
+    }
+  }
+
+    } catch (error) {
+        console.error(error);
+        message.reply("❌ Erro ao configurar.");
+    }
+}
+// ==================== 💍 COMANDO VERCASAMENTO (VERSÃO COM INSÍGNIAS) ====================
+if (command === 'vercasamento' || command === 'marry') {
+    const aguarde = await message.reply("💖 Abrindo o álbum do casal...");
+
+    try {
+        const dadosUser = await User.findOne({ userId: message.author.id });
+
+        if (!dadosUser || !dadosUser.marriedWith) {
+            return aguarde.edit("💔 Você não está casado(a)! Use `!casar @alguem`.");
         }
 
+        const conjugeId = dadosUser.marriedWith;
+        const conjugeUser = await message.client.users.fetch(conjugeId).catch(() => null);
+
+        const canvasLib = require('@napi-rs/canvas');
+        const canvas = canvasLib.createCanvas(900, 500); 
+        const ctx = canvas.getContext('2d');
+
+        // 1. FUNDO
+        try {
+            const imgFundo = await canvasLib.loadImage("https://i.imgur.com/bcaHfu4.png");
+            ctx.drawImage(imgFundo, 0, 0, 900, 500);
+        } catch (e) {
+            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 900, 500);
+        }
+
+        // 2. OVERLAY ESCURO PRINCIPAL
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.roundRect(40, 40, 820, 420, 20); // Bordas arredondadas
+        ctx.fill();
+
+        // 3. RENDERIZAR AVATARES
+        const renderAvatar = async (user, x, y) => {
+            try {
+                const url = user ? user.displayAvatarURL({ extension: 'png', size: 256 }) : "https://i.imgur.com/6otv9uB.png";
+                const img = await canvasLib.loadImage(url);
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, 85, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FF69B4'; // Borda rosa no avatar
+                ctx.lineWidth = 5;
+                ctx.stroke();
+                ctx.clip();
+                ctx.drawImage(img, x - 85, y - 85, 170, 170);
+                ctx.restore();
+            } catch (e) { console.log("Erro avatar"); }
+        };
+
+        await renderAvatar(message.author, 220, 180);
+        await renderAvatar(conjugeUser, 680, 180);
+
+        // 4. TEXTOS
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+
+        // Ícone Central
+        ctx.font = '70px Arial';
+        ctx.fillText('💝', 450, 195);
+
+        // Nomes
+        ctx.font = 'bold 32px Arial';
+        ctx.fillText(message.author.username.toUpperCase(), 220, 315);
+        ctx.fillText(conjugeUser ? conjugeUser.username.toUpperCase() : "ALMA GÊMEA", 680, 315);
+
+        // --- EXIBIÇÃO DA INSÍGNIA (NOVO) ---
+        const insignia = dadosUser.activeBadge || "🌱 Iniciante";
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; // Fundo da insígnia
+        ctx.roundRect(325, 220, 250, 45, 10);
+        ctx.fill();
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#FFD700'; // Cor Dourada para destaque
+        ctx.fillText(insignia, 450, 250);
+        ctx.restore();
+
+        // Bio do Casal
+        const bio = dadosUser.coupleBio || "Unidos pelo destino.";
+        ctx.font = 'italic 26px Arial';
+        ctx.fillStyle = '#FFC0CB';
+        ctx.fillText(`“ ${bio} ”`, 450, 380);
+
+        // Rodapé com Data e Afinidade
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#ffffff';
+        const data = dadosUser.marriageDate || "---";
+        const afinidade = dadosUser.affinity || 0;
+        
+        // Desenha uma linha separadora fina
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(100, 410);
+        ctx.lineTo(800, 410);
+        ctx.stroke();
+
+        ctx.fillText(`📅 CASADOS DESDE: ${data}    ✨ AFINIDADE: ${afinidade}`, 450, 445);
+
+        // 5. ENVIO
+        const buffer = canvas.toBuffer('image/png');
+        const attachment = new AttachmentBuilder(buffer, { name: 'casamento.png' });
+        
+        await aguarde.delete().catch(() => {});
+        return message.reply({ files: [attachment] });
+
+    } catch (error) {
+        console.error("ERRO NO VERCASAMENTO:", error);
+        return aguarde.edit("❌ Erro ao gerar a imagem do casal.");
+    }
+}
+// ==================== 💌 COMANDO CARTINHA (RESTRITO AO CÔNJUGE) ====================
+if (command === 'cartinha' || command === 'letter') {
+    try {
+        const conjugeId = userData.marriedWith;
+
+        // 1. Verificação: Está casado?
+        if (!conjugeId) {
+            return message.reply('❌ Só podes enviar cartinhas se estiveres casado(a)!');
+        }
+
+        const target = message.mentions.users.first();
+
+        // 2. Verificação: Marcou alguém? É o cônjuge?
+        if (!target || target.id !== conjugeId) {
+            return message.reply(`❌ Só podes enviar uma cartinha para a pessoa com quem estás casado(a)! Mencione <@${conjugeId}>.`);
+        }
+
+        // 3. Verificação: Dinheiro
         const custo = 7500;
         if (userData.money < custo) {
             return message.reply(`❌ Uma cartinha perfumada custa **${custo.toLocaleString()} moedas**. Não tens saldo suficiente!`);
         }
 
-        // 2. Execução (Gasta dinheiro e gera afinidade)
-        try {
-            const pontosGanhos = Math.floor(Math.random() * 4) + 3; // Ganha entre 3 e 6 pontos
-            
-            userData.money -= custo;
-            userData.affinity = (userData.affinity || 0) + pontosGanhos;
-            
-            // 3. Otimização Mongoose: Atualiza o parceiro sem precisar carregar o perfil dele na RAM
-            await User.updateOne(
-                { userId: conjugeId }, 
-                { $inc: { affinity: pontosGanhos } }
-            );
+        // 4. Execução (Gasta dinheiro e gera afinidade)
+        const pontosGanhos = Math.floor(Math.random() * 4) + 3; // Ganha entre 3 e 6 pontos
+        
+        userData.money -= custo;
+        userData.affinity = (userData.affinity || 0) + pontosGanhos;
+        
+        // Atualiza o parceiro simultaneamente no banco
+        await User.updateOne(
+            { userId: conjugeId }, 
+            { $inc: { affinity: pontosGanhos } }
+        );
 
-            await userData.save();
+        await userData.save();
 
-            const embed = new EmbedBuilder()
-                .setColor('#FF1493')
-                .setTitle('💌 Uma Cartinha de Amor Chegou!')
-                .setDescription(`${message.author} enviou uma carta escrita à mão para ${target}!\n\n> "O meu amor por ti cresce a cada dia..."`)
-                .addFields(
-                    { name: '💖 Afinidade', value: `**+${pontosGanhos}** pontos`, inline: true },
-                    { name: '💰 Custo', value: `\`${custo.toLocaleString()}\``, inline: true }
-                )
-                .setTimestamp();
+        // 5. Envio do Embed
+        const embed = new EmbedBuilder()
+            .setColor('#FF1493')
+            .setTitle('💌 Uma Cartinha de Amor Chegou!')
+            .setDescription(`${message.author} enviou uma carta escrita à mão e perfumada para ${target}!\n\n> "O meu amor por ti cresce a cada dia..."`)
+            .addFields(
+                { name: '💖 Afinidade', value: `**+${pontosGanhos}** pontos`, inline: true },
+                { name: '💰 Custo', value: `\`${custo.toLocaleString()}\``, inline: true }
+            )
+            .setFooter({ text: 'O amor está no ar...' })
+            .setTimestamp();
 
-            return message.reply({ embeds: [embed] });
+        return message.channel.send({ content: `<@${target.id}>, recebeste correio!`, embeds: [embed] });
 
-        } catch (err) {
-            console.error("Erro no comando cartinha:", err);
-            return message.reply("❌ O correio falhou! Tenta enviar a cartinha novamente mais tarde.");
-        }
+    } catch (err) {
+        console.error("Erro no comando cartinha:", err);
+        return message.reply("❌ O correio falhou! Tenta enviar a cartinha novamente mais tarde.");
     }
-    // ==================== 🎁 COMANDO PRESENTEAR (SOCIAL) ====================
+}
+// ==================== 🎁 COMANDO PRESENTEAR (SOCIAL + AFINIDADE RESTRITA) ====================
 if (command === 'presentear' || command === 'gift' || command === 'dar') {
-    const alvo = message.mentions.users.first();
-    const itemID = args[1]?.toLowerCase();
-
-    // 1. Verificações de Alvo e Item
-    if (!alvo) return message.reply("🎁 **Para quem é o presente?** Menciona alguém! Ex: `!presentear @user rosa`.");
-    if (alvo.id === message.author.id) return message.reply("🤔 Dar um presente a ti mesmo? Que tal seres mais generoso com os outros?");
-    if (alvo.bot) return message.reply("🤖 Bots não têm sentimentos... Guarda o presente para um humano!");
-    if (!itemID) return message.reply("💝 **O que queres dar?** Escreve o ID do item da mochila. Ex: `!presentear @user flores`.");
-
-    const inventory = userData.inventory || [];
-    const index = inventory.indexOf(itemID);
-
-    if (index === -1) return message.reply("❌ Não tens esse item na tua mochila!");
-
-    // 2. Definição de Valores de Afinidade por Item
-    const tabelaAfinidade = {
-        'rosa': { pts: 5, msg: "fichou encantado(a) com a tua rosa solitária! 🌹" },
-        'flores': { pts: 15, msg: "adorou o buquê de flores! O clima está a aquecer. 💐" },
-        'chocolate': { pts: 10, msg: "saboreou o chocolate e achou-te uma doçura! 🍫" },
-        'urso': { pts: 25, msg: "abraçou o urso de pelúcia e agora não para de sorrir! 🧸" },
-        'anel': { pts: 50, msg: "ficou sem palavras com o anel... Isso foi um pedido? 💍" },
-        'mansao': { pts: 500, msg: "AGORA É OFICIAL! Tu deste uma MANSÃO! Quem resistiria? 🏰" }
-    };
-
-    const presente = tabelaAfinidade[itemID];
-    if (!presente) return message.reply("❓ Esse item não pode ser dado como presente social. Tenta uma Rosa, Flores, Chocolate, Urso ou Anel!");
-
     try {
-        const alvoData = await User.findOne({ userId: alvo.id });
-        if (!alvoData) return message.reply("❌ Esse usuário ainda não tem conta no bot.");
+        const alvo = message.mentions.users.first();
+        const itemID = args[1]?.toLowerCase();
 
-        // 3. Processamento do Presente
-        userData.inventory.splice(index, 1); // Remove da mochila de quem dá
-        
-        // Garante que o campo existe e adiciona os pontos
-        // A afinidade é salva no perfil de quem RECEBE em relação a quem DÁ (ou num campo geral de prestígio)
-        alvoData.affinity = (alvoData.affinity || 0) + presente.pts;
-        
-        // Opcional: Adicionar o item na mochila de quem recebe (se quiseres que o item mude de dono)
+        // 1. Verificações de Alvo e Item
+        if (!alvo) return message.reply("🎁 **Para quem é o presente?** Menciona alguém! Ex: `!presentear @user rosa`.");
+        if (alvo.id === message.author.id) return message.reply("🤔 Dar um presente a ti mesmo?");
+        if (alvo.bot) return message.reply("🤖 Bots não têm sentimentos... Guarda o presente para um humano!");
+        if (!itemID) return message.reply("💝 **O que queres dar?** Escreve o ID do item. Ex: `!presentear @user flores`.");
+
+        const inventory = userData.inventory || [];
+        const index = inventory.indexOf(itemID);
+
+        if (index === -1) return message.reply("❌ Não tens esse item na tua mochila!");
+
+        // 2. Tabela de Afinidade (Só conta se for casado)
+        const tabelaAfinidade = {
+            'rosa': { pts: 5, msg: "ficou encantado(a) com a tua rosa solitária! 🌹" },
+            'flores': { pts: 15, msg: "adorou o buquê de flores! 💐" },
+            'chocolate': { pts: 10, msg: "saboreou o chocolate e achou-te uma doçura! 🍫" },
+            'urso': { pts: 25, msg: "abraçou o urso de pelúcia e agora não para de sorrir! 🧸" },
+            'anel': { pts: 50, msg: "ficou sem palavras com o anel... Isso foi um pedido? 💍" },
+            'mansao': { pts: 500, msg: "DEU UMA MANSÃO! Quem resistiria? 🏰" }
+        };
+
+        const presente = tabelaAfinidade[itemID];
+        if (!presente) return message.reply("❓ Esse item não pode ser dado como presente social. Tenta Rosa, Flores, Chocolate, Urso, Anel ou Mansao!");
+
+        let alvoData = await User.findOne({ userId: alvo.id }) || await User.create({ userId: alvo.id });
+
+        // 3. Processamento do Item (Sempre muda de dono, sendo casado ou não)
+        userData.inventory.splice(index, 1); 
         if (!alvoData.inventory) alvoData.inventory = [];
         alvoData.inventory.push(itemID);
 
         userData.markModified('inventory');
         alvoData.markModified('inventory');
 
+        // 4. Lógica de Afinidade (SÓ SE FOR O CÔNJUGE)
+        let ganhouAfinidade = false;
+        if (userData.marriedWith === alvo.id) {
+            ganhouAfinidade = true;
+            userData.affinity = (userData.affinity || 0) + presente.pts;
+            alvoData.affinity = userData.affinity; // Sincroniza
+        }
+
         await userData.save();
         await alvoData.save();
 
-        // 4. Resposta Especial
-        return message.reply(
-            `🎁 **PRESENTE ENVIADO!**\n` +
-            `❤️ **${alvo.username}** ${presente.msg}\n` +
-            `📈 Afinidade de **${alvo.username}** subiu **+${presente.pts}** pontos!`
-        );
+        // 5. Resposta Especial
+        let resposta = `🎁 **PRESENTE ENVIADO!**\n❤️ **${alvo.username}** ${presente.msg}`;
+        
+        if (ganhouAfinidade) {
+            resposta += `\n📈 **Afinidade do casal:** \`+${presente.pts}\` (Total: \`${userData.affinity}\`)`;
+        } else {
+            resposta += `\n📦 O item foi transferido para a mochila de **${alvo.username}**!`;
+        }
+
+        return message.reply(resposta);
 
     } catch (err) {
         console.error("Erro no comando presentear:", err);
         return message.reply("❌ Ocorreu um erro ao entregar o presente.");
     }
 }
-
-// ==================== 💋 COMANDO BEIJAR (SISTEMA COMPLETO + 25 FRASES) ====================
+// ==================== 💋 COMANDO BEIJAR (SISTEMA COM AFINIDADE PARA CASADOS) ====================
 if (command === 'beijar' || command === 'kiss') {
     try {
         const target = message.mentions.users.first();
+        if (!target) return message.reply('💋 Você precisa mencionar alguém para beijar!');
+
+        // 1. Verificações de Alvo
+        if (target.id === message.author.id) return message.reply('Você não pode beijar a si mesmo!');
+        if (target.id === message.client.user.id) return message.reply('Aww, um beijo em mim? *fico corada*');
+
+        // Buscar dados do autor
+        let userData = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
         const inventory = userData.inventory || [];
 
-        // 1. Verificações de Alvo (Estilo Loritta)
-        if (!target) return message.reply('💋 Você precisa mencionar alguém para beijar! Exemplo: `!beijar @usuario`');
-
-        if (target.id === message.author.id) {
-            return message.reply('Você quer beijar você mesmo? Deixe-me fazer isso por você! *lhe dou um beijinho*');
-        }
-
-        if (target.id === message.client.user.id) {
-            return message.reply('Como assim você quer me beijar? Eu sou apenas um bot! Mas tudo bem, eu aceito o seu carinho. *te retribuo com um abraço*');
-        }
-
-        // 2. Lógica de Afinidade e Itens
+        // 2. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
+        let mostrarAfinidade = false;
         let ganhoAfinidade = 1;
         let extras = [];
 
-        // --- BÔNUS: ANEL DE DIAMANTE (Passivo: Dobra afinidade) ---
-        if (inventory.includes('anel')) {
-            ganhoAfinidade *= 2;
-            extras.push("💍 **Bônus de Anel:** Afinidade dobrada!");
+        if (userData.marriedWith === target.id) {
+            mostrarAfinidade = true;
+
+            // --- BÔNUS: ANEL DE DIAMANTE ---
+            if (inventory.includes('anel')) {
+                ganhoAfinidade *= 2;
+                extras.push("💍 **Bônus de Anel:** Afinidade dobrada!");
+            }
+
+            // --- BÔNUS: CHOCOLATE (Consumo Automático) ---
+            if (inventory.includes('chocolate')) {
+                const index = inventory.indexOf('chocolate');
+                userData.inventory.splice(index, 1);
+                userData.markModified('inventory');
+                ganhoAfinidade += 5;
+                extras.push("🍫 **Chocolate usado:** +5 de afeto!");
+            }
+
+            // Atualiza afinidade no banco para o casal
+            userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
+            await userData.save();
+            
+            // Sincroniza com o cônjuge
+            await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
         }
 
-        // --- BÔNUS: CHOCOLATE (Consumo Automático: +5 afinidade) ---
-        if (inventory.includes('chocolate')) {
-            const index = userData.inventory.indexOf('chocolate');
-            userData.inventory.splice(index, 1);
-            userData.markModified('inventory');
-            ganhoAfinidade += 5;
-            extras.push("🍫 **Chocolate usado:** +5 de afeto!");
-        }
-
-        // 3. Atualização no Banco de Dados
-        userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
-        await userData.save();
-
-        // 4. Banco de Dados de Beijos (As 25 variações originais)
+        // 3. Banco de Dados de Beijos
         const mensagens = [
             `💋 **${message.author.username}** deu um beijo apaixonado em **${target.username}**! ❤️`,
             `😚 **${message.author.username}** deu um beijo fofinho na bochecha de **${target.username}**! ✨`,
@@ -1030,9 +1390,12 @@ if (command === 'beijar' || command === 'kiss') {
 
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
 
-        // 5. Resposta Final Combinada
-        let footer = `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${userData.affinity}\`)`;
-        if (extras.length > 0) footer += `\n✨ ${extras.join(' | ')}`;
+        // 4. Resposta Final (Só mostra afinidade se mostrarAfinidade for true)
+        let footer = "";
+        if (mostrarAfinidade) {
+            footer = `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${userData.affinity}\`)`;
+            if (extras.length > 0) footer += `\n✨ ${extras.join(' | ')}`;
+        }
 
         return message.channel.send(`${sorteio}${footer}`);
 
@@ -1041,25 +1404,41 @@ if (command === 'beijar' || command === 'kiss') {
         message.reply("❌ Ocorreu um erro ao processar o seu beijo!");
     }
 }
-// ==================== 💆 COMANDO CAFUNÉ (ESTILO LORITTA & TEXTO PURO) ====================
+// ==================== 💆 COMANDO CAFUNÉ (SISTEMA DE AFINIDADE) ====================
 if (command === 'cafune' || command === 'headpat') {
     try {
         const target = message.mentions.users.first();
 
-        // 1. Verificações Específicas (Estilo Loritta)
+        // 1. Verificações de Alvo (Estilo Loritta)
         if (!target) return message.reply('💆 Você precisa mencionar alguém para fazer um cafuné! Exemplo: `!cafune @usuario`');
 
-        // Se a pessoa tentar fazer cafuné nela mesma (Fala da Loritta)
         if (target.id === message.author.id) {
             return message.reply('Você quer fazer cafuné em você mesmo? Deixe-me fazer isso por você! *faço um cafuné em sua cabeça*');
         }
 
-        // Se a pessoa tentar fazer cafuné no BOT (Fala da Loritta)
         if (target.id === message.client.user.id) {
             return message.reply('Aww, obrigada! Eu adoro carinho atrás das orelhas... digo, nos meus circuitos! *aproveito o cafuné*');
         }
 
-        // 2. Banco de Dados de Cafuné (Mais de 20 variações criativas)
+        // Buscar dados do autor no banco
+        let dadosAutor = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
+
+        // 2. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
+        let mostrarAfinidade = false;
+        let ganhoAfinidade = 1; // Cafuné geralmente dá menos que beijo, ou o mesmo, você escolhe.
+
+        if (dadosAutor.marriedWith === target.id) {
+            mostrarAfinidade = true;
+
+            // Atualiza afinidade no banco para o autor
+            dadosAutor.affinity = (dadosAutor.affinity || 0) + ganhoAfinidade;
+            await dadosAutor.save();
+            
+            // Sincroniza com o cônjuge (para o card de casamento ficar igual para os dois)
+            await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
+        }
+
+        // 3. Banco de Dados de Frases
         const mensagens = [
             `💆 **${message.author.username}** está fazendo um cafuné relaxante em **${target.username}**!`,
             `✨ **${message.author.username}** começou a fazer um cafuné fofinho em **${target.username}**!`,
@@ -1075,7 +1454,7 @@ if (command === 'cafune' || command === 'headpat') {
             `🍀 **${message.author.username}** está fazendo um cafuné da sorte em **${target.username}**!`,
             `🎵 **${message.author.username}** faz cafuné em **${target.username}** enquanto cantarola uma música.`,
             `🌈 **${message.author.username}** trouxe alegria para **${target.username}** com um cafuné especial!`,
-            `🧘 **${message.author.username}** está transmitindo paz para **${target.username}** através de um cafuné.`,
+            `🧘 **${message.author.username}** está transmitir paz para **${target.username}** através de um cafuné.`,
             `💖 **${message.author.username}** está demonstrando todo o seu afeto com um cafuné em **${target.username}**.`,
             `🍼 **${message.author.username}** mimalhou **${target.username}** com um cafuné de bebê!`,
             `🍓 **${message.author.username}** deu um cafuné carinhoso em **${target.username}**!`,
@@ -1083,18 +1462,15 @@ if (command === 'cafune' || command === 'headpat') {
             `🎈 **${message.author.username}** deixou **${target.username}** nas nuvens com esse cafuné!`
         ];
 
-        // 3. Sorteio
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
 
-        // 4. Lógica de Afinidade/Cooldown (Opcional - Mantendo a sua ideia anterior)
-        // Se você quiser manter o bônus de afinidade, o código continuaria aqui
-        let msgBonus = "";
-        if (typeof userData !== 'undefined' && userData.marriedWith === target.id) {
-            msgBonus = `\n😊 **${target.username}** amou o carinho do seu amor!`;
+        // 4. Montagem da Resposta Final
+        let footer = "";
+        if (mostrarAfinidade) {
+            footer = `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${dadosAutor.affinity}\`)`;
         }
 
-        // 5. Envio da Resposta (Texto Puro para evitar bugs)
-        return message.channel.send(`${sorteio}${msgBonus}`);
+        return message.channel.send(`${sorteio}${footer}`);
 
     } catch (error) {
         console.error("Erro no comando cafune:", error);
@@ -1106,11 +1482,14 @@ if (command === 'cafune' || command === 'headpat') {
 if (command === 'abracar' || command === 'hug') {
     try {
         const target = message.mentions.users.first();
+        
+        // Buscar dados do autor no banco (Garante que userData existe)
+        let userData = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
         const inventory = userData.inventory || [];
         const now = Date.now();
-        const cooldownSocial = 30000; // 30 segundos de cooldown base
+        const cooldownSocial = 30000; // 30 segundos
 
-        // 1. Verificações Específicas (Estilo Loritta)
+        // 1. Verificações Específicas
         if (!target) return message.reply('🤗 Precisas de mencionar alguém para abraçar! Exemplo: `!abracar @usuario`');
 
         if (target.id === message.author.id) {
@@ -1121,7 +1500,7 @@ if (command === 'abracar' || command === 'hug') {
             return message.reply('Aww! Eu adoro abraços! *retribuo o abraço com os meus braços mecânicos e fofinhos*');
         }
 
-        // 2. Lógica de Itens (Bateria de Lítio reseta cooldown social)
+        // 2. Lógica de Itens e Cooldown (Funciona para todos)
         let usouBateria = false;
         if (userData.lastSocial && (now - userData.lastSocial < cooldownSocial)) {
             if (inventory.includes('bateria')) {
@@ -1135,25 +1514,36 @@ if (command === 'abracar' || command === 'hug') {
             }
         }
 
-        // 3. Lógica de Afinidade e Anel
+        // 3. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
+        let mostrarAfinidade = false;
         let ganhoAfinidade = 1;
         let extras = [];
 
-        if (inventory.includes('anel')) {
-            ganhoAfinidade *= 2;
-            extras.push("💍 **Poder do Anel:** Abraço duplicado!");
+        if (userData.marriedWith === target.id) {
+            mostrarAfinidade = true;
+
+            // --- BÔNUS: ANEL DE DIAMANTE ---
+            if (inventory.includes('anel')) {
+                ganhoAfinidade *= 2;
+                extras.push("💍 **Poder do Anel:** Abraço duplicado!");
+            }
+
+            // Atualiza afinidade no banco para o autor
+            userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
+            
+            // Sincroniza com o cônjuge
+            await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
         }
 
         if (usouBateria) {
             extras.push("🔋 **Bateria de Lítio:** Cooldown social resetado!");
         }
 
-        // 4. Atualização no Banco
-        userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
-        userData.lastSocial = now; // Atualiza o tempo da última interação social
+        // 4. Salvar dados de tempo (sempre salva o cooldown, mesmo sem afinidade)
+        userData.lastSocial = now;
         await userData.save();
 
-        // 5. Banco de Dados de Abraços (Suas 20 frases)
+        // 5. Banco de Dados de Frases
         const mensagens = [
             `🤗 **${message.author.username}** deu um abraço bem apertado em **${target.username}**!`,
             `✨ **${message.author.username}** deu um abraço carinhoso em **${target.username}**!`,
@@ -1178,38 +1568,73 @@ if (command === 'abracar' || command === 'hug') {
         ];
 
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
-        let msgCasal = (userData.marriedWith === target.id) ? `\n💖 **${target.username}** se sentiu muito amado(a) com o seu abraço!` : "";
 
         // 6. Resposta Final
-        let footer = `\n\n💕 **Afinidade:** \`+${ganhoAfinidade}\` | Total: \`${userData.affinity}\``;
-        if (extras.length > 0) footer += `\n✨ ${extras.join(' | ')}`;
+        let footer = "";
+        if (mostrarAfinidade) {
+            footer = `\n\n💕 **Afinidade:** \`+${ganhoAfinidade}\` | Total: \`${userData.affinity}\``;
+        }
 
-        return message.channel.send(`${sorteio}${msgCasal}${footer}`);
+        // Se usou bateria, avisa mesmo que não tenha afinidade
+        if (usouBateria && !mostrarAfinidade) footer += `\n\n✨ **Bateria de Lítio:** Cooldown social resetado!`;
+        else if (usouBateria && mostrarAfinidade) footer += `\n✨ Bateria de Lítio usada!`;
+
+        return message.channel.send(`${sorteio}${footer}`);
 
     } catch (error) {
         console.error("Erro no comando abraçar:", error);
         message.reply("❌ Aconteceu um erro ao tentar dar esse abraço!");
     }
 }
-// ==================== 🖐️ COMANDO TAPA (ESTILO LORITTA & TEXTO PURO) ====================
+// ==================== 🖐️ COMANDO TAPA (SISTEMA DE AFINIDADE NEGATIVA) ====================
 if (command === 'tapa' || command === 'slap') {
     try {
         const target = message.mentions.users.first();
 
-        // 1. Verificações Específicas (Estilo Loritta)
-        if (!target) return message.reply('🖐️ Você precisa mencionar alguém para dar um tapa! Exemplo: `!tapa @usuario`');
+        // 1. Verificações Específicas
+        if (!target) return message.reply('🖐️ Você precisa mencionar alguém para dar um tapa!');
 
-        // Se a pessoa tentar se bater (Fala da Loritta)
         if (target.id === message.author.id) {
             return message.reply('Você quer se bater? Não faça isso! Se você quer tanto dar um tapa em alguém, bata em mim... não, espera, em mim também não!');
         }
 
-        // Se a pessoa tentar bater no BOT (Fala da Loritta)
         if (target.id === message.client.user.id) {
             return message.reply('Ei! Por que você está tentando me bater? Eu sou apenas um bot inofensivo! *começo a chorar virtualmente*');
         }
 
-        // 2. Banco de Dados de Tapas (20 variações criativas)
+        // Buscar dados do autor
+        let dadosAutor = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
+        const agora = Date.now();
+
+        // 2. Cooldown de 10 segundos
+        if (agora - (dadosAutor.lastSocial || 0) < 10000) {
+            return message.reply("⏳ Calma, a violência não é a resposta! Espere um pouco.");
+        }
+
+        // 3. Lógica de Afinidade NEGATIVA (SÓ SE ESTIVER CASADO COM O ALVO)
+        let perdeuAfinidade = false;
+        let perda = 2; // Quantidade de afinidade que perde por tapa
+
+        if (dadosAutor.marriedWith === target.id) {
+            perdeuAfinidade = true;
+
+            // Diminui a afinidade (garantindo que não fique menor que 0 se você preferir)
+            dadosAutor.affinity = Math.max(0, (dadosAutor.affinity || 0) - perda);
+            dadosAutor.lastSocial = agora;
+            await dadosAutor.save();
+
+            // Sincroniza a perda com o cônjuge
+            await User.updateOne(
+                { userId: target.id }, 
+                { $set: { affinity: dadosAutor.affinity }, $set: { lastSocial: agora } }
+            );
+        } else {
+            // Se não for casado, apenas salva o cooldown
+            dadosAutor.lastSocial = agora;
+            await dadosAutor.save();
+        }
+
+        // 4. Banco de Dados de Frases
         const mensagens = [
             `🖐️ **POW!** **${message.author.username}** deu um tapa bem estalado em **${target.username}**!`,
             `💢 **${message.author.username}** deu um tapa de anime em **${target.username}**!`,
@@ -1222,88 +1647,87 @@ if (command === 'tapa' || command === 'slap') {
             `🤫 **${message.author.username}** deu um tapa silencioso em **${target.username}**!`,
             `🙄 **${message.author.username}** deu um tapa "acorda pra vida" em **${target.username}**!`,
             `👐 **${message.author.username}** deu um tapa duplo em **${target.username}**!`,
-            `🦗 **${message.author.username}** tentou dar um tapa em **${target.username}**, mas ele(a) desviou!`,
             `🎭 **${message.author.username}** deu um tapa dramático em **${target.username}**!`,
-            `🥀 **${message.author.username}** deu um tapa com uma luva em **${target.username}**, que clássico!`,
             `🔥 **${message.author.username}** deu um tapa ardente em **${target.username}**!`,
-            `👊 **${message.author.username}** deu um soco... não, espera, foi só um tapa em **${target.username}**!`,
-            `🥨 **${message.author.username}** deu um tapa de "pare com isso" em **${target.username}**!`,
-            `🌊 **${message.author.username}** deu um tapa molhado em **${target.username}**!`,
-            `✨ **${message.author.username}** deu um tapa mágico em **${target.username}**!`,
             `💫 **${message.author.username}** fez **${target.username}** ver estrelas com esse tapa!`
         ];
 
-        // 3. Sorteio
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
 
-        // 4. Lógica de Cooldown (Opcional - usando sua variável)
-        const agora = Date.now();
-        if (typeof userData !== 'undefined') {
-            if (agora - (userData.lastSocial || 0) < 10000) {
-                return message.reply("⏳ Calma, a violência não é a resposta! Espera uns segundos.");
-            }
-            userData.lastSocial = agora;
-            await userData.save();
+        // 5. Resposta Final
+        let footer = "";
+        if (perdeuAfinidade) {
+            footer = `\n💔 **Afinidade Perdida:** \`-${perda}\` (Total: \`${dadosAutor.affinity}\`)`;
         }
 
-        // 5. Envio da Resposta (Texto Puro)
-        return message.channel.send(sorteio);
+        return message.channel.send(`${sorteio}${footer}`);
 
     } catch (error) {
         console.error("Erro no comando tapa:", error);
         message.reply("❌ Ocorreu um erro ao tentar dar esse tapa!");
     }
 }
-// ==================== ⚔️ COMANDO ATACAR (SISTEMA DE COMBATE INTEGRADO) ====================
+// ==================== ⚔️ COMANDO ATACAR (SISTEMA DE COMBATE + PUNIÇÃO CASAL) ====================
 if (command === 'atacar' || command === 'attack') {
     try {
         const target = message.mentions.users.first();
 
         // 1. Verificações de Alvo
-        if (!target) return message.reply('⚔️ Precisas de mencionar alguém para atacar! Exemplo: `!atacar @usuario`');
+        if (!target) return message.reply('⚔️ Precisas de mencionar alguém para atacar!');
         if (target.id === message.author.id) return message.reply('Queres atacar-te a ti próprio? Se estás triste, eu posso dar-te um abraço! 🤗');
         if (target.id === message.client.user.id) return message.reply('Ei! Por que me queres atacar? Eu sou apenas um bot fofinho! 🤖📦');
 
-        const targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+        // Carregar dados de ambos
+        let dadosAutor = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
+        let targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+        
         const agora = Date.now();
-        const myInv = userData.inventory || [];
+        const myInv = dadosAutor.inventory || [];
         const targetInv = targetData.inventory || [];
 
-        // 2. Cooldown com Bônus (Chip Neural reduz cansaço de luta)
+        // 2. Cooldown com Bônus (Chip Neural)
         let cooldownLuta = 15000; 
-        if (myInv.includes('chip')) cooldownLuta = 5000; // Reduz para 5s
+        if (myInv.includes('chip')) cooldownLuta = 5000; 
 
-        if (agora - (userData.lastSocial || 0) < cooldownLuta) {
-            const restante = Math.ceil((cooldownLuta - (agora - userData.lastSocial)) / 1000);
+        if (agora - (dadosAutor.lastSocial || 0) < cooldownLuta) {
+            const restante = Math.ceil((cooldownLuta - (agora - dadosAutor.lastSocial)) / 1000);
             return message.reply(`⏳ Estás sem fôlego! Espera **${restante}s** para lutar de novo.`);
         }
 
-        // 3. Status de Equipamento
+        // 3. Lógica de Afinidade NEGATIVA (SÓ SE ESTIVER CASADO COM O ALVO)
+        let perdeuAfinidade = false;
+        let perda = 5; // Ataque tira mais afinidade que tapa
+
+        if (dadosAutor.marriedWith === target.id) {
+            perdeuAfinidade = true;
+            dadosAutor.affinity = Math.max(0, (dadosAutor.affinity || 0) - perda);
+            // Sincronizar afinidade para ambos
+            targetData.affinity = dadosAutor.affinity;
+        }
+
+        // 4. Status de Equipamento e Poder
         const euTenhoArma = myInv.includes('arma');
         const euTenhoFaca = myInv.includes('faca');
         const euTenhoChip = myInv.includes('chip');
         const alvoTemArma = targetInv.includes('arma');
         const indexEscudoAlvo = targetInv.indexOf('escudo');
 
-        // 4. Lógica de Poder (Chance de Vitória)
-        let chanceVitoria = 0.50; // 50/50 base
+        let chanceVitoria = 0.50; 
         let bonusTexto = [];
 
         if (euTenhoFaca) { chanceVitoria += 0.15; bonusTexto.push("🔪 Faca (+15%)"); }
         if (euTenhoArma) { chanceVitoria += 0.25; bonusTexto.push("🔫 Pistola (+25%)"); }
         if (euTenhoChip) { chanceVitoria += 0.10; bonusTexto.push("💾 Chip Neural (+10%)"); }
-
-        // Penalidade se o alvo estiver armado
         if (alvoTemArma) { chanceVitoria -= 0.30; bonusTexto.push("⚠️ Alvo Armado (-30%)"); }
 
-        // 5. Verificação de Escudo (Defesa Absoluta)
+        // 5. Verificação de Escudo
         if (indexEscudoAlvo !== -1 && !euTenhoArma) {
             targetData.inventory.splice(indexEscudoAlvo, 1);
             targetData.markModified('inventory');
+            dadosAutor.lastSocial = agora;
             await targetData.save();
-            userData.lastSocial = agora;
-            await userData.save();
-            return message.reply(`🛡️ **DEFESA!** **${target.username}** usou um **Escudo** para bloquear o teu ataque perfeitamente! O escudo quebrou, mas ele saiu ileso.`);
+            await dadosAutor.save();
+            return message.reply(`🛡️ **DEFESA!** **${target.username}** usou um **Escudo** para bloquear o teu ataque! O escudo quebrou, mas ele saiu ileso.`);
         }
 
         // 6. Execução do Combate
@@ -1317,29 +1741,28 @@ if (command === 'atacar' || command === 'attack') {
                 `💥 **POW!** Com reflexos de ninja, **${message.author.username}** derrotou o oponente!`
             ];
             resultadoTexto = frasesVitoria[Math.floor(Math.random() * frasesVitoria.length)];
-            
-            // Se venceu usando arma, a frase é especial
-            if (euTenhoArma) resultadoTexto = `🔫 **FOGO CRUZADO!** **${message.author.username}** usou a sua Pistola 9mm para render **${target.username}** sem esforço! 🏆`;
+            if (euTenhoArma) resultadoTexto = `🔫 **FOGO CRUZADO!** **${message.author.username}** usou a sua Pistola 9mm para render **${target.username}**! 🏆`;
         } else {
             const frasesDerrota = [
-                `🤕 **DERROTA!** **${target.username}** desviou do golpe de **${message.author.username}** e revidou com força!`,
-                `🛡️ **CONTRA-ATAQUE!** **${message.author.username}** tentou atacar, mas levou a pior contra **${target.username}**!`,
-                `💀 **QUE VIRADA!** **${target.username}** imobilizou **${message.author.username}** e ganhou a luta!`
+                `🤕 **DERROTA!** **${target.username}** desviou do golpe de **${message.author.username}** e revidou!`,
+                `🛡️ **CONTRA-ATAQUE!** **${message.author.username}** tentou atacar, mas levou a pior!`,
+                `💀 **QUE VIRADA!** **${target.username}** imobilizou **${message.author.username}**!`
             ];
             resultadoTexto = frasesDerrota[Math.floor(Math.random() * frasesDerrota.length)];
-
-            if (alvoTemArma) resultadoTexto = `🛡️ **REAÇÃO ARMADA!** **${target.username}** sacou uma Pistola 9mm e fez **${message.author.username}** fugir desesperado! 🏃💨`;
+            if (alvoTemArma) resultadoTexto = `🛡️ **REAÇÃO ARMADA!** **${target.username}** sacou uma Pistola 9mm e fez **${message.author.username}** fugir! 🏃💨`;
         }
 
-        // 7. Salvamento
-        userData.lastSocial = agora;
-        await userData.save();
+        // 7. Salvamento Final
+        dadosAutor.lastSocial = agora;
+        await dadosAutor.save();
+        await targetData.save();
 
         // 8. Resposta Final
         const embedTitulo = venceu ? "🤺 **VITÓRIA NA ARENA!**" : "🛡️ **DERROTA NA ARENA!**";
         let msgFinal = `${embedTitulo}\n\n${resultadoTexto}`;
         
         if (bonusTexto.length > 0) msgFinal += `\n\n✨ **Fatores:** \`${bonusTexto.join(' | ')}\``;
+        if (perdeuAfinidade) msgFinal += `\n💔 **Clima Tenso:** Por atacares o teu cônjuge, perderam **${perda}** de afinidade! (Total: \`${dadosAutor.affinity}\`)`;
 
         return message.channel.send(msgFinal);
 
@@ -1615,7 +2038,10 @@ if (command === 'assaltodupla' || command === 'assalto') {
         
         let chanceSucesso = 0.60; // 60% base
         let ganhoBase = Math.floor(Math.random() * 20000) + 15000; 
-        let afinidadeGanho = 15;
+        
+        // --- AJUSTE: Afinidade aleatória entre 1 e 9 ---
+        let afinidadeGanho = Math.floor(Math.random() * 9) + 1; 
+        
         let extras = [];
 
         // --- BÔNUS: INIBIDOR DE SINAL (Aumenta a chance de sucesso) ---
@@ -1641,8 +2067,10 @@ if (command === 'assaltodupla' || command === 'assalto') {
 
         // --- BÔNUS: ANEL DE DIAMANTE (Aumenta afinidade) ---
         if (invTotal.includes('anel')) {
-            afinidadeGanho += 20;
-            extras.push("💍 **Anel:** Sintonia perfeita (+20 Afeto)");
+            // Se tiver anel, ganha um bônus fixo além do sorteio
+            const bonusAnel = 10;
+            afinidadeGanho += bonusAnel;
+            extras.push(`💍 **Anel:** Sintonia perfeita (+${bonusAnel} Afeto)`);
         }
 
         // 5. EXECUÇÃO DO GOLPE
@@ -1653,7 +2081,7 @@ if (command === 'assaltodupla' || command === 'assalto') {
             userData.affinity = (userData.affinity || 0) + afinidadeGanho;
             
             partnerData.money += ganhoBase; 
-            partnerData.affinity = (partnerData.affinity || 0) + afinidadeGanho;
+            partnerData.affinity = userData.affinity; // Sincroniza o valor exato
 
             await userData.save();
             await partnerData.save();
@@ -1666,7 +2094,7 @@ if (command === 'assaltodupla' || command === 'assalto') {
                     { name: "💰 Lucro p/ cada", value: `**${ganhoBase.toLocaleString()}** moedas`, inline: true },
                     { name: "❤️ Afinidade", value: `+${afinidadeGanho} pontos`, inline: true }
                 ],
-                footer: { text: extras.length > 0 ? `Bônus: ${extras.join(' | ')}` : "Parceria eterna." }
+                footer: { text: extras.length > 0 ? `Bônus Ativos: ${extras.join(' | ')}` : "Parceria criminosa eterna." }
             };
             return message.reply({ embeds: [embedSucesso] });
 
@@ -1675,10 +2103,10 @@ if (command === 'assaltodupla' || command === 'assalto') {
             let multa = 5000;
             let temMascara = invTotal.includes('mascara');
             
-            if (temMascara) multa = 0; // Máscara protege da multa no assalto em dupla
+            if (temMascara) multa = 0; 
 
             userData.money = Math.max(0, userData.money - multa);
-            userData.lastRob = agora; // Entra em cooldown mesmo falhando
+            userData.lastRob = agora; 
             
             partnerData.money = Math.max(0, partnerData.money - multa);
             partnerData.lastRob = agora;
@@ -1687,7 +2115,7 @@ if (command === 'assaltodupla' || command === 'assalto') {
             await partnerData.save();
 
             if (temMascara) {
-                return message.reply(`👮 **Cercados!** O alarme disparou, mas as vossas **Máscaras** 🎭 impediram a identificação. Fugiram sem pagar fiança, mas o cooldown ativou!`);
+                return message.reply(`👮 **Cercados!** O alarme disparou, mas as vossas **Máscaras** 🎭 impediram a identificação. Fugiram sem pagar fiança, mas precisam de se esconder (Cooldown ativado)!`);
             } else {
                 return message.reply(`🚨 **A CASA CAIU!** Vocês foram pegos na saída. Cada um teve de pagar **${multa.toLocaleString()} moedas** de fiança para sair da esquadra!`);
             }
@@ -3529,34 +3957,66 @@ if (command === 'matar' || command === 'kill') {
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
     }
 }
-// ==================== 📖 COMANDO AJUDA COMPLETO (VERSÃO FINAL) ====================
+// ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO CORRIGIDA) ====================
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
     const embedAjuda = new EmbedBuilder()
         .setTitle('📖 Central de Comandos OmniBot')
         .setColor('#5865F2')
         .setThumbnail(client.user.displayAvatarURL())
-        .setDescription('Seja bem-vindo! Explore minhas funcionalidades abaixo:')
+        .setDescription('Explore todas as funcionalidades do sistema abaixo:')
         .addFields(
             { 
-                name: '💰 ECONOMIA & RANKING', 
+                name: '💰 ECONOMIA & CARREIRA', 
                 value: 
-                '`!money`: Ver saldo rápido.\n' +
-                '`!daily`: Recompensa diária.\n' +
+                '`!money`: Saldo rápido.\n' +
+                '`!daily`: Resgate diário.\n' +
                 '`!trabalhar`: Ganhar moedas.\n' +
-                '`!trabalhos`: Profissão e progresso de carreira.\n' +
-                '`!depositar`/`!sacar`: Gerir dinheiro no banco.\n' +
-                '`!pix @user [valor]`: Enviar moedas.\n' +
-                '`!dar @user [item] [qtd]`: Enviar itens.\n' +
-                '`!top`: Ranking local.\n' +
-                '`!top global`: Ranking mundial.'
+                '`!trabalhos`: Ver profissões e progresso.\n' +
+                '`!depositar`/`!sacar`: Gestão bancária.\n' +
+                '`!pix @user [valor]`: Transferir moedas.\n' +
+                '`!top`: Ranking local | `!top global`: Mundial.'
             },
             { 
-                name: "👤 PERFIL & STATUS", 
+                name: '🛍️ CENTRO COMERCIAL (LOJAS)', 
                 value: 
-                '`!perfil` ou `!p`: Card com nível, moedas e mochila.\n' +
-                '`!fundos`: Lista seus backgrounds comprados.\n' +
-                '`!meusfundos`: Escolhe qual fundo usar agora.'
+                '🛒 `!loja`: Itens básicos.\n' +
+                '🌸 `!flores`: Presentes e mimos.\n' +
+                '⚡ `!tech`: Upgrades cibernéticos.\n' +
+                '💎 `!luxo`: Itens de alto padrão.\n' +
+                '👑 `!reliquias`: Itens lendários.\n' +
+                '🌑 `!submundo`: Itens proibidos.'
+            },
+            { 
+                name: '🎒 INVENTÁRIO & ESTÉTICA', 
+                value: 
+                '`!comprar [id]`: Adquirir itens.\n' +
+                '`!mochila`: Ver teus itens na mochila.\n' +
+                '`!usar [id]`: Consumir itens da mochila.\n' +
+                '`!fundos`: Ver teus backgrounds comprados.\n' +
+                '`!meusfundos`: Escolher qual fundo equipar no perfil.\n' +
+                '`!dar @user [item] [qtd]`: Enviar itens para alguém.'
+            },
+            { 
+                name: '💍 RELACIONAMENTOS', 
+                value: 
+                '`!casar @user`: Iniciar união (25k).\n' +
+                '`!vercasamento`: Card, afinidade e insígnias.\n' +
+                '`!configcasamento`: Mudar bio e medalhas.\n' +
+                '`!presentear @user [id]`: Dar presentes (+Afinidade).\n' +
+                '`!cartinha @user`: Enviar carta de afeto.\n' +
+                '`!trair @user`: Encontro secreto (Risco!)\n' +
+                '`!divorciar`: Terminar relação | `!ship`: Compatibilidade.' 
+            },
+            { 
+                name: '🌑 FACÇÃO & SUBMUNDO', 
+                value: 
+                '`!entrar`: Virar Membro da Facção.\n' +
+                '`!traficar`: Rota de lucro ilegal.\n' +
+                '`!missao`: Operações especiais.\n' +
+                '`!assaltodupla`: Golpe em casal.\n' +
+                '`!contrato`: Aceitar alvo | `!concluir`: Prêmio.\n' +
+                '`!crime`: Assalto | `!roubar @user`: Furtar (10%).' 
             },
             { 
                 name: '🎰 CASSINO & SORTE', 
@@ -3566,66 +4026,24 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 '`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
             },
             { 
-                name: '💍 RELACIONAMENTOS', 
+                name: '👤 PERFIL & PROGRESSO', 
                 value: 
-                '`!casar @user`: Iniciar união (25k).\n' +
-                '`!vercasamento`: Status e afinidade.\n' +
-                '`!cartinha @user`: Pontos de afeto.\n' +
-                '`!divorciar`: Terminar relação.\n' +
-                '`!ship @user @user`: Ver compatibilidade.' 
-            },
-            { 
-                name: '🎭 INTERAÇÕES SOCIAIS', 
-                value: 
-                '`!avaliar [algo]`: Minha opinião sincera.\n' +
-                '`!beijar`, `!abracar`, `!cafune`: Gestos de carinho.\n' +
-                '`!tapa`, `!atacar`: Gestos agressivos.' 
-            },
-            { 
-                name: '🌑 SUBMUNDO ILEGAL', 
-                value: 
-                '`!submundo`: Loja proibida.\n' +
-                '`!crime`: Assalto arriscado.\n' +
-                '`!roubar @user`: Tentar furto (10%).\n' +
-                '`!entrar`: Virar Membro da Facção.\n' +
-                '`!traficar`: Rota de lucro.\n' +
-                '`!missao`: Operações da elite.\n' +
-                '`!assaltodupla`: Golpe em casal.\n' +
-                '`!contrato`: Aceitar alvo.\n' +
-                '`!concluir`: Receber prêmio.' 
-            },
-            { 
-                name: '🏆 PROGRESSO', 
-                value: 
-                '`!guia`: Lista de TODOS os troféus.\n' +
-                '`!conquistas`: Ver teus marcos e medalhas.' 
-            },
-            { 
-                name: '🛒 MERCADO GLOBAL', 
-                value: 
-                '`!loja`: Ver estoque atual.\n' +
-                '`!comprar [item]`: Adquirir produto.\n' +
-                '`!mochila`: Atalho para o inventário.' 
+                '`!perfil` ou `!p`: Card completo de status.\n' +
+                '`!guia`: Lista de todos os troféus.\n' +
+                '`!conquistas`: Ver teus marcos e medalhas.\n' +
+                '`!avaliar [algo]`: Opinião do bot.\n' +
+                '`!beijar`, `!abracar`, `!cafune`, `!tapa`, `!atacar`: Social.' 
             },
             { 
                 name: '🛡️ MODERAÇÃO & STAFF', 
                 value: 
-                '`!matar @user`: Dar timeout (1 min).\n' +
-                '`!clear [nº]`: Limpar chat.\n' +
-                '`!kick`/`!ban`: Expulsar ou Banir.\n' +
-                '`!anuncio`: Mensagem oficial.\n' +
-                '`!falar`: Repetir texto.' 
-            },
-            { 
-                name: '⚙️ CONFIGURAÇÕES & INFO', 
-                value: 
-                '`!stats`: Dados técnicos e Uptime.\n' +
-                '`!info`: Créditos do desenvolvedor.\n' +
-                '`!renovar`: Resetar estoque da loja.\n' +
-                '`!resetar @user`: Limpar dados (Dono).' 
+                '`!matar @user`: Timeout | `!clear`: Limpar chat.\n' +
+                '`!kick`/`!ban`: Expulsar | `!anuncio`: Oficial.\n' +
+                '`!stats`: Dados técnicos | `!info`: Créditos.\n' +
+                '`!resetar @user`: Reset total de dados (Dono).' 
             }
         )
-        .setFooter({ text: '💡 Dica: Use os IDs corretos para comprar itens nas lojas!' })
+        .setFooter({ text: '💡 Dica: Use !meusfundos para trocar a aparência do seu perfil!' })
         .setTimestamp();
 
     return message.reply({ embeds: [embedAjuda] });
