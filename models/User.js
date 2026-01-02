@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
     money: { type: Number, default: 0 },       
     bank: { type: Number, default: 0 },        
     dirtyMoney: { type: Number, default: 0 },  
-    cassinoGasto: { type: Number, default: 0 }, // [ADICIONADO] Essencial para a insígnia 'Viciados'
+    cassinoGasto: { type: Number, default: 0 }, // Para a insígnia 'Viciados'
     lastWork: { type: Number, default: 0 },    
     workCount: { type: Number, default: 0 },   
     lastInvest: { type: Number, default: 0 },  
@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
     lastTrafico: { type: Number, default: 0 }, 
     lastMission: { type: Number, default: 0 }, 
 
-    // ==================== 💖 RELACIONAMENTO (ATUALIZADO) ====================
+    // ==================== 💖 RELACIONAMENTO ====================
     marriedWith: { type: String, default: null }, 
     affinity: { type: Number, default: 0 }, 
     marriageDate: { type: String, default: null },      
@@ -42,7 +42,13 @@ const UserSchema = new mongoose.Schema({
     jobsDone: { type: Number, default: 0 },    
     lastKill: { type: Number, default: 0 },    
     lastRob: { type: Number, default: 0 },     
-    lastCrime: { type: Number, default: 0 }
+    lastCrime: { type: Number, default: 0 },
+
+    // ==================== 🎮 STATUS & MINI-GAMES ====================
+    bjVitorias: { type: Number, default: 0 },       // Vitórias no Blackjack
+    bjDerrotas: { type: Number, default: 0 },       // Derrotas no Blackjack
+    akinatorVitorias: { type: Number, default: 0 }, // Vezes que venceu o gênio
+    akinatorDerrotas: { type: Number, default: 0 }  // Vezes que o gênio acertou
 });
 
 module.exports = mongoose.model('User', UserSchema);
