@@ -526,6 +526,109 @@ if (command === 'pix') {
         return message.reply("❌ Ocorreu um erro interno ao realizar o PIX.");
     }
 }
+// ==================== 🃏 JOGO DE BLACKJACK (21) ====================
+if (command === 'blackjack' || command === 'bj') {
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+    
+    let aposta = parseInt(args[0]);
+    if (!aposta || aposta <= 0) return message.reply("❌ Digita um valor válido para apostar!");
+
+    let dados = await User.findOne({ userId: message.author.id });
+    if (!dados || dados.money < aposta) return message.reply("❌ Não tens dinheiro suficiente na mão!");
+
+    // Configuração do Jogo
+    const naipes = ['♠️', '♥️', '♣️', '♦️'];
+    const valores = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+    function criarCarta() {
+        const valor = valores[Math.floor(Math.random() * valores.length)];
+        const naipe = naipes[Math.floor(Math.random() * naipes.length)];
+        let pontos = parseInt(valor);
+        if (['J', 'Q', 'K'].includes(valor)) pontos = 10;
+        if (valor === 'A') pontos = 11;
+        return { texto: `${valor}${naipe}`, pontos };
+    }
+
+    let maoPlayer = [criarCarta(), criarCarta()];
+    let maoDealer = [criarCarta(), criarCarta()];
+
+    const calcularPontos = (mao) => {
+        let total = mao.reduce((sum, carta) => sum + carta.pontos, 0);
+        let as = mao.filter(c => c.texto.startsWith('A')).length;
+        while (total > 21 && as > 0) { total -= 10; as--; }
+        return total;
+    };
+
+    // Embed Inicial
+    const renderEmbed = (finalizado = false) => {
+        let pontosP = calcularPontos(maoPlayer);
+        let pontosD = finalizado ? calcularPontos(maoDealer) : "??";
+        let cartasD = finalizado ? maoDealer.map(c => c.texto).join(" ") : `${maoDealer[0].texto} 🎴`;
+
+        const eb = new EmbedBuilder()
+            .setTitle('🃏 Blackjack (21)')
+            .setColor(finalizado ? '#2b2d31' : '#5865F2')
+            .addFields(
+                { name: `Sua Mão (${pontosP})`, value: maoPlayer.map(c => c.texto).join(" "), inline: true },
+                { name: `Banca (${pontosD})`, value: cartasD, inline: true }
+            )
+            .setFooter({ text: `Aposta: ${aposta.toLocaleString()} moedas` });
+        return eb;
+    };
+
+    const botoes = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('hit').setLabel('Pedir Carta').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('stand').setLabel('Parar').setStyle(ButtonStyle.Secondary)
+    );
+
+    const msg = await message.reply({ embeds: [renderEmbed()], components: [botoes] });
+
+    const filter = (i) => i.user.id === message.author.id;
+    const collector = msg.createMessageComponentCollector({ filter, time: 60000 });
+
+    collector.on('collect', async (i) => {
+        await i.deferUpdate();
+
+        if (i.customId === 'hit') {
+            maoPlayer.push(criarCarta());
+            if (calcularPontos(maoPlayer) > 21) {
+                collector.stop('lose');
+            } else {
+                await msg.edit({ embeds: [renderEmbed()] });
+            }
+        } else if (i.customId === 'stand') {
+            // Dealer joga
+            while (calcularPontos(maoDealer) < 17) { maoDealer.push(criarCarta()); }
+            collector.stop('check');
+        }
+    });
+
+    collector.on('end', async (collected, reason) => {
+        let pontosP = calcularPontos(maoPlayer);
+        let pontosD = calcularPontos(maoDealer);
+        let resultado = "";
+
+        if (reason === 'lose' || pontosP > 21) {
+            resultado = "💥 **ESTOUROU!** Você passou de 21 e perdeu.";
+            await User.updateOne({ userId: message.author.id }, { $inc: { money: -aposta } });
+        } else if (reason === 'check') {
+            if (pontosD > 21 || pontosP > pontosD) {
+                resultado = `🎉 **GANHOU!** Você recebeu **${aposta.toLocaleString()}** moedas.`;
+                await User.updateOne({ userId: message.author.id }, { $inc: { money: aposta } });
+            } else if (pontosP === pontosD) {
+                resultado = "🤝 **EMPATE!** O dinheiro foi devolvido.";
+            } else {
+                resultado = "💀 **PERDEU!** A banca venceu.";
+                await User.updateOne({ userId: message.author.id }, { $inc: { money: -aposta } });
+            }
+        } else {
+            return msg.edit({ content: "⏰ Tempo esgotado!", components: [] });
+        }
+
+        const finalEmbed = renderEmbed(true).setDescription(resultado);
+        await msg.edit({ embeds: [finalEmbed], components: [] });
+    });
+}
     // ==================== 🪙 COMANDO CASSINO ====================
     if (command === 'cassino' || command === 'caraoucoroa') {
         const targetUser = message.mentions.users.first();
@@ -4047,94 +4150,195 @@ if (command === 'matar' || command === 'kill') {
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
     }
 }
-// ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO CORRIGIDA) ====================
-if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
+// ==================== 🧞 COMANDO AKINATOR ATUALIZADO (COM PLACAR) ====================
+if (command === 'akinator' || command === 'aki') {
+    const { Akinator } = require('akinator-api');
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+
+    try {
+        const language = "pt"; 
+        const aki = new Akinator(language);
+        await aki.start();
+
+        const gerarBotoes = () => {
+            return new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('0').setLabel('Sim').setStyle(ButtonStyle.Success),
+                new ButtonBuilder().setCustomId('1').setLabel('Não').setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('2').setLabel('Não Sei').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('3').setLabel('Talvez Sim').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('4').setLabel('Talvez Não').setStyle(ButtonStyle.Primary),
+            );
+        };
+
+        const embed = new EmbedBuilder()
+            .setTitle('🤔 Akinator')
+            .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
+            .setColor('#F1C40F')
+            .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+            .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
+
+        const msg = await message.reply({ embeds: [embed], components: [gerarBotoes()] });
+
+        const filter = (i) => i.user.id === message.author.id;
+        const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
+
+        collector.on('collect', async (interaction) => {
+            await interaction.deferUpdate();
+
+            await aki.step(interaction.customId);
+
+            // Se o Akinator atingir confiança alta, ele tenta adivinhar
+            if (aki.progress >= 85 || aki.currentStep >= 78) {
+                await aki.win();
+                collector.stop();
+
+                const guess = aki.answers[0];
+
+                const winEmbed = new EmbedBuilder()
+                    .setTitle('🎯 O Gênio deu o palpite!')
+                    .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description}*\n\n**Eu acertei?**`)
+                    .setImage(guess.absolute_picture_path)
+                    .setColor('#2ECC71');
+
+                // Botões para confirmar se ele acertou ou errou
+                const rowConfirm = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, você acertou!').setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, você errou!').setStyle(ButtonStyle.Danger)
+                );
+
+                const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
+
+                // Coletor para a confirmação final
+                const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+
+                finalCollector.on('collect', async (iFinal) => {
+                    await iFinal.deferUpdate();
+
+                    if (iFinal.customId === 'aki_sim') {
+                        // Gênio ganhou = Derrota para o player
+                        await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
+                        await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia! Ninguém escapa da minha mente.", components: [], embeds: [winEmbed.setColor('#2ECC71')] });
+                    } else {
+                        // Player ganhou = Vitória para o player
+                        await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
+                        await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu desta vez... Minha lâmpada está falhando.", components: [], embeds: [winEmbed.setColor('#FF0000')] });
+                    }
+                });
+                return;
+            }
+
+            const nextEmbed = new EmbedBuilder()
+                .setTitle('🤔 Akinator')
+                .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
+                .setColor('#F1C40F')
+                .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+                .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
+
+            await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
+        });
+
+        collector.on('end', (collected, reason) => {
+            if (reason === 'time') {
+                msg.edit({ content: '⏰ O gênio cansou de esperar e sumiu na fumaça.', embeds: [], components: [] });
+            }
+        });
+
+    } catch (e) {
+        console.error(e);
+        message.reply("❌ Ocorreu um erro ao conectar com os servidores do Akinator.");
+    }
+}
+// ==================== 🧞 STATUS DO AKINATOR ====================
+if (command === 'estatsakinator' || command === 'akiestats') {
+    const target = message.mentions.users.first() || message.author;
+    const dados = await User.findOne({ userId: target.id });
+
+    if (!dados) return message.reply("❌ Usuário não encontrado no banco de dados.");
+
+    const vitorias = dados.akinatorVitorias || 0;
+    const derrotas = dados.akinatorDerrotas || 0;
+    const total = vitorias + derrotas;
+    
+    // Calcular taxa de vitória contra o gênio
+    const taxaAproveitamento = total > 0 ? ((vitorias / total) * 100).toFixed(1) : 0;
+
+    const embed = new EmbedBuilder()
+        .setTitle(`🧞 Placar vs Akinator: ${target.username}`)
+        .setColor('#F1C40F')
+        .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+        .addFields(
+            { name: '🏆 Vitórias (Você venceu)', value: `\`${vitorias}\``, inline: true },
+            { name: '💀 Derrotas (Gênio acertou)', value: `\`${derrotas}\``, inline: true },
+            { name: '📊 Taxa de Sucesso', value: `\`${taxaAproveitamento}%\` de mentes impenetráveis`, inline: false }
+        )
+        .setFooter({ text: 'Ganhe do gênio fazendo-o errar seu personagem!' });
+
+    return message.reply({ embeds: [embed] });
+}
+// ==================== 📖 COMANDO AJUDA COMPLETO COM RESUMOS ====================
+if (command === 'ajuda' || command === 'help') {
 
     const embedAjuda = new EmbedBuilder()
         .setTitle('📖 Central de Comandos OmniBot')
         .setColor('#5865F2')
         .setThumbnail(client.user.displayAvatarURL())
-        .setDescription('Explore todas as funcionalidades do sistema abaixo:')
+        .setDescription('Aqui tens a lista detalhada de tudo o que podes fazer no servidor:')
         .addFields(
             { 
-                name: '💰 ECONOMIA & CARREIRA', 
+                name: '💰 ECONOMIA & TRABALHO', 
                 value: 
-                '`!money`: Saldo rápido.\n' +
-                '`!daily`: Resgate diário.\n' +
-                '`!trabalhar`: Ganhar moedas.\n' +
-                '`!trabalhos`: Ver profissões e progresso.\n' +
-                '`!depositar`/`!sacar`: Gestão bancária.\n' +
-                '`!pix @user [valor]`: Transferir moedas.\n' +
-                '`!top`: Ranking local | `!top global`: Mundial.'
-            },
-            { 
-                name: '🛍️ CENTRO COMERCIAL (LOJAS)', 
-                value: 
-                '🛒 `!loja`: Itens básicos.\n' +
-                '🌸 `!flores`: Presentes e mimos.\n' +
-                '⚡ `!tech`: Upgrades cibernéticos.\n' +
-                '💎 `!luxo`: Itens de alto padrão.\n' +
-                '👑 `!reliquias`: Itens lendários.\n' +
-                '🌑 `!submundo`: Itens proibidos.'
-            },
-            { 
-                name: '🎒 INVENTÁRIO & ESTÉTICA', 
-                value: 
-                '`!comprar [id]`: Adquirir itens.\n' +
-                '`!mochila`: Ver teus itens na mochila.\n' +
-                '`!usar [id]`: Consumir itens da mochila.\n' +
-                '`!fundos`: Ver teus backgrounds comprados.\n' +
-                '`!meusfundos`: Escolher qual fundo equipar no perfil.\n' +
-                '`!dar @user [item] [qtd]`: Enviar itens para alguém.'
+                '`!money`: Consulta o teu saldo total.\n' +
+                '`!daily`: Resgate a tua recompensa diária.\n' +
+                '`!trabalhar`: Realiza turnos para ganhar moedas.\n' +
+                '`!trabalhos`: Lista de profissões e níveis.\n' +
+                '`!pix @user [valor]`: Transfere dinheiro para amigos.'
             },
             { 
                 name: '💍 RELACIONAMENTOS', 
                 value: 
-                '`!casar @user`: Iniciar união (25k).\n' +
-                '`!vercasamento`: Card, afinidade e insígnias.\n' +
-                '`!configcasamento`: Mudar bio e medalhas.\n' +
-                '`!insignias`: Galeria com as 40 conquistas de casal.\n' +
-                '`!presentear @user [id]`: Dar presentes (+Afinidade).\n' +
-                '`!cartinha @user`: Enviar carta de afeto.\n' +
-                '`!trair @user`: Encontro secreto (Risco!)\n' +
-                '`!divorciar`: Terminar relação | `!ship`: Compatibilidade.' 
+                '❤️ `!casar @user`: Inicia um pedido de casamento.\n' +
+                '🖼️ `!vercasamento`: Mostra o card oficial do casal.\n' +
+                '⚙️ `!configcasamento`: Muda a bio e a insígnia ativa.\n' +
+                '🏆 `!insignias`: Galeria com as 40 conquistas de casal.\n' +
+                '🎁 `!presentear`: Envia itens para subir a Afinidade.'
+            },
+            { 
+                name: '🎮 JOGOS & DIVERSÃO', 
+                value: 
+                '🧞 `!akinator`: O gênio tenta adivinhar o teu personagem!\n' +
+                '📊 `!akiestats`: Consulta o teu histórico contra o gênio.\n' +
+                '🎰 `!cassino [valor]`: Aposta no Cara ou Coroa contra alguém.\n' +
+                '🎲 `!dado [valor]`: Tenta a sorte contra a banca do bot.\n' +
+                '🃏 `!blackjack`: O clássico jogo do 21.\n' +
+                '❤️ `!ship @user`: Calcula a compatibilidade amorosa.'
             },
             { 
                 name: '🌑 FACÇÃO & SUBMUNDO', 
                 value: 
-                '`!entrar`: Virar Membro da Facção.\n' +
-                '`!traficar`: Rota de lucro ilegal.\n' +
-                '`!missao`: Operações especiais.\n' +
-                '`!assaltodupla`: Golpe em casal.\n' +
-                '`!contrato`: Aceitar alvo | `!concluir`: Prêmio.\n' +
-                '`!crime`: Assalto | `!roubar @user`: Furtar (10%).' 
+                '🎭 `!entrar`: Junta-te ao crime organizado.\n' +
+                '📦 `!traficar`: Inicia rotas de contrabando.\n' +
+                '🔫 `!crime`: Realiza assaltos rápidos.\n' +
+                '👥 `!assaltodupla`: Golpe coordenado com o teu cônjuge.\n' +
+                '🎯 `!contrato`: Aceita alvos de recompensa.'
             },
             { 
-                name: '🎰 CASSINO & SORTE', 
+                name: '🎒 INVENTÁRIO & LOJA', 
                 value: 
-                '`!investir <valor>`: Bolsa de valores.\n' +
-                '`!cassino @user [valor]`: Cara ou Coroa PvP.\n' +
-                '`!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
+                '🛒 `!loja`: Abre o menu de compras por categorias.\n' +
+                '🎒 `!mochila`: Mostra todos os teus itens e utilitários.\n' +
+                '🖼️ `!fundos`: Gere a tua coleção de backgrounds comprados.\n' +
+                '✨ `!usar [id]`: Consome ou ativa um item do inventário.'
             },
             { 
-                name: '👤 PERFIL & PROGRESSO', 
+                name: '🛡️ ADMINISTRAÇÃO', 
                 value: 
-                '`!perfil` ou `!p`: Card completo de status.\n' +
-                '`!guia`: Lista de todos os troféus.\n' +
-                '`!conquistas`: Ver teus marcos e medalhas.\n' +
-                '`!avaliar [algo]`: Opinião do bot.\n' +
-                '`!beijar`, `!abracar`, `!cafune`, `!tapa`, `!atacar`: Social.' 
-            },
-            { 
-                name: '🛡️ MODERAÇÃO & STAFF', 
-                value: 
-                '`!matar @user`: Timeout | `!clear`: Limpar chat.\n' +
-                '`!kick`/`!ban`: Expulsar | `!anuncio`: Oficial.\n' +
-                '`!stats`: Dados técnicos | `!info`: Créditos.\n' +
-                '`!resetar @user`: Reset total de dados (Dono).' 
+                '🧹 `!clear`: Limpa mensagens recentes do chat.\n' +
+                '⏳ `!matar @user`: Aplica um timeout (castigo) no usuário.\n' +
+                '🚫 `!ban`/`!kick`: Remove infratores do servidor.\n' +
+                '🔄 `!resetar @user`: Apaga todos os dados de um jogador.'
             }
         )
-        .setFooter({ text: '💡 Dica: Use !meusfundos para trocar a aparência do seu perfil!' })
+        .setFooter({ text: '💡 Precisas de ajuda extra? Contacta um administrador!' })
         .setTimestamp();
 
     return message.reply({ embeds: [embedAjuda] });
