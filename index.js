@@ -4275,70 +4275,101 @@ if (command === 'estatsakinator' || command === 'akiestats') {
 
     return message.reply({ embeds: [embed] });
 }
-// ==================== 📖 COMANDO AJUDA COMPLETO COM RESUMOS ====================
-if (command === 'ajuda' || command === 'help') {
+// ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO FINALIZADA) ====================
+if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
     const embedAjuda = new EmbedBuilder()
         .setTitle('📖 Central de Comandos OmniBot')
         .setColor('#5865F2')
         .setThumbnail(client.user.displayAvatarURL())
-        .setDescription('Aqui tens a lista detalhada de tudo o que podes fazer no servidor:')
+        .setDescription('Explore todas as funcionalidades do sistema abaixo:')
         .addFields(
             { 
-                name: '💰 ECONOMIA & TRABALHO', 
+                name: '💰 ECONOMIA & CARREIRA', 
                 value: 
-                '`!money`: Consulta o teu saldo total.\n' +
-                '`!daily`: Resgate a tua recompensa diária.\n' +
-                '`!trabalhar`: Realiza turnos para ganhar moedas.\n' +
-                '`!trabalhos`: Lista de profissões e níveis.\n' +
-                '`!pix @user [valor]`: Transfere dinheiro para amigos.'
+                '`!money`: Saldo rápido.\n' +
+                '`!daily`: Resgate diário.\n' +
+                '`!trabalhar`: Ganhar moedas.\n' +
+                '`!trabalhos`: Ver profissões e progresso.\n' +
+                '`!depositar`/`!sacar`: Gestão bancária.\n' +
+                '`!pix @user [valor]`: Transferir moedas.\n' +
+                '`!top`: Ranking local | `!top global`: Mundial.'
+            },
+            { 
+                name: '🛍️ CENTRO COMERCIAL (LOJAS)', 
+                value: 
+                '🛒 `!loja`: Itens básicos.\n' +
+                '🌸 `!flores`: Presentes e mimos.\n' +
+                '⚡ `!tech`: Upgrades cibernéticos.\n' +
+                '💎 `!luxo`: Itens de alto padrão.\n' +
+                '👑 `!reliquias`: Itens lendários.\n' +
+                '🌑 `!submundo`: Itens proibidos.'
+            },
+            { 
+                name: '🎒 INVENTÁRIO & ESTÉTICA', 
+                value: 
+                '`!comprar [id]`: Adquirir itens.\n' +
+                '`!mochila`: Ver teus itens na mochila.\n' +
+                '`!usar [id]`: Consumir itens da mochila.\n' +
+                '`!fundos`: Ver teus backgrounds comprados.\n' +
+                '`!meusfundos`: Escolher qual fundo equipar no perfil.\n' +
+                '`!dar @user [item] [qtd]`: Enviar itens para alguém.'
             },
             { 
                 name: '💍 RELACIONAMENTOS', 
                 value: 
-                '❤️ `!casar @user`: Inicia um pedido de casamento.\n' +
-                '🖼️ `!vercasamento`: Mostra o card oficial do casal.\n' +
-                '⚙️ `!configcasamento`: Muda a bio e a insígnia ativa.\n' +
-                '🏆 `!insignias`: Galeria com as 40 conquistas de casal.\n' +
-                '🎁 `!presentear`: Envia itens para subir a Afinidade.'
+                '`!casar @user`: Iniciar união (25k).\n' +
+                '`!vercasamento`: Card, afinidade e insígnias.\n' +
+                '`!configcasamento`: Mudar bio e medalhas.\n' +
+                '`!insignias`: Galeria com as 40 conquistas de casal.\n' +
+                '`!presentear @user [id]`: Dar presentes (+Afinidade).\n' +
+                '`!cartinha @user`: Enviar carta de afeto.\n' +
+                '`!trair @user`: Encontro secreto (Risco!)\n' +
+                '`!divorciar`: Terminar relação | `!ship`: Compatibilidade.' 
             },
             { 
-                name: '🎮 JOGOS & DIVERSÃO', 
+                name: '🎮 Jogos & Minigames', 
                 value: 
-                '🧞 `!akinator`: O gênio tenta adivinhar o teu personagem!\n' +
-                '📊 `!akiestats`: Consulta o teu histórico contra o gênio.\n' +
-                '🎰 `!cassino [valor]`: Aposta no Cara ou Coroa contra alguém.\n' +
-                '🎲 `!dado [valor]`: Tenta a sorte contra a banca do bot.\n' +
-                '🃏 `!blackjack`: O clássico jogo do 21.\n' +
-                '❤️ `!ship @user`: Calcula a compatibilidade amorosa.'
+                '👤 `!akinator`: O gênio tentará ler sua mente para adivinhar o personagem!\n' +
+                '📊 `!akiestats`: Veja seu placar de vitórias e derrotas contra o Akinator.'
+            },
+            { 
+                name: '🎰 CASSINO & SORTE', 
+                value: 
+                '🃏 `!blackjack [valor]`: Tente chegar aos 21 e ganhe moedas.\n' +
+                '📈 `!investir <valor>`: Bolsa de valores.\n' +
+                '🎲 `!cassino @user [valor]`: Cara ou Coroa PvP.\n' +
+                '🎲 `!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
             },
             { 
                 name: '🌑 FACÇÃO & SUBMUNDO', 
                 value: 
-                '🎭 `!entrar`: Junta-te ao crime organizado.\n' +
-                '📦 `!traficar`: Inicia rotas de contrabando.\n' +
-                '🔫 `!crime`: Realiza assaltos rápidos.\n' +
-                '👥 `!assaltodupla`: Golpe coordenado com o teu cônjuge.\n' +
-                '🎯 `!contrato`: Aceita alvos de recompensa.'
+                '`!entrar`: Virar Membro da Facção.\n' +
+                '`!traficar`: Rota de lucro ilegal.\n' +
+                '`!missao`: Operações especiais.\n' +
+                '`!assaltodupla`: Golpe em casal.\n' +
+                '`!contrato`: Aceitar alvo | `!concluir`: Prêmio.\n' +
+                '`!crime`: Assalto | `!roubar @user`: Furtar (10%).' 
             },
             { 
-                name: '🎒 INVENTÁRIO & LOJA', 
+                name: '👤 PERFIL & PROGRESSO', 
                 value: 
-                '🛒 `!loja`: Abre o menu de compras por categorias.\n' +
-                '🎒 `!mochila`: Mostra todos os teus itens e utilitários.\n' +
-                '🖼️ `!fundos`: Gere a tua coleção de backgrounds comprados.\n' +
-                '✨ `!usar [id]`: Consome ou ativa um item do inventário.'
+                '`!perfil` ou `!p`: Card completo de status.\n' +
+                '`!guia`: Lista de todos os troféus.\n' +
+                '`!conquistas`: Ver teus marcos e medalhas.\n' +
+                '`!avaliar [algo]`: Opinião do bot.\n' +
+                '`!beijar`, `!abracar`, `!cafune`, `!tapa`, `!atacar`: Social.' 
             },
             { 
-                name: '🛡️ ADMINISTRAÇÃO', 
+                name: '🛡️ MODERAÇÃO & STAFF', 
                 value: 
-                '🧹 `!clear`: Limpa mensagens recentes do chat.\n' +
-                '⏳ `!matar @user`: Aplica um timeout (castigo) no usuário.\n' +
-                '🚫 `!ban`/`!kick`: Remove infratores do servidor.\n' +
-                '🔄 `!resetar @user`: Apaga todos os dados de um jogador.'
+                '`!matar @user`: Timeout | `!clear`: Limpar chat.\n' +
+                '`!kick`/`!ban`: Expulsar | `!anuncio`: Oficial.\n' +
+                '`!stats`: Dados técnicos | `!info`: Créditos.\n' +
+                '`!resetar @user`: Reset total de dados (Dono).' 
             }
         )
-        .setFooter({ text: '💡 Precisas de ajuda extra? Contacta um administrador!' })
+        .setFooter({ text: '💡 Dica: Use !meusfundos para trocar a aparência do seu perfil!' })
         .setTimestamp();
 
     return message.reply({ embeds: [embedAjuda] });
