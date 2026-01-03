@@ -15,7 +15,7 @@
   "type": "commonjs",
   "dependencies": {
     "@napi-rs/canvas": "^0.1.66",
-    "akinator-api": "^1.0.1",
+    "aki-api": "^7.0.1",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
