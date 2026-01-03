@@ -123,12 +123,12 @@ client.on('messageCreate', async (message) => {
     if (!message.content.startsWith('!')) return;
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
-    
+
     // ==================== 🧞 COMANDO AKINATOR (INTEGRADO) ====================
     if (command === 'akinator' || command === 'aki') {
         try {
             // Usando a região pt para o gênio falar português
-            const aki = new Akinator({ region: 'pt', childMode: false });
+            const aki = new (require('aki-api').Akinator)({ region: 'pt', childMode: false });
             await aki.start();
 
             const gerarBotoes = () => {
