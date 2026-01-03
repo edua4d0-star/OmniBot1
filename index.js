@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
-// 🧞 Configuração do Akinator
+// 🧞 Configuração do Akinator (Pode manter o require, vamos apenas desativar o comando)
 const { Akinator } = require('aki-api');
 
 // 🎨 Configuração do Canvas
@@ -19,23 +19,50 @@ const {
     ButtonStyle, 
     StringSelectMenuBuilder, 
     AttachmentBuilder, 
-    Options, 
-    PermissionsBitField 
+    PermissionsBitField,
+    Options 
 } = require('discord.js');
 
 // 📂 Importação do Schema de Usuário
 const User = require('./models/User');
 
 // ==================== 🛠️ VARIÁVEIS GLOBAIS UNIFICADAS ====================
-let roletaDisponivelGlobal = true; // Esta é a variável principal
+let roletaDisponivelGlobal = true; 
 let proximoEventoRoleta = Date.now() + Math.random() * (6 * 60 * 60 * 1000); 
 let cooldownLigar = new Set();
+let fraseAtivaBomDia = null;
 
-// Reset automático da roleta à meia-noite
+// 🔧 Sistema de Manutenção
+let manutencaoGlobal = false; // Se for true, bloqueia comandos para usuários comuns
+const donosID = ["1203435676083822712"]; // Coloque seu ID aqui para você poder usar o bot mesmo em manutenção
+
+// Apenas o Akinator começa desativado (true)
+let comandosDesativados = {
+    akinator: true 
+};
+
+// Lista de frases icônicas (o sistema vai "sujar" elas com invisíveis no chat)
+const listaFrasesBomDia = [
+    "4002-8922 não quero ganhar 1 patins, eu quero um preisteicho 1!",
+    "4002-8922 alô yudi me dá meu playstation agora por favor",
+    "4002-8922 roda a roleta priscila eu quero meu prêmio",
+    "4002-8922 40028922 é o funk do yudi que vai me dar um preisteicho"
+];
+
+// Função para inserir caracteres invisíveis (impede o Ctrl+C Ctrl+V)
+function sujarFrase(frase) {
+    const invisivel = "\u200b"; // Zero Width Space
+    return frase.split('').join(invisivel);
+}
+
+// ==================== ⏰ INTERVALOS AUTOMÁTICOS ====================
+
+// Reset automático à meia-noite para o prêmio do dia
 setInterval(() => {
     const agora = new Date();
     if (agora.getHours() === 0 && agora.getMinutes() === 0) {
         roletaDisponivelGlobal = true;
+        console.log("✅ [SISTEMA] Roleta do Bom Dia & Cia resetada para um novo dia!");
     }
 }, 60000);
 
@@ -120,27 +147,30 @@ const lojaItens = {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
-// ==================== EVENTO AUTOMÁTICO: BOM DIA & CIA ====================
-    // Verifica se a roleta está disponível e se já passou do horário sorteado
-    if (roletaDisponivelGlobal && Date.now() > proximoEventoRoleta && !message.author.bot) {
+// ==================== 📺 ANÚNCIO AUTOMÁTICO (ESTILO LORITTA) ====================
+    if (!fraseAtivaBomDia && roletaDisponivelGlobal && Date.now() > proximoEventoRoleta && !message.author.bot) {
         
-        roletaDisponivelGlobal = false; // Desativa para ninguém mais ganhar hoje
+        const fraseBase = listaFrasesBomDia[Math.floor(Math.random() * listaFrasesBomDia.length)];
         
-        // Sorteia o próximo horário (daqui a 6 a 12 horas)
-        proximoEventoRoleta = Date.now() + (6 * 60 * 60 * 1000) + (Math.random() * 6 * 60 * 60 * 1000);
+        // Frase que aparece no chat (com invisíveis)
+        const fraseExibida = sujarFrase(fraseBase);
+        
+        // Frase que o bot espera (limpa)
+        fraseAtivaBomDia = fraseBase;
 
-        const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
-
-        await User.updateOne({ userId: message.author.id }, { $inc: { money: premioGrande } });
-
-        const embedSurpresa = new EmbedBuilder()
-            .setTitle('📺 BOM DIA & CIA - EVENTO SURPRESA!')
+        const embedAviso = new EmbedBuilder()
+            .setTitle('📺 Bom Dia & Cia')
             .setColor('#F1C40F')
-            .setThumbnail('https://i.imgur.com/v8tTfI7.png')
-            .setDescription(`⭐ **INCRÍVEL!** A roleta parou para você no meio do chat!\n\n🎙️ **Yudi:** "PLAYSTATION! PLAYSTATION!"\n\n💰 **Prêmio Ganho:** \`${premioGrande.toLocaleString()}\` moedas!`)
+            .setDescription(
+                `Você aí de casa querendo prêmios agora, neste instante? Então ligue para o Bom Dia & Cia!\n\n` +
+                `🏃 **Corra que apenas a primeira pessoa que ligar irá ganhar prêmios!**\n` +
+                `💸 (Cada tentativa de ligação custa **72 moedas**!)\n\n` +
+                `📢 **DIGITE NO CHAT (NÃO COPIE):**\n\`!ligar ${fraseExibida}\``
+            )
             .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
 
-        message.channel.send({ content: `🎊 <@${message.author.id}>`, embeds: [embedSurpresa] });
+        message.channel.send({ embeds: [embedAviso] });
+        proximoEventoRoleta = Date.now() + (6 * 60 * 60 * 1000) + (Math.random() * 6 * 60 * 60 * 1000);
     }
 
     // 1. Carrega os dados do MongoDB (UMA ÚNICA VEZ AQUI)
@@ -160,22 +190,114 @@ client.on('messageCreate', async (message) => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-if (command === 'akinator' || command === 'aki') {
+ // ==================== 🛠️ TRAVA DE MANUTENÇÃO GLOBAL ====================
+    const donos = ["1203435676083822712"]; 
+
+    if (manutencaoGlobal && !donos.includes(message.author.id)) {
+        // Mudamos de .reply() para .send() para evitar o erro de "Unknown Message"
+        return message.channel.send({ 
+            content: `<@${message.author.id}>, ⚠️ **O Bot está em manutenção global!** Estamos a fazer melhorias internas. Tenta novamente mais tarde.` 
+        }).catch(err => console.log("Erro ao enviar mensagem de manutenção."));
+    }
+
+    if (command === 'setmanutencao') {
+        if (message.author.id !== "1203435676083822712") return;
+
+        manutencaoGlobal = !manutencaoGlobal; // Inverte o estado (de on para off e vice-versa)
+        
+        const status = manutencaoGlobal ? "ATIVADA 🔴" : "DESATIVADA 🟢";
+        return message.reply(`🔧 A manutenção global foi **${status}**.`);
+    }
+
+    if (command === 'forcarbomdia' && message.author.id === "1203435676083822712") {
+    proximoEventoRoleta = Date.now() - 1000; // Define o tempo como "atrasado" para o bot disparar o anúncio na próxima mensagem
+    message.reply("✅ O programa entrará no ar na próxima mensagem enviada no chat!");
+}
+
+// ==================== 🛠️ TRAVA ESPECÍFICA DO AKINATOR ====================
+    // Se o comando for de Akinator e o sistema estiver desativado...
+    if (['akinator', 'aki', 'akiestats'].includes(command) && comandosDesativados.akinator) {
+        return message.reply("🛠️ **Sistema em Manutenção:** Tanto o jogo quanto as estatísticas do Akinator estão desativados no momento.");
+    }
+
+    if (command === 'setcomando') {
+        const donos = ["1203435676083822712"];
+        if (!donos.includes(message.author.id)) return;
+
+        const alvo = args[0]?.toLowerCase(); // ex: akinator
+        const acao = args[1]?.toLowerCase(); // ex: off (para ligar)
+
+        if (alvo === 'akinator') {
+            if (acao === 'on') {
+                comandosDesativados.akinator = true;
+                return message.reply("🚫 **Akinator e Akiestats** foram desativados!");
+            } else if (acao === 'off') {
+                comandosDesativados.akinator = false;
+                return message.reply("✅ **Akinator e Akiestats** foram reativados!");
+            }
+        }
+        
+        message.reply("❓ Use: `!setcomando akinator on` (para desligar) ou `off` (para ligar).");
+    }
+
+    if (command === 'status' || command === 'devstats') {
+        const donos = ["1203435676083822712"];
+        if (!donos.includes(message.author.id)) return;
+
+        // 1. Definição de Status (Cores e Textos)
+        const statusGlobal = manutencaoGlobal ? "🔴 MANUTENÇÃO ATIVA" : "🟢 OPERACIONAL";
+        const statusAkinator = comandosDesativados.akinator ? "❌ DESATIVADO" : "✅ ATIVO";
+        const botPing = Math.round(client.ws.ping);
+        
+        // 2. Cálculo do Tempo para o Bom Dia & Cia
+        const tempoRestante = Math.max(0, proximoEventoRoleta - Date.now());
+        const horas = Math.floor(tempoRestante / (1000 * 60 * 60));
+        const minutos = Math.floor((tempoRestante % (1000 * 60 * 60)) / (1000 * 60));
+
+        // 3. Status da Conexão MongoDB
+        const dbStatus = mongoose.connection.readyState === 1 ? '🟢 Conectado' : '🔴 Desconectado';
+
+        const embedStatus = new EmbedBuilder()
+            .setTitle('🖥️ Painel de Controle do Desenvolvedor')
+            .setColor(manutencaoGlobal ? '#FF0000' : '#2ECC71')
+            .setThumbnail(client.user.displayAvatarURL())
+            .addFields(
+                { name: '🌐 Estado Global do Bot', value: `\`${statusGlobal}\``, inline: false },
+                { name: '⚡ Latência (Ping)', value: `\`${botPing}ms\``, inline: true },
+                { name: '🗄️ Database (MongoDB)', value: `\`${dbStatus}\``, inline: true },
+                { name: '🧞 Módulo Akinator', value: `\`${statusAkinator}\``, inline: true },
+                { name: '📺 Bom Dia & Cia', value: `Próximo evento em: \`${horas}h ${minutos}m\``, inline: false }
+            )
+            .setTimestamp()
+            .setFooter({ text: `Requisitado por: ${message.author.username}` });
+
+        return message.reply({ embeds: [embedStatus] });
+    }
+
+// ==================== 🧞 COMANDO AKINATOR ====================
+    if (command === 'akinator' || command === 'aki') {
+        // 1. Trava de Manutenção Global (Usa a variável 'donos' definida no seu código)
+        const donos = ["1203435676083822712"]; 
+        if (manutencaoGlobal && !donos.includes(message.author.id)) {
+            return message.reply("🛠️ **Manutenção Global:** O bot está em manutenção. Apenas desenvolvedores podem usar comandos.");
+        }
+
+        // 2. Trava Individual do Comando
+        if (comandosDesativados.akinator) {
+            return message.reply("🛠️ **Manutenção:** O Akinator está temporariamente fora do ar para melhorias. Tente novamente mais tarde!");
+        }
+
         try {
             const akiApi = require('aki-api');
             const AkiClass = akiApi.Aki || (akiApi.default && akiApi.default.Aki);
 
-            // Criando o gênio com configurações de disfarce
             const aki = new AkiClass({ 
                 region: 'en', 
                 childMode: false 
             });
 
-            // Tenta iniciar
             await aki.start();
             
-            // ... restante do seu código de embeds e botões ...
-
             const gerarBotoes = () => {
                 return new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('0').setLabel('Sim').setStyle(ButtonStyle.Success),
@@ -201,12 +323,10 @@ if (command === 'akinator' || command === 'aki') {
             collector.on('collect', async (interaction) => {
                 try {
                     if (!interaction.deferred) await interaction.deferUpdate();
-
                     await aki.step(interaction.customId);
 
                     if (aki.progress >= 80 || aki.currentStep >= 78) {
                         collector.stop();
-
                         const guess = aki.answers[0]; 
 
                         const winEmbed = new EmbedBuilder()
@@ -251,18 +371,18 @@ if (command === 'akinator' || command === 'aki') {
             });
 
           } catch (e) {
-            console.error("ERRO COMPLETO:", e); // Isso vai mostrar o erro real no console
-
-            if (e.message.includes('403')) {
-                return message.reply("⚠️ **O Gênio bloqueou a conexão.**\nO Akinator detectou o bot como um acesso não autorizado. Isso é um bloqueio temporário do site deles. Tente novamente em alguns minutos ou faça o deploy no Render.");
-            }
-            
+            console.error("ERRO AKINATOR:", e);
             message.reply("❌ Não consegui iniciar o gênio. Tente novamente mais tarde.");
         }
     }
 
     // ==================== 📊 COMANDO STATS AKINATOR ====================
     if (command === 'akiestats') {
+        // Trava de Manutenção Individual
+        if (comandosDesativados.akinator) {
+            return message.reply("🛠️ **Manutenção:** As estatísticas do Akinator estão indisponíveis no momento.");
+        }
+
         const vitorias = userData.akinatorVitorias || 0;
         const derrotas = userData.akinatorDerrotas || 0;
         
@@ -272,62 +392,76 @@ if (command === 'akinator' || command === 'aki') {
                 { name: '🏆 Vitórias (Você ganhou)', value: `\`${vitorias}\``, inline: true },
                 { name: '🧞 Derrotas (Gênio acertou)', value: `\`${derrotas}\``, inline: true }
             )
-            .setColor('#F1C40F');
+            .setColor('#F1C40F')
+            .setThumbnail(message.author.displayAvatarURL());
 
         return message.reply({ embeds: [embedStats] });
     }
+// ==================== 📞 COMANDO !LIGAR (SEM COOLDOWN + AUTO-DELETE) ====================
+if (command === 'ligar') {
+    // 🗑️ APAGA A MENSAGEM DO USUÁRIO IMEDIATAMENTE (Evita cópia)
+    message.delete().catch(() => {}); 
 
-// ==================== 📞 COMANDO !LIGAR (CUSTO: 72) ====================
-    if (command === 'ligar' || command === 'call') {
-        const custoLigacao = 72;
+    const custoLigacao = 72;
+    const oQueOUsuarioEscreveu = args.join(" ");
 
-        // 1. Verifica se o usuário tem dinheiro (userData vem do seu banco de dados)
-        if (userData.money < custoLigacao) {
-            return message.reply(`💸 Você não tem **${custoLigacao} moedas** para fazer essa ligação!`);
+    if (!fraseAtivaBomDia) {
+        return message.channel.send(`☎️ <@${message.author.id}>, **Yudi:** "O programa não está no ar agora!"`).then(m => setTimeout(() => m.delete(), 5000));
+    }
+
+    // 🛑 TRAVA ANTI-COPIA (Caso ele use algum caractere especial)
+    if (oQueOUsuarioEscreveu.includes("\u200b")) {
+        return message.channel.send(`🚫 <@${message.author.id}>, **Yudi:** "Tentou copiar o invisível? Aqui tem que digitar!"`).then(m => setTimeout(() => m.delete(), 5000));
+    }
+
+    // Verifica se a frase está correta
+    if (oQueOUsuarioEscreveu.toLowerCase() !== fraseAtivaBomDia.toLowerCase()) {
+        return message.channel.send(`☎️ <@${message.author.id}>, **Yudi:** "Errou a frase! Tenta de novo!"`).then(m => setTimeout(() => m.delete(), 5000));
+    }
+
+    // Verifica dinheiro
+    if (userData.money < custoLigacao) {
+        return message.channel.send(`💸 <@${message.author.id}>, você não tem as **${custoLigacao} moedas**!`).then(m => setTimeout(() => m.delete(), 5000));
+    }
+
+    // Executa a cobrança (Sem cooldown agora)
+    await User.updateOne({ userId: message.author.id }, { $inc: { money: -custoLigacao } });
+
+    const msgLigar = await message.channel.send(`☎️ <@${message.author.id}> **Tuuuut... Tuuuut...** \`[-72 moedas]\``);
+
+    setTimeout(async () => {
+        // 🎲 30% de chance de ser atendido
+        const conseguiuLigar = Math.random() < 0.30;
+
+        if (conseguiuLigar && roletaDisponivelGlobal) {
+            fraseAtivaBomDia = null; 
+            roletaDisponivelGlobal = false; 
+
+            // 🎡 ROLETA: 50% / 50%
+            const roleta = Math.random() < 0.50;
+            const premioValor = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
+            
+            await User.updateOne({ userId: message.author.id }, { $inc: { money: premioValor } });
+
+            const premioNome = roleta ? "🎮 PLAYSTATION" : "💻 PC DO MILHÃO";
+            const gif = roleta 
+                ? 'https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif' 
+                : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRtcjR6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif';
+
+            const embedWin = new EmbedBuilder()
+                .setTitle(`🎯 ATENDEU! ROLETA GIRANDO...`)
+                .setColor('#00FF00')
+                .setDescription(`🎊 <@${message.author.id}> girou a roleta e ganhou o **${premioNome}**!\n💰 **Prêmio:** \`${premioValor.toLocaleString()}\` moedas.`)
+                .setImage(gif);
+
+            return msgLigar.edit({ content: `✅ **LIGAÇÃO ATENDIDA!**`, embeds: [embedWin] });
+            
+        } else {
+            // Se falhar, apaga o aviso de falha depois de 4 segundos para limpar o chat
+            return msgLigar.edit(`❌ <@${message.author.id}>, **Yudi:** "Caiu na caixa postal! Tenta de novo!"`).then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
         }
-
-        // 2. Verifica se alguém já ganhou o prêmio global hoje
-        if (!roletaDisponivelGlobal) {
-            return message.reply("📺 **Yudi:** \"O programa de hoje já acabou e os prêmios foram entregues! Volte amanhã!\"");
-        }
-
-        // 3. Verifica Cooldown (5 minutos)
-        if (cooldownLigar.has(message.author.id)) {
-            return message.reply("📞 **Linha Ocupada!** Você já tentou ligar recentemente. Espere um pouco.");
-        }
-
-        // --- AÇÃO: DESCONTA O DINHEIRO E ATIVA COOLDOWN ---
-        await User.updateOne({ userId: message.author.id }, { $inc: { money: -custoLigacao } });
-        cooldownLigar.add(message.author.id);
-        setTimeout(() => cooldownLigar.delete(message.author.id), 300000); 
-
-        const msgLigar = await message.reply(`☎️ [-${custoLigacao} moedas] **Tuuuut... Tuuuut...** Ligando para o Bom Dia & Cia...`);
-
-        setTimeout(async () => {
-            // Chance de 2% de ser atendido
-            const sorteioAtender = Math.random() < 0.02; 
-
-            if (sorteioAtender && roletaDisponivelGlobal) {
-                roletaDisponivelGlobal = false; // Bloqueia o prêmio para o resto do dia
-
-                // Sorteia o prêmio gigante (150k a 500k)
-                const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
-
-                await User.updateOne({ userId: message.author.id }, { $inc: { money: premioGrande } });
-
-                const embedWin = new EmbedBuilder()
-                    .setTitle('📺 BOM DIA & CIA - VOCÊ ESTÁ NO AR!')
-                    .setColor('#F1C40F')
-                    .setDescription(`🎙️ **PRISCILA:** "Alô? Quem fala?!"\n👤 **Vencedor:** <@${message.author.id}>\n\n🎮 **PLAYSTATION 2!!**\n💰 **Prêmio:** \`${premioGrande.toLocaleString()}\` moedas!`)
-                    .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
-
-                return msgLigar.edit({ content: `✅ **LIGAÇÃO ATENDIDA!**`, embeds: [embedWin] });
-            } else {
-                return msgLigar.edit("❌ **Ocupado:** \"Desculpe, todas as nossas linhas estão ocupadas. Tente novamente mais tarde!\"");
-            }
-        }, 3000);
-        return; // Finaliza aqui para não executar outros comandos
-    } 
+    }, 2500);
+}
     // COMANDO MONEY
     if (command === 'money' || command === 'bal') {
         const alvo = message.mentions.users.first() || message.author;
@@ -4450,12 +4584,13 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
             { 
                 name: '🎮 Jogos & Minigames', 
                 value: 
-                '👤 `!akinator`: O gênio tentará ler sua mente para adivinhar o personagem!\n' +
-                '📊 `!akiestats`: Veja seu placar de vitórias e derrotas contra o Akinator.'
+                `👤 \`!akinator\`: O gênio tentará ler sua mente para adivinhar o personagem!${comandosDesativados.akinator ? " **(🛠️ Em Manutenção)**" : ""}\n` +
+                `📊 \`!akiestats\`: Veja seu placar de vitórias e derrotas contra o Akinator.${comandosDesativados.akinator ? " **(🛠️ Em Manutenção)**" : ""}`
             },
             { 
                 name: '🎰 CASSINO & SORTE', 
                 value: 
+                '📞`!ligar 4002-8922 [frase]`: Ligue para o Bom Dia & Cia (Custa 72 moedas).\n' +
                 '🎰 `!roleta [valor]`: Aposte e dobre seu dinheiro (45% chance).\n' +
                 '🃏 `!blackjack [valor]`: Tente chegar aos 21 e ganhe moedas.\n' +
                 '📈 `!investir <valor>`: Bolsa de valores.\n' +
@@ -4518,6 +4653,13 @@ function renovarEstoque() {
         console.log("❌ [ERRO] Variável 'lojaItens' não definida. Verifique o topo do código.");
     }
 }
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ Erro Detectado (Rejeição não tratada):', reason);
+});
+
+process.on('uncaughtException', (err, origin) => {
+    console.error('⚠️ Erro Crítico (Exceção não capturada):', err);
+});
 
 // Configuração do Timer: 86.400.000ms = 24 Horas
 // Na Discloud, o bot pode reiniciar antes disso, então a chamada inicial é vital
