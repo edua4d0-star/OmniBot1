@@ -4150,14 +4150,17 @@ if (command === 'matar' || command === 'kill') {
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
     }
 }
-// ==================== 🧞 COMANDO AKINATOR ATUALIZADO (COM PLACAR) ====================
+// ==================== 🧞 COMANDO AKINATOR ATUALIZADO (VERSÃO ESTÁVEL) ====================
 if (command === 'akinator' || command === 'aki') {
-    const { Akinator } = require('akinator-api');
+    // Importamos a biblioteca moderna (instale com: npm install aki-api)
+    const { Akinator } = require('aki-api'); 
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 
     try {
-        const language = "pt"; 
-        const aki = new Akinator(language);
+        // No aki-api, definimos a região como um objeto
+        const region = 'pt';
+        const aki = new Akinator({ region }); 
+        
         await aki.start();
 
         const gerarBotoes = () => {
@@ -4183,13 +4186,13 @@ if (command === 'akinator' || command === 'aki') {
         const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
 
         collector.on('collect', async (interaction) => {
-            await interaction.deferUpdate();
+            if (!interaction.deferred) await interaction.deferUpdate();
 
+            // Envia a resposta selecionada
             await aki.step(interaction.customId);
 
             // Se o Akinator atingir confiança alta, ele tenta adivinhar
             if (aki.progress >= 85 || aki.currentStep >= 78) {
-                await aki.win();
                 collector.stop();
 
                 const guess = aki.answers[0];
@@ -4200,7 +4203,6 @@ if (command === 'akinator' || command === 'aki') {
                     .setImage(guess.absolute_picture_path)
                     .setColor('#2ECC71');
 
-                // Botões para confirmar se ele acertou ou errou
                 const rowConfirm = new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, você acertou!').setStyle(ButtonStyle.Success),
                     new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, você errou!').setStyle(ButtonStyle.Danger)
@@ -4208,7 +4210,6 @@ if (command === 'akinator' || command === 'aki') {
 
                 const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
 
-                // Coletor para a confirmação final
                 const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
 
                 finalCollector.on('collect', async (iFinal) => {
@@ -4244,8 +4245,8 @@ if (command === 'akinator' || command === 'aki') {
         });
 
     } catch (e) {
-        console.error(e);
-        message.reply("❌ Ocorreu um erro ao conectar com os servidores do Akinator.");
+        console.error("ERRO AKINATOR:", e);
+        message.reply("❌ O gênio está instável. Tente novamente em alguns segundos!");
     }
 }
 // ==================== 🧞 STATUS DO AKINATOR ====================
