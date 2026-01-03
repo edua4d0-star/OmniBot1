@@ -124,11 +124,13 @@ client.on('messageCreate', async (message) => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    // ==================== 🧞 COMANDO AKINATOR (INTEGRADO) ====================
+// ==================== 🧞 COMANDO AKINATOR (VERSÃO 7.x) ====================
     if (command === 'akinator' || command === 'aki') {
+        const { Aki } = require('aki-api'); // Importação correta para a versão 7
+
         try {
-            // Usando a região pt para o gênio falar português
-            const aki = new (require('aki-api').Akinator)({ region: 'pt', childMode: false });
+            // Inicializa o gênio na região Brasil
+            const aki = new Aki({ region: 'pt', childMode: false });
             await aki.start();
 
             const gerarBotoes = () => {
@@ -156,11 +158,14 @@ client.on('messageCreate', async (message) => {
             collector.on('collect', async (interaction) => {
                 if (!interaction.deferred) await interaction.deferUpdate();
 
+                // Na v7, o método step envia a resposta
                 await aki.step(interaction.customId);
 
-                if (aki.progress >= 85 || aki.currentStep >= 78) {
+                // Se o gênio estiver pronto para dar o palpite
+                if (aki.progress >= 80 || aki.currentStep >= 78) {
                     collector.stop();
-                    const guess = aki.answers[0];
+
+                    const guess = aki.answers[0]; // Pega o primeiro palpite
 
                     const winEmbed = new EmbedBuilder()
                         .setTitle('🎯 O Gênio deu o palpite!')
@@ -178,21 +183,18 @@ client.on('messageCreate', async (message) => {
                     const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
 
                     finalCollector.on('collect', async (iFinal) => {
-                        if (!iFinal.deferred) await iFinal.deferUpdate();
-
                         if (iFinal.customId === 'aki_sim') {
-                            // Gênio ganhou
                             await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
-                            await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia! Ninguém escapa da minha mente.", components: [], embeds: [winEmbed] });
+                            await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia!", components: [] });
                         } else {
-                            // Player ganhou
                             await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
-                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu desta vez... Minha lâmpada está falhando.", components: [], embeds: [winEmbed.setColor('#FF0000')] });
+                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu...", components: [] });
                         }
                     });
                     return;
                 }
 
+                // Atualiza a pergunta
                 const nextEmbed = new EmbedBuilder()
                     .setTitle('🤔 Akinator')
                     .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
@@ -203,15 +205,9 @@ client.on('messageCreate', async (message) => {
                 await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
             });
 
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') {
-                    msg.edit({ content: '⏰ O gênio cansou de esperar e sumiu na fumaça.', embeds: [], components: [] });
-                }
-            });
-
         } catch (e) {
-            console.log(e);
-            message.reply("❌ Ocorreu um erro ao invocar o gênio.");
+            console.error(e);
+            message.reply("❌ Não consegui iniciar o gênio. Verifique se a biblioteca `aki-api` está instalada.");
         }
     }
 
@@ -4257,33 +4253,6 @@ if (command === 'matar' || command === 'kill') {
         console.error("ERRO NO COMANDO MATAR:", error);
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
     }
-}
-// ==================== 🧞 STATUS DO AKINATOR ====================
-if (command === 'estatsakinator' || command === 'akiestats') {
-    const target = message.mentions.users.first() || message.author;
-    const dados = await User.findOne({ userId: target.id });
-
-    if (!dados) return message.reply("❌ Usuário não encontrado no banco de dados.");
-
-    const vitorias = dados.akinatorVitorias || 0;
-    const derrotas = dados.akinatorDerrotas || 0;
-    const total = vitorias + derrotas;
-    
-    // Calcular taxa de vitória contra o gênio
-    const taxaAproveitamento = total > 0 ? ((vitorias / total) * 100).toFixed(1) : 0;
-
-    const embed = new EmbedBuilder()
-        .setTitle(`🧞 Placar vs Akinator: ${target.username}`)
-        .setColor('#F1C40F')
-        .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
-        .addFields(
-            { name: '🏆 Vitórias (Você venceu)', value: `\`${vitorias}\``, inline: true },
-            { name: '💀 Derrotas (Gênio acertou)', value: `\`${derrotas}\``, inline: true },
-            { name: '📊 Taxa de Sucesso', value: `\`${taxaAproveitamento}%\` de mentes impenetráveis`, inline: false }
-        )
-        .setFooter({ text: 'Ganhe do gênio fazendo-o errar seu personagem!' });
-
-    return message.reply({ embeds: [embed] });
 }
 // ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO FINALIZADA) ====================
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
