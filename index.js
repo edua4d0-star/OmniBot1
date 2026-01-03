@@ -123,6 +123,113 @@ client.on('messageCreate', async (message) => {
     if (!message.content.startsWith('!')) return;
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
+    
+    // ==================== 🧞 COMANDO AKINATOR (INTEGRADO) ====================
+    if (command === 'akinator' || command === 'aki') {
+        try {
+            // Usando a região pt para o gênio falar português
+            const aki = new Akinator({ region: 'pt', childMode: false });
+            await aki.start();
+
+            const gerarBotoes = () => {
+                return new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('0').setLabel('Sim').setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId('1').setLabel('Não').setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder().setCustomId('2').setLabel('Não Sei').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId('3').setLabel('Talvez Sim').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('4').setLabel('Talvez Não').setStyle(ButtonStyle.Primary),
+                );
+            };
+
+            const embed = new EmbedBuilder()
+                .setTitle('🤔 Akinator')
+                .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
+                .setColor('#F1C40F')
+                .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+                .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
+
+            const msg = await message.reply({ embeds: [embed], components: [gerarBotoes()] });
+
+            const filter = (i) => i.user.id === message.author.id;
+            const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
+
+            collector.on('collect', async (interaction) => {
+                if (!interaction.deferred) await interaction.deferUpdate();
+
+                await aki.step(interaction.customId);
+
+                if (aki.progress >= 85 || aki.currentStep >= 78) {
+                    collector.stop();
+                    const guess = aki.answers[0];
+
+                    const winEmbed = new EmbedBuilder()
+                        .setTitle('🎯 O Gênio deu o palpite!')
+                        .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description}*\n\n**Eu acertei?**`)
+                        .setImage(guess.absolute_picture_path || 'https://i.imgur.com/vHqY7Ym.png')
+                        .setColor('#2ECC71');
+
+                    const rowConfirm = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, acertou!').setStyle(ButtonStyle.Success),
+                        new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, errou!').setStyle(ButtonStyle.Danger)
+                    );
+
+                    const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
+
+                    const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+
+                    finalCollector.on('collect', async (iFinal) => {
+                        if (!iFinal.deferred) await iFinal.deferUpdate();
+
+                        if (iFinal.customId === 'aki_sim') {
+                            // Gênio ganhou
+                            await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
+                            await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia! Ninguém escapa da minha mente.", components: [], embeds: [winEmbed] });
+                        } else {
+                            // Player ganhou
+                            await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
+                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu desta vez... Minha lâmpada está falhando.", components: [], embeds: [winEmbed.setColor('#FF0000')] });
+                        }
+                    });
+                    return;
+                }
+
+                const nextEmbed = new EmbedBuilder()
+                    .setTitle('🤔 Akinator')
+                    .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
+                    .setColor('#F1C40F')
+                    .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+                    .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
+
+                await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
+            });
+
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time') {
+                    msg.edit({ content: '⏰ O gênio cansou de esperar e sumiu na fumaça.', embeds: [], components: [] });
+                }
+            });
+
+        } catch (e) {
+            console.log(e);
+            message.reply("❌ Ocorreu um erro ao invocar o gênio.");
+        }
+    }
+
+    // ==================== 📊 COMANDO STATS AKINATOR ====================
+    if (command === 'akiestats') {
+        const vitorias = userData.akinatorVitorias || 0;
+        const derrotas = userData.akinatorDerrotas || 0;
+        
+        const embedStats = new EmbedBuilder()
+            .setTitle(`📊 Stats Akinator - ${message.author.username}`)
+            .addFields(
+                { name: '🏆 Vitórias (Você ganhou)', value: `\`${vitorias}\``, inline: true },
+                { name: '🧞 Derrotas (Gênio acertou)', value: `\`${derrotas}\``, inline: true }
+            )
+            .setColor('#F1C40F');
+
+        return message.reply({ embeds: [embedStats] });
+    }
 
     // COMANDO MONEY
     if (command === 'money' || command === 'bal') {
@@ -4149,104 +4256,6 @@ if (command === 'matar' || command === 'kill') {
     } catch (error) {
         console.error("ERRO NO COMANDO MATAR:", error);
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
-    }
-}
-// ==================== 🧞 COMANDO AKINATOR (VERSÃO RENDER FIX) ====================
-if (command === 'akinator' || command === 'aki') {
-    const { Akinator } = require('aki-api'); 
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-
-    try {
-        // Configuramos a região e o modo de segurança
-        const region = 'pt';
-        const aki = new Akinator({ region, childMode: false }); 
-        
-        // Tentamos iniciar. Se falhar aqui, o catch vai avisar.
-        await aki.start();
-
-        const gerarBotoes = () => {
-            return new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('0').setLabel('Sim').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId('1').setLabel('Não').setStyle(ButtonStyle.Danger),
-                new ButtonBuilder().setCustomId('2').setLabel('Não Sei').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId('3').setLabel('Talvez Sim').setStyle(ButtonStyle.Primary),
-                new ButtonBuilder().setCustomId('4').setLabel('Talvez Não').setStyle(ButtonStyle.Primary),
-            );
-        };
-
-        const embed = new EmbedBuilder()
-            .setTitle('🤔 Akinator')
-            .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
-            .setColor('#F1C40F')
-            .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
-            .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
-
-        const msg = await message.reply({ embeds: [embed], components: [gerarBotoes()] });
-
-        const filter = (i) => i.user.id === message.author.id;
-        const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
-
-        collector.on('collect', async (interaction) => {
-            if (!interaction.deferred) await interaction.deferUpdate();
-
-            // Responde e avança para o próximo passo
-            await aki.step(interaction.customId);
-
-            // Se o gênio estiver muito confiante, ele para e tenta adivinhar
-            if (aki.progress >= 85 || aki.currentStep >= 78) {
-                collector.stop();
-
-                const guess = aki.answers[0];
-
-                const winEmbed = new EmbedBuilder()
-                    .setTitle('🎯 O Gênio deu o palpite!')
-                    .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description}*\n\n**Eu acertei?**`)
-                    .setImage(guess.absolute_picture_path || 'https://i.imgur.com/vHqY7Ym.png')
-                    .setColor('#2ECC71');
-
-                const rowConfirm = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, acertou!').setStyle(ButtonStyle.Success),
-                    new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, errou!').setStyle(ButtonStyle.Danger)
-                );
-
-                const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
-
-                const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
-
-                finalCollector.on('collect', async (iFinal) => {
-                    if (!iFinal.deferred) await iFinal.deferUpdate();
-
-                    if (iFinal.customId === 'aki_sim') {
-                        await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
-                        await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sou invencível!", components: [] });
-                    } else {
-                        await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
-                        await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu... Vou me retirar para minha lâmpada.", components: [] });
-                    }
-                });
-                return;
-            }
-
-            // Atualiza para a próxima pergunta
-            const nextEmbed = new EmbedBuilder()
-                .setTitle('🤔 Akinator')
-                .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
-                .setColor('#F1C40F')
-                .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
-                .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
-
-            await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
-        });
-
-        collector.on('end', (collected, reason) => {
-            if (reason === 'time') {
-                msg.edit({ content: '⏰ O gênio cansou de esperar e sumiu.', embeds: [], components: [] });
-            }
-        });
-
-    } catch (e) {
-        console.log("ERRO AO INICIAR AKINATOR:", e.message);
-        message.reply("❌ Os servidores do Akinator estão recusando a conexão (IP Bloqueado). Tente novamente em alguns minutos!");
     }
 }
 // ==================== 🧞 STATUS DO AKINATOR ====================
