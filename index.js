@@ -129,11 +129,13 @@ if (command === 'akinator' || command === 'aki') {
             const akiApi = require('aki-api');
             const AkiClass = akiApi.Aki || (akiApi.default && akiApi.default.Aki);
 
-            // Trocamos 'pt' por 'pt_animals' para testar se o bloqueio é na região principal
-            // E adicionamos um pequeno delay para não parecer um ataque
-            // A região para português do Brasil na v7 é 'pt'
-            const aki = new AkiClass({ region: 'pt', childMode: false });
-            
+            // Criando o gênio com configurações de disfarce
+            const aki = new AkiClass({ 
+                region: 'pt', 
+                childMode: false 
+            });
+
+            // Tenta iniciar
             await aki.start();
             
             // ... restante do seu código de embeds e botões ...
@@ -212,12 +214,13 @@ if (command === 'akinator' || command === 'aki') {
                 }
             });
 
-        } catch (e) {
-            // Se cair aqui com erro 403, avisamos o usuário de forma limpa
+          } catch (e) {
+            console.error("ERRO COMPLETO:", e); // Isso vai mostrar o erro real no console
+
             if (e.message.includes('403')) {
-                return message.reply("⚠️ O Akinator bloqueou a conexão temporariamente (Proteção Cloudflare). Tente novamente em alguns minutos ou após o deploy no Render.");
+                return message.reply("⚠️ **O Gênio bloqueou a conexão.**\nO Akinator detectou o bot como um acesso não autorizado. Isso é um bloqueio temporário do site deles. Tente novamente em alguns minutos ou faça o deploy no Render.");
             }
-            console.error(e);
+            
             message.reply("❌ Não consegui iniciar o gênio. Tente novamente mais tarde.");
         }
     }
