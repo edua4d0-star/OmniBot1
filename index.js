@@ -3,10 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
-// 🧞 Configuração do Akinator (Biblioteca atualizada)
+// 🧞 Configuração do Akinator
 const { Akinator } = require('aki-api');
 
-// 🎨 Configuração do Canvas (Usando napi-rs que é mais estável no Render)
+// 🎨 Configuração do Canvas
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 // 🤖 Configuração do Discord.js
@@ -23,8 +23,20 @@ const {
     PermissionsBitField 
 } = require('discord.js');
 
-// 📂 Importação do Schema de Usuário (Necessário para salvar as vitórias/derrotas)
-const User = require('./models/User'); // Certifique-se que o caminho do seu arquivo está correto
+// 📂 Importação do Schema de Usuário
+const User = require('./models/User');
+
+// ==================== 🛠️ VARIÁVEIS GLOBAIS (BOM DIA & CIA) ====================
+let roletaDisponivelGlobal = true; // Apenas um ganhador de 150k-500k por dia
+let cooldownLigar = new Set();    // Cooldown para o comando !ligar
+
+// Reset automático da roleta à meia-noite
+setInterval(() => {
+    const agora = new Date();
+    if (agora.getHours() === 0 && agora.getMinutes() === 0) {
+        roletaDisponivelGlobal = true;
+    }
+}, 60000);
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
@@ -107,6 +119,47 @@ const lojaItens = {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
+    // ==================== EVENTO GLOBAL BOM DIA E CIA (ESTILO LORITTA) ====================
+
+// A cada mensagem, o bot checa se já deu o horário do sorteio
+if (!roletaAtivaGlobal && Date.now() > proximoEventoRoleta) {
+    roletaAtivaGlobal = true;
+    console.log("📢 Roleta Global Ativada! O próximo a falar ganha.");
+}
+
+// Se a roleta estiver ativa, o primeiro que falar (que não seja bot) ganha!
+if (roletaAtivaGlobal && !message.author.bot && message.guild) {
+    roletaAtivaGlobal = false; // Desativa para ninguém mais ganhar
+    
+    // Define o próximo evento (ex: daqui a 4 a 8 horas)
+    const intervalo = (4 * 60 * 60 * 1000) + (Math.random() * 4 * 60 * 60 * 1000);
+    proximoEventoRoleta = Date.now() + intervalo;
+
+    // Sorteia o prêmio alto entre 150k e 500k
+    const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
+
+    // Salva no Banco de Dados
+    await User.updateOne(
+        { userId: message.author.id },
+        { $inc: { money: premioGrande } }
+    );
+
+    const embedWin = new EmbedBuilder()
+        .setTitle('📺 BOM DIA & CIA - GRANDE VENCEDOR GLOBAL!')
+        .setColor('#F1C40F')
+        .setThumbnail('https://i.imgur.com/v8tTfI7.png')
+        .setDescription(
+            `🎊 **INCRÍVEL!** A roleta global parou agora para você!\n\n` +
+            `🗣️ **Vencedor:** <@${message.author.id}>\n` +
+            `💰 **Prêmio:** \`${premioGrande.toLocaleString()}\` moedas\n\n` +
+            `*Este foi um evento global. Apenas uma pessoa ganha por vez!*`
+        )
+        .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZzR3eHByZ3R6bmR6bmR6bmR6bmR6bmR6bmR6bmR6bmR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTjJp9k6yZ8z7q/giphy.gif')
+        .setFooter({ text: 'O próximo prêmio pode aparecer a qualquer momento...' });
+
+    message.channel.send({ content: `🏆 **BOOOOM DIA!** <@${message.author.id}>`, embeds: [embedWin] });
+}
+
     // 1. Carrega os dados do MongoDB (UMA ÚNICA VEZ AQUI)
     let userData = await User.findOne({ userId: message.author.id });
     if (!userData) userData = await User.create({ userId: message.author.id });
@@ -131,7 +184,7 @@ if (command === 'akinator' || command === 'aki') {
 
             // Criando o gênio com configurações de disfarce
             const aki = new AkiClass({ 
-                region: 'pt', 
+                region: 'en', 
                 childMode: false 
             });
 
@@ -239,6 +292,56 @@ if (command === 'akinator' || command === 'aki') {
             .setColor('#F1C40F');
 
         return message.reply({ embeds: [embedStats] });
+    }
+
+// ==================== 📞 COMANDO !LIGAR (BOM DIA & CIA) ====================
+    if (command === 'ligar' || command === 'call') {
+        const custoLigação = 72;
+
+        // 1. Verifica se o usuário tem as 72 moedas
+        if (userData.money < custoLigação) {
+            return message.reply(`💸 Você precisa de **${custoLigação} moedas** para fazer uma ligação!`);
+        }
+
+        // 2. Verifica Cooldown
+        if (cooldownLigar.has(message.author.id)) {
+            return message.reply("📞 **Linha Ocupada!** Espere 5 minutos para tentar ligar novamente.");
+        }
+
+        // 3. Verifica se o prêmio global ainda está disponível
+        if (!roletaDisponivelGlobal) {
+            return message.reply("📺 **Yudi:** \"O programa de hoje já acabou! Volte amanhã para tentar o prêmio máximo!\"");
+        }
+
+        // 4. Cobra o valor da ligação e adiciona cooldown
+        await User.updateOne({ userId: message.author.id }, { $inc: { money: -custoLigação } });
+        cooldownLigar.add(message.author.id);
+        setTimeout(() => cooldownLigar.delete(message.author.id), 300000); 
+
+        const msgLigar = await message.reply(`☎️ [-${custoLigação} moedas] **Tuuuut... Tuuuut...** Ligando para o Bom Dia & Cia...`);
+
+        setTimeout(async () => {
+            // 2% de chance de ganhar o prêmio global de 150k a 500k
+            const sorteioAtender = Math.random() < 0.02; 
+
+            if (sorteioAtender && roletaDisponivelGlobal) {
+                roletaDisponivelGlobal = false; 
+
+                const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
+
+                await User.updateOne({ userId: message.author.id }, { $inc: { money: premioGrande } });
+
+                const embedWin = new EmbedBuilder()
+                    .setTitle('📺 BOM DIA & CIA - VOCÊ ESTÁ NO AR!')
+                    .setColor('#F1C40F')
+                    .setDescription(`🎙️ **PRISCILA:** "Alô? Quem fala?!"\n👤 **Vencedor:** <@${message.author.id}>\n\n🎮 **PLAYSTATION 2!!**\n💰 **Prêmio:** \`${premioGrande.toLocaleString()}\` moedas!`)
+                    .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
+
+                return msgLigar.edit({ content: `✅ **LIGAÇÃO ATENDIDA!**`, embeds: [embedWin] });
+            } else {
+                return msgLigar.edit("❌ **Ocupado:** \"Desculpe, todas as nossas linhas estão ocupadas. Tente novamente mais tarde!\"");
+            }
+        }, 3000);
     }
 
     // COMANDO MONEY
@@ -642,6 +745,46 @@ if (command === 'pix') {
     } catch (error) {
         console.error("Erro no comando PIX:", error);
         return message.reply("❌ Ocorreu um erro interno ao realizar o PIX.");
+    }
+}
+// ==================== 🎰 COMANDO CASSINO (ROLETA) ====================
+if (command === 'roleta' || command === 'bet') {
+    const quantia = parseInt(args[0]);
+
+    if (isNaN(quantia) || quantia <= 0) {
+        return message.reply("❌ Digite um valor válido para apostar! Ex: `!roleta 100`.");
+    }
+
+    if (userData.money < quantia) {
+        return message.reply(`💸 Você não tem dinheiro suficiente! Seu saldo: **${userData.money.toLocaleString()}**`);
+    }
+
+    // Chance de 45% de ganhar (um pouco menos que a metade para a casa ganhar)
+    const ganhou = Math.random() < 0.45;
+    let novoSaldo;
+
+    if (ganhou) {
+        const premio = quantia * 2;
+        novoSaldo = userData.money + quantia; // Ganha o que apostou
+        await User.updateOne({ userId: message.author.id }, { $inc: { money: quantia } });
+
+        const embedVitoria = new EmbedBuilder()
+            .setTitle('🎰 RESULTADO DA ROLETA')
+            .setDescription(`🍀 **VOCÊ GANHOU!!**\n\nVocê apostou **${quantia.toLocaleString()}** e recebeu **${premio.toLocaleString()}** moedas!`)
+            .setColor('#2ECC71')
+            .setThumbnail('https://i.imgur.com/K69P9K7.png'); // Imagem de moedas/sorte
+
+        return message.reply({ embeds: [embedVitoria] });
+    } else {
+        novoSaldo = userData.money - quantia;
+        await User.updateOne({ userId: message.author.id }, { $inc: { money: -quantia } });
+
+        const embedDerrota = new EmbedBuilder()
+            .setTitle('🎰 RESULTADO DA ROLETA')
+            .setDescription(`💀 **VOCÊ PERDEU!**\n\nO gênio da sorte não estava com você. Você perdeu **${quantia.toLocaleString()}** moedas.`)
+            .setColor('#E74C3C');
+
+        return message.reply({ embeds: [embedDerrota] });
     }
 }
 // ==================== 🃏 JOGO DE BLACKJACK (21) ====================
@@ -4329,6 +4472,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
             { 
                 name: '🎰 CASSINO & SORTE', 
                 value: 
+                '🎰 `!roleta [valor]`: Aposte e dobre seu dinheiro (45% chance).\n' +
                 '🃏 `!blackjack [valor]`: Tente chegar aos 21 e ganhe moedas.\n' +
                 '📈 `!investir <valor>`: Bolsa de valores.\n' +
                 '🎲 `!cassino @user [valor]`: Cara ou Coroa PvP.\n' +
