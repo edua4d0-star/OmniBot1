@@ -120,46 +120,28 @@ const lojaItens = {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
-    // ==================== EVENTO GLOBAL BOM DIA E CIA (ESTILO LORITTA) ====================
+// ==================== EVENTO AUTOMÁTICO: BOM DIA & CIA ====================
+    // Verifica se a roleta está disponível e se já passou do horário sorteado
+    if (roletaDisponivelGlobal && Date.now() > proximoEventoRoleta && !message.author.bot) {
+        
+        roletaDisponivelGlobal = false; // Desativa para ninguém mais ganhar hoje
+        
+        // Sorteia o próximo horário (daqui a 6 a 12 horas)
+        proximoEventoRoleta = Date.now() + (6 * 60 * 60 * 1000) + (Math.random() * 6 * 60 * 60 * 1000);
 
-// A cada mensagem, o bot checa se já deu o horário do sorteio
-if (!roletaAtivaGlobal && Date.now() > proximoEventoRoleta) {
-    roletaAtivaGlobal = true;
-    console.log("📢 Roleta Global Ativada! O próximo a falar ganha.");
-}
+        const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
 
-// Se a roleta estiver ativa, o primeiro que falar (que não seja bot) ganha!
-if (roletaAtivaGlobal && !message.author.bot && message.guild) {
-    roletaAtivaGlobal = false; // Desativa para ninguém mais ganhar
-    
-    // Define o próximo evento (ex: daqui a 4 a 8 horas)
-    const intervalo = (4 * 60 * 60 * 1000) + (Math.random() * 4 * 60 * 60 * 1000);
-    proximoEventoRoleta = Date.now() + intervalo;
+        await User.updateOne({ userId: message.author.id }, { $inc: { money: premioGrande } });
 
-    // Sorteia o prêmio alto entre 150k e 500k
-    const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
+        const embedSurpresa = new EmbedBuilder()
+            .setTitle('📺 BOM DIA & CIA - EVENTO SURPRESA!')
+            .setColor('#F1C40F')
+            .setThumbnail('https://i.imgur.com/v8tTfI7.png')
+            .setDescription(`⭐ **INCRÍVEL!** A roleta parou para você no meio do chat!\n\n🎙️ **Yudi:** "PLAYSTATION! PLAYSTATION!"\n\n💰 **Prêmio Ganho:** \`${premioGrande.toLocaleString()}\` moedas!`)
+            .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
 
-    // Salva no Banco de Dados
-    await User.updateOne(
-        { userId: message.author.id },
-        { $inc: { money: premioGrande } }
-    );
-
-    const embedWin = new EmbedBuilder()
-        .setTitle('📺 BOM DIA & CIA - GRANDE VENCEDOR GLOBAL!')
-        .setColor('#F1C40F')
-        .setThumbnail('https://i.imgur.com/v8tTfI7.png')
-        .setDescription(
-            `🎊 **INCRÍVEL!** A roleta global parou agora para você!\n\n` +
-            `🗣️ **Vencedor:** <@${message.author.id}>\n` +
-            `💰 **Prêmio:** \`${premioGrande.toLocaleString()}\` moedas\n\n` +
-            `*Este foi um evento global. Apenas uma pessoa ganha por vez!*`
-        )
-        .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZzR3eHByZ3R6bmR6bmR6bmR6bmR6bmR6bmR6bmR6bmR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTjJp9k6yZ8z7q/giphy.gif')
-        .setFooter({ text: 'O próximo prêmio pode aparecer a qualquer momento...' });
-
-    message.channel.send({ content: `🏆 **BOOOOM DIA!** <@${message.author.id}>`, embeds: [embedWin] });
-}
+        message.channel.send({ content: `🎊 <@${message.author.id}>`, embeds: [embedSurpresa] });
+    }
 
     // 1. Carrega os dados do MongoDB (UMA ÚNICA VEZ AQUI)
     let userData = await User.findOne({ userId: message.author.id });
@@ -295,39 +277,40 @@ if (command === 'akinator' || command === 'aki') {
         return message.reply({ embeds: [embedStats] });
     }
 
-// ==================== 📞 COMANDO !LIGAR (BOM DIA & CIA) ====================
+// ==================== 📞 COMANDO !LIGAR (CUSTO: 72) ====================
     if (command === 'ligar' || command === 'call') {
-        const custoLigação = 72;
+        const custoLigacao = 72;
 
-        // 1. Verifica se o usuário tem as 72 moedas
-        if (userData.money < custoLigação) {
-            return message.reply(`💸 Você precisa de **${custoLigação} moedas** para fazer uma ligação!`);
+        // 1. Verifica se o usuário tem dinheiro (userData vem do seu banco de dados)
+        if (userData.money < custoLigacao) {
+            return message.reply(`💸 Você não tem **${custoLigacao} moedas** para fazer essa ligação!`);
         }
 
-        // 2. Verifica Cooldown
-        if (cooldownLigar.has(message.author.id)) {
-            return message.reply("📞 **Linha Ocupada!** Espere 5 minutos para tentar ligar novamente.");
-        }
-
-        // 3. Verifica se o prêmio global ainda está disponível
+        // 2. Verifica se alguém já ganhou o prêmio global hoje
         if (!roletaDisponivelGlobal) {
-            return message.reply("📺 **Yudi:** \"O programa de hoje já acabou! Volte amanhã para tentar o prêmio máximo!\"");
+            return message.reply("📺 **Yudi:** \"O programa de hoje já acabou e os prêmios foram entregues! Volte amanhã!\"");
         }
 
-        // 4. Cobra o valor da ligação e adiciona cooldown
-        await User.updateOne({ userId: message.author.id }, { $inc: { money: -custoLigação } });
+        // 3. Verifica Cooldown (5 minutos)
+        if (cooldownLigar.has(message.author.id)) {
+            return message.reply("📞 **Linha Ocupada!** Você já tentou ligar recentemente. Espere um pouco.");
+        }
+
+        // --- AÇÃO: DESCONTA O DINHEIRO E ATIVA COOLDOWN ---
+        await User.updateOne({ userId: message.author.id }, { $inc: { money: -custoLigacao } });
         cooldownLigar.add(message.author.id);
         setTimeout(() => cooldownLigar.delete(message.author.id), 300000); 
 
-        const msgLigar = await message.reply(`☎️ [-${custoLigação} moedas] **Tuuuut... Tuuuut...** Ligando para o Bom Dia & Cia...`);
+        const msgLigar = await message.reply(`☎️ [-${custoLigacao} moedas] **Tuuuut... Tuuuut...** Ligando para o Bom Dia & Cia...`);
 
         setTimeout(async () => {
-            // 2% de chance de ganhar o prêmio global de 150k a 500k
+            // Chance de 2% de ser atendido
             const sorteioAtender = Math.random() < 0.02; 
 
             if (sorteioAtender && roletaDisponivelGlobal) {
-                roletaDisponivelGlobal = false; 
+                roletaDisponivelGlobal = false; // Bloqueia o prêmio para o resto do dia
 
+                // Sorteia o prêmio gigante (150k a 500k)
                 const premioGrande = Math.floor(Math.random() * (500000 - 150000 + 1)) + 150000;
 
                 await User.updateOne({ userId: message.author.id }, { $inc: { money: premioGrande } });
@@ -343,8 +326,8 @@ if (command === 'akinator' || command === 'aki') {
                 return msgLigar.edit("❌ **Ocupado:** \"Desculpe, todas as nossas linhas estão ocupadas. Tente novamente mais tarde!\"");
             }
         }, 3000);
-    }
-
+        return; // Finaliza aqui para não executar outros comandos
+    } 
     // COMANDO MONEY
     if (command === 'money' || command === 'bal') {
         const alvo = message.mentions.users.first() || message.author;
