@@ -124,13 +124,24 @@ client.on('messageCreate', async (message) => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-// ==================== 🧞 COMANDO AKINATOR (VERSÃO 7.x) ====================
+// ==================== 🧞 COMANDO AKINATOR ====================
     if (command === 'akinator' || command === 'aki') {
-        const { Aki } = require('aki-api'); // Importação correta para a versão 7
-
         try {
-            // Inicializa o gênio na região Brasil
-            const aki = new Aki({ region: 'pt', childMode: false });
+            // 1. Importa a biblioteca
+            const akiApi = require('aki-api');
+            
+            // 2. Detecta a classe correta (Aki)
+            const AkiClass = akiApi.Aki || (akiApi.default && akiApi.default.Aki);
+
+            if (!AkiClass) {
+                return message.reply("❌ Erro interno: Não foi possível carregar o motor do Akinator.");
+            }
+
+            // 3. Inicializa o gênio
+            // DICA: Use 'pt' para personagens ou 'pt_animals' para animais.
+            // Se 'pt' der erro 403, tente 'en' apenas para testar se o seu IP está bloqueado.
+            const aki = new AkiClass({ region: 'pt', childMode: false }); 
+            
             await aki.start();
 
             const gerarBotoes = () => {
@@ -142,7 +153,7 @@ client.on('messageCreate', async (message) => {
                     new ButtonBuilder().setCustomId('4').setLabel('Talvez Não').setStyle(ButtonStyle.Primary),
                 );
             };
-
+            
             const embed = new EmbedBuilder()
                 .setTitle('🤔 Akinator')
                 .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
@@ -156,58 +167,64 @@ client.on('messageCreate', async (message) => {
             const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
 
             collector.on('collect', async (interaction) => {
-                if (!interaction.deferred) await interaction.deferUpdate();
+                try {
+                    if (!interaction.deferred) await interaction.deferUpdate();
 
-                // Na v7, o método step envia a resposta
-                await aki.step(interaction.customId);
+                    await aki.step(interaction.customId);
 
-                // Se o gênio estiver pronto para dar o palpite
-                if (aki.progress >= 80 || aki.currentStep >= 78) {
-                    collector.stop();
+                    if (aki.progress >= 80 || aki.currentStep >= 78) {
+                        collector.stop();
 
-                    const guess = aki.answers[0]; // Pega o primeiro palpite
+                        const guess = aki.answers[0]; 
 
-                    const winEmbed = new EmbedBuilder()
-                        .setTitle('🎯 O Gênio deu o palpite!')
-                        .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description}*\n\n**Eu acertei?**`)
-                        .setImage(guess.absolute_picture_path || 'https://i.imgur.com/vHqY7Ym.png')
-                        .setColor('#2ECC71');
+                        const winEmbed = new EmbedBuilder()
+                            .setTitle('🎯 O Gênio deu o palpite!')
+                            .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description}*\n\n**Eu acertei?**`)
+                            .setImage(guess.absolute_picture_path || 'https://i.imgur.com/vHqY7Ym.png')
+                            .setColor('#2ECC71');
 
-                    const rowConfirm = new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, acertou!').setStyle(ButtonStyle.Success),
-                        new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, errou!').setStyle(ButtonStyle.Danger)
-                    );
+                        const rowConfirm = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, acertou!').setStyle(ButtonStyle.Success),
+                            new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, errou!').setStyle(ButtonStyle.Danger)
+                        );
 
-                    const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
+                        const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
 
-                    const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+                        const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
 
-                    finalCollector.on('collect', async (iFinal) => {
-                        if (iFinal.customId === 'aki_sim') {
-                            await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
-                            await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia!", components: [] });
-                        } else {
-                            await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
-                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu...", components: [] });
-                        }
-                    });
-                    return;
+                        finalCollector.on('collect', async (iFinal) => {
+                            if (!iFinal.deferred) await iFinal.deferUpdate();
+                            if (iFinal.customId === 'aki_sim') {
+                                await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
+                                await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia!", components: [], embeds: [winEmbed] });
+                            } else {
+                                await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
+                                await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu...", components: [], embeds: [winEmbed.setColor('#FF0000')] });
+                            }
+                        });
+                        return;
+                    }
+
+                    const nextEmbed = new EmbedBuilder()
+                        .setTitle('🤔 Akinator')
+                        .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
+                        .setColor('#F1C40F')
+                        .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
+                        .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
+
+                    await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
+                } catch (err) {
+                    console.error("Erro no coletor:", err);
                 }
-
-                // Atualiza a pergunta
-                const nextEmbed = new EmbedBuilder()
-                    .setTitle('🤔 Akinator')
-                    .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
-                    .setColor('#F1C40F')
-                    .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
-                    .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
-
-                await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
             });
 
         } catch (e) {
+            // Se cair aqui com erro 403, avisamos o usuário de forma limpa
+            if (e.message.includes('403')) {
+                return message.reply("⚠️ O Akinator bloqueou a conexão temporariamente (Proteção Cloudflare). Tente novamente em alguns minutos ou após o deploy no Render.");
+            }
             console.error(e);
-            message.reply("❌ Não consegui iniciar o gênio. Verifique se a biblioteca `aki-api` está instalada.");
+            message.reply("❌ Não consegui iniciar o gênio. Tente novamente mais tarde.");
         }
     }
 
