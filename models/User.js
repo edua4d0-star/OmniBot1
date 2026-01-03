@@ -48,7 +48,12 @@ const UserSchema = new mongoose.Schema({
     bjVitorias: { type: Number, default: 0 },       // Vitórias no Blackjack
     bjDerrotas: { type: Number, default: 0 },       // Derrotas no Blackjack
     akinatorVitorias: { type: Number, default: 0 }, // Vezes que venceu o gênio
-    akinatorDerrotas: { type: Number, default: 0 }  // Vezes que o gênio acertou
+    akinatorDerrotas: { type: Number, default: 0 }, // Vezes que o gênio acertou
+    
+    // --- NOVO: BOM DIA & CIA ---
+    bomDiaCount: { type: Number, default: 0 },      // Quantas vezes ganhou hoje (Limite de 3)
+    lastBomDiaDate: { type: Number, default: 0 },   // Timestamp para resetar o contador diário
+    totalBomDiaWins: { type: Number, default: 0 }   // Total histórico de vitórias na roleta
 });
 
 module.exports = mongoose.model('User', UserSchema);
