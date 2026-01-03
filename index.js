@@ -124,25 +124,18 @@ client.on('messageCreate', async (message) => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-// ==================== 🧞 COMANDO AKINATOR ====================
-    if (command === 'akinator' || command === 'aki') {
+if (command === 'akinator' || command === 'aki') {
         try {
-            // 1. Importa a biblioteca
             const akiApi = require('aki-api');
-            
-            // 2. Detecta a classe correta (Aki)
             const AkiClass = akiApi.Aki || (akiApi.default && akiApi.default.Aki);
 
-            if (!AkiClass) {
-                return message.reply("❌ Erro interno: Não foi possível carregar o motor do Akinator.");
-            }
-
-            // 3. Inicializa o gênio
-            // DICA: Use 'pt' para personagens ou 'pt_animals' para animais.
-            // Se 'pt' der erro 403, tente 'en' apenas para testar se o seu IP está bloqueado.
-            const aki = new AkiClass({ region: 'pt', childMode: false }); 
+            // Trocamos 'pt' por 'pt_animals' para testar se o bloqueio é na região principal
+            // E adicionamos um pequeno delay para não parecer um ataque
+            const aki = new AkiClass({ region: 'pt_animals', childMode: false });
             
             await aki.start();
+            
+            // ... restante do seu código de embeds e botões ...
 
             const gerarBotoes = () => {
                 return new ActionRowBuilder().addComponents(
