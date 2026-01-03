@@ -3,10 +3,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
-// 🎨 Configuração do Canvas (Usando napi-rs que é mais estável no Render)
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+// 🧞 Configuração do Akinator (Biblioteca atualizada)
+const { Akinator } = require('aki-api');
 
-// 🤖 Configuração do Discord.js (AttachmentBuilder já está aqui, não precisa repetir)
+// 🎨 Configuração do Canvas (Usando napi-rs que é mais estável no Render)
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+
+// 🤖 Configuração do Discord.js
 const { 
     Client, 
     GatewayIntentBits, 
@@ -19,6 +22,9 @@ const {
     Options, 
     PermissionsBitField 
 } = require('discord.js');
+
+// 📂 Importação do Schema de Usuário (Necessário para salvar as vitórias/derrotas)
+const User = require('./models/User'); // Certifique-se que o caminho do seu arquivo está correto
 
 // ==================== 🌐 SERVIDOR WEB (KEEP-ALIVE) ====================
 const app = express();
