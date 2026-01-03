@@ -131,7 +131,8 @@ if (command === 'akinator' || command === 'aki') {
 
             // Trocamos 'pt' por 'pt_animals' para testar se o bloqueio é na região principal
             // E adicionamos um pequeno delay para não parecer um ataque
-            const aki = new AkiClass({ region: 'pt_animals', childMode: false });
+            // A região para português do Brasil na v7 é 'pt'
+            const aki = new AkiClass({ region: 'pt', childMode: false });
             
             await aki.start();
             
