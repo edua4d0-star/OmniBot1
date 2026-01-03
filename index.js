@@ -45,11 +45,6 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado ao MongoDB!"))
     .catch(err => console.error("❌ Erro MongoDB:", err));
 
-// ==================== 📁 IMPORTAÇÃO DO MODEL ====================
-// Se der erro aqui, siga os comandos do terminal abaixo
-// No seu index.js, mude para:
-const User = require('./models/User.js');
-
 // ==================== 🤖 CONFIGURAÇÃO BOT ====================
 const client = new Client({
     intents: [
