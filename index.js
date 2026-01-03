@@ -26,9 +26,10 @@ const {
 // 📂 Importação do Schema de Usuário
 const User = require('./models/User');
 
-// ==================== 🛠️ VARIÁVEIS GLOBAIS (BOM DIA & CIA) ====================
-let roletaDisponivelGlobal = true; // Apenas um ganhador de 150k-500k por dia
-let cooldownLigar = new Set();    // Cooldown para o comando !ligar
+// ==================== 🛠️ VARIÁVEIS GLOBAIS UNIFICADAS ====================
+let roletaDisponivelGlobal = true; // Esta é a variável principal
+let proximoEventoRoleta = Date.now() + Math.random() * (6 * 60 * 60 * 1000); 
+let cooldownLigar = new Set();
 
 // Reset automático da roleta à meia-noite
 setInterval(() => {
