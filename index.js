@@ -2794,20 +2794,45 @@ if (command === 'infiltrar') {
     }
 }
 
-if (command === 'sacar') {
-    const fac = await Faccao.findOne({ nome: userData.faccao });
-    if (!fac || fac.liderId !== message.author.id) return message.reply("🚫 Apenas o Dono pode sacar fundos do cofre.");
+// ==================== 💰 COMANDO RETIRAR DO COFRE ====================
+if (command === 'retirarcofre' || command === 'sacarcofre') {
+    try {
+        // 1. Busca a facção do usuário
+        const fac = await Faccao.findOne({ nome: userData.faccao });
 
-    const quantia = parseInt(args[0]);
-    if (!quantia || quantia <= 0 || fac.cofre < quantia) return message.reply("❌ Valor inválido ou saldo insuficiente no cofre.");
+        // 2. Verificações de segurança
+        if (!fac) {
+            return message.reply("❌ Você não pertence a nenhuma organização registrada.");
+        }
 
-    fac.cofre -= quantia;
-    userData.money += quantia;
+        if (fac.liderId !== message.author.id) {
+            return message.reply("🚫 Apenas o **Dono** da organização tem a chave do cofre para saques.");
+        }
 
-    await fac.save();
-    await userData.save();
+        // 3. Validação do valor
+        const quantia = parseInt(args[0]);
+        if (!quantia || quantia <= 0) {
+            return message.reply("❓ Uso: `!retirarcofre <quantidade>`");
+        }
 
-    return message.reply(`🏦 **SAQUE EFETUADO:** Retiraste **${quantia.toLocaleString()}** moedas do cofre da organização.`);
+        if (fac.cofre < quantia) {
+            return message.reply(`❌ O cofre não possui saldo suficiente. Saldo atual: **${fac.cofre.toLocaleString()}** moedas.`);
+        }
+
+        // 4. Processamento (Tira do cofre e dá para o Líder)
+        fac.cofre -= quantia;
+        userData.money += quantia;
+
+        // 5. Salvar alterações
+        await fac.save();
+        await userData.save();
+
+        return message.reply(`🏦 **SAQUE DA ORGANIZAÇÃO:**\nRetiraste **${quantia.toLocaleString()}** moedas do cofre da **${fac.nome}**.\nO valor foi adicionado à sua carteira.`);
+
+    } catch (e) {
+        console.error(e);
+        message.reply("❌ Erro ao processar o saque do cofre.");
+    }
 }
 
 if (command === 'contribuir') {
@@ -5185,6 +5210,9 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 name: '🌑 FACÇÃO & SUBMUNDO', 
                 value: 
                 '`!fundar`: Criar base e cargos (2M).\n' +
+                '`!retirarcofre`: Retirar dinheiro do cofre (Dono).\n' +
+                '`!deletarfaccao`: Apagar a estrutura da facção.\n' +
+                '`!mafias`: Ver ranking das maiores máfias.\n' +
                 '`!entrar`: Virar Membro da Facção.\n' +
                 '`!traficar`: Rota de lucro ilegal.\n' +
                 '`!missao`: Operações especiais.\n' +
@@ -5196,7 +5224,7 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 '`!suborno` - Paga para limpar a tua ficha criminal e evitar ser preso.\n' +
                 '`!contrato`: Aceitar alvo | `!concluir`: Prêmio.\n' +
                 '`!crime`: Assalto | `!roubar @user`: Furtar (10%).' +
-                '`!promover`: Subir patente | `!expulsar`: Remover membro.\n' +
+                '`!promover`: Subir patente.\n' +
                 '`!lavar`: Converter dinheiro sujo (Taxa 25%).\n' +
                 '`!infiltrar`: Espiar facção rival.'
             },
