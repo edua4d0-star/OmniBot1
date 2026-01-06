@@ -5294,25 +5294,26 @@ renovarEstoque();
 
 // ==================== 🚓 FUNÇÕES DE APOIO (ESSENCIAL PARA O RELÓGIO) ====================
 
-/**
- * Esta função precisa existir FORA de qualquer comando para que 
- * o setInterval (Relógio) consiga encontrá-la.
- */
 function iniciarAssalto(canal) {
     if (eventoAtivo) return;
 
     eventoAtivo = true;
     hpBanco = 2500; // HP do Carro Forte
-    participantes = []; // Reseta participantes
+    participantes = []; 
 
     const embed = new EmbedBuilder()
         .setTitle("🚨 CARRO FORTE AVISTADO!")
         .setColor("#FF0000")
         .setDescription("💰 Um blindado da Prosegur foi visto na avenida principal!\n\nUse `!interceptar` para atacar o comboio e roubar a carga!")
-        .setImage("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRtcjR6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif")
+        .setImage("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRtcjR6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9iZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif")
         .setFooter({ text: "Evento de Facção - OmniBot" });
 
-    canal.send({ content: "@everyone", embeds: [embed] });
+    // Adicionado trava de menção
+    canal.send({ 
+        content: "@everyone", 
+        embeds: [embed],
+        allowedMentions: { parse: [] } 
+    });
 }
 
 // ==================== ⏰ RELÓGIO DE EVENTOS ALEATÓRIOS ====================
@@ -5321,7 +5322,6 @@ setInterval(() => {
     const minutos = agora.getMinutes();
     const horas = agora.getHours();
 
-    // O sorteio só acontece UMA VEZ por hora (no minuto 00)
     if (minutos === 0) {
         
         // --- 1. SORTEIO DO BOM DIA & CIA ---
@@ -5339,8 +5339,13 @@ setInterval(() => {
                         .setDescription(`**O programa entrou no ar inesperadamente!**\n\n📢 **LIGUE JÁ:** \`!ligar ${fraseExibida}\``)
                         .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
 
-                    canalBomDia.send({ content: "@everyone", embeds: [embedAviso] });
-                    console.log(`[SORTEIO] Bom Dia & Cia iniciado aleatoriamente.`);
+                    // Adicionado trava de menção
+                    canalBomDia.send({ 
+                        content: "@everyone", 
+                        embeds: [embedAviso],
+                        allowedMentions: { parse: [] } 
+                    });
+                    console.log(`[SORTEIO] Bom Dia & Cia iniciado sem ping.`);
                 }
             }
         }
@@ -5349,9 +5354,8 @@ setInterval(() => {
         if (!eventoAtivo && Math.random() <= 0.30) {
             const canalNoticias = client.channels.cache.get('1389693712770269196');
             if (canalNoticias) {
-                // AGORA O ERRO NÃO ACONTECE POIS A FUNÇÃO ESTÁ LOGO ACIMA
                 iniciarAssalto(canalNoticias);
-                console.log(`[SORTEIO] Carro Forte iniciado aleatoriamente.`);
+                console.log(`[SORTEIO] Carro Forte iniciado sem ping.`);
             }
         }
     }
@@ -5360,7 +5364,7 @@ setInterval(() => {
     if (horas === 0 && minutos === 0) {
         roletaDisponivelGlobal = true;
         fraseAtivaBomDia = null;
-        console.log("✅ [SISTEMA] Variáveis resetadas para o novo dia.");
+        console.log("✅ [SISTEMA] Variáveis resetadas.");
     }
 
 }, 60000);
