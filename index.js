@@ -3,8 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
-// 🧞 Configuração do Akinator (Pode manter o require, vamos apenas desativar o comando)
-const { Akinator } = require('aki-api');
+// 🧞 Configuração do Akinator (Versão Atualizada)
+const { Aki } = require('aki-api');
 
 // 🎨 Configuração do Canvas
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
@@ -42,7 +42,7 @@ let participantes = [];
 
 // Sistemas desativados
 let comandosDesativados = {
-    akinator: true 
+    akinator: false
 };
 
 // Lista de frases (Usadas pelo Relógio no final do arquivo)
@@ -173,12 +173,32 @@ client.on('messageCreate', async (message) => {
         return message.reply("🛠️ **Sistema em Manutenção:** Akinator desativado no momento.");
     }
 
-    // ==================== ⚙️ COMANDOS DE DESENVOLVEDOR ====================
 
-    if (command === 'setmanutencao' && donos.includes(message.author.id)) {
-        manutencaoGlobal = !manutencaoGlobal;
-        return message.reply(`🔧 Manutenção global: **${manutencaoGlobal ? "ATIVADA 🔴" : "DESATIVADA 🟢"}**`);
+    // ==================== 🛠️ ADMINISTRAÇÃO & CONTROLE ====================
+
+// --- MODO MANUTENÇÃO GLOBAL ---
+if (command === 'setmanutencao' && donos.includes(message.author.id)) {
+    manutencaoGlobal = !manutencaoGlobal;
+    return message.reply(`🔧 Manutenção global: **${manutencaoGlobal ? "ATIVADA 🔴" : "DESATIVADA 🟢"}**`);
+}
+
+// ==================== 🛠️ GESTÃO DE COMANDOS (MODO OBJETO) ====================
+if (command === 'setcomando' && donos.includes(message.author.id)) {
+    const modulo = args[0]?.toLowerCase();
+    const acao = args[1]?.toLowerCase();
+
+    if (modulo === 'akinator') {
+        if (acao === 'off') {
+            comandosDesativados.akinator = true; // Altera a trava que seu código usa
+            return message.reply("🧞 **SISTEMA:** O gênio foi enviado para a lâmpada (DESATIVADO 🔴).");
+        } else if (acao === 'on') {
+            comandosDesativados.akinator = false;
+            return message.reply("🧞 **SISTEMA:** O gênio está pronto para jogar (ATIVADO 🟢).");
+        } else {
+            return message.reply("❓ Uso: `!setcomando akinator [on/off]`");
+        }
     }
+}
 
     if (command === 'forcarassalto' && message.member.permissions.has('Administrator')) {
         if (typeof iniciarAssalto === 'function') {
@@ -288,27 +308,28 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-// ==================== 🧞 COMANDO AKINATOR ====================
+// No topo do seu arquivo, fora dos comandos, adicione:
+const jogandoAkinator = new Set();
+
 if (command === 'akinator' || command === 'aki') {
-    // 1. Trava de Manutenção Global
-    const donos = ["1203435676083822712"]; 
     if (manutencaoGlobal && !donos.includes(message.author.id)) {
-        return message.reply("🛠️ **Manutenção Global:** O bot está em manutenção. Apenas desenvolvedores podem usar comandos.");
+        return message.reply("🛠️ **Manutenção Global:** O bot está em manutenção.");
     }
 
-    // 2. Trava Individual do Comando
     if (comandosDesativados.akinator) {
-        return message.reply("🛠️ **Manutenção:** O Akinator está temporariamente fora do ar para melhorias. Tente novamente mais tarde!");
+        return message.reply("🛠️ **Manutenção:** O Akinator está temporariamente fora do ar.");
+    }
+
+    if (jogandoAkinator.has(message.author.id)) {
+        return message.reply("⏳ Você já tem uma partida em curso!");
     }
 
     try {
-        // Importação correta para versões recentes da aki-api
-        const { Aki } = require('aki-api');
-        const region = 'pt'; // Região para Português
-        const aki = new Aki({ region });
+        // Usando a constante Aki definida no topo
+        const aki = new Aki({ region: 'pt', childMode: true });
+        await aki.start();
+        jogandoAkinator.add(message.author.id);
 
-        await aki.start(); // AQUI O AWAIT VAI FUNCIONAR AGORA
-        
         const gerarBotoes = () => {
             return new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('0').setLabel('Sim').setStyle(ButtonStyle.Success),
@@ -318,7 +339,7 @@ if (command === 'akinator' || command === 'aki') {
                 new ButtonBuilder().setCustomId('4').setLabel('Talvez Não').setStyle(ButtonStyle.Primary),
             );
         };
-        
+
         const embed = new EmbedBuilder()
             .setTitle('🤔 Akinator')
             .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
@@ -328,93 +349,89 @@ if (command === 'akinator' || command === 'aki') {
 
         const msg = await message.reply({ embeds: [embed], components: [gerarBotoes()] });
 
-        const filter = (i) => i.user.id === message.author.id;
-        const collector = msg.createMessageComponentCollector({ filter, time: 300000 });
+        const collector = msg.createMessageComponentCollector({ 
+            filter: (i) => i.user.id === message.author.id, 
+            time: 300000 
+        });
 
         collector.on('collect', async (interaction) => {
             try {
-                if (!interaction.deferred) await interaction.deferUpdate();
-                
-                // Envia a resposta selecionada para o gênio
+                await interaction.deferUpdate();
                 await aki.step(interaction.customId);
 
-                // Se o progresso for alto o suficiente, ele dá o palpite
                 if (aki.progress >= 80 || aki.currentStep >= 78) {
                     collector.stop();
-                    
-                    // Busca os palpites
                     await aki.win();
-                    const guess = aki.answers[0]; 
+                    const guess = aki.answers[0];
 
                     const winEmbed = new EmbedBuilder()
                         .setTitle('🎯 O Gênio deu o palpite!')
-                        .setDescription(`Eu acho que seu personagem é: **${guess.name}**\n*${guess.description || ''}*\n\n**Eu acertei?**`)
+                        .setDescription(`Eu acho que é: **${guess.name}**\n*${guess.description || ''}*`)
                         .setImage(guess.absolute_picture_path || 'https://i.imgur.com/vHqY7Ym.png')
                         .setColor('#2ECC71');
 
                     const rowConfirm = new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim, acertou!').setStyle(ButtonStyle.Success),
-                        new ButtonBuilder().setCustomId('aki_nao').setLabel('Não, errou!').setStyle(ButtonStyle.Danger)
+                        new ButtonBuilder().setCustomId('aki_sim').setLabel('Sim!').setStyle(ButtonStyle.Success),
+                        new ButtonBuilder().setCustomId('aki_nao').setLabel('Não!').setStyle(ButtonStyle.Danger)
                     );
 
                     const finalMsg = await msg.edit({ embeds: [winEmbed], components: [rowConfirm] });
 
-                    const finalCollector = finalMsg.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+                    const finalCollector = finalMsg.createMessageComponentCollector({ 
+                        filter: (i) => i.user.id === message.author.id, 
+                        time: 30000, 
+                        max: 1 
+                    });
 
                     finalCollector.on('collect', async (iFinal) => {
-                        if (!iFinal.deferred) await iFinal.deferUpdate();
+                        jogandoAkinator.delete(message.author.id);
                         if (iFinal.customId === 'aki_sim') {
                             await User.updateOne({ userId: message.author.id }, { $inc: { akinatorDerrotas: 1 } });
-                            await finalMsg.edit({ content: "🧞 **Akinator:** HAHA! Eu sabia!", components: [], embeds: [winEmbed] });
+                            await finalMsg.edit({ content: "🧞 **Akinator:** Acertei!", components: [] });
                         } else {
                             await User.updateOne({ userId: message.author.id }, { $inc: { akinatorVitorias: 1 } });
-                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu...", components: [], embeds: [winEmbed.setColor('#FF0000')] });
+                            await finalMsg.edit({ content: "😔 **Akinator:** Você me venceu...", components: [] });
                         }
                     });
                     return;
                 }
 
-                // Atualiza para a próxima pergunta
-                const nextEmbed = new EmbedBuilder()
-                    .setTitle('🤔 Akinator')
+                const nextEmbed = EmbedBuilder.from(embed)
                     .setDescription(`**Pergunta ${aki.currentStep + 1}:**\n${aki.question}`)
-                    .setColor('#F1C40F')
-                    .setThumbnail('https://i.imgur.com/vHqY7Ym.png')
                     .setFooter({ text: `Progresso: ${Math.round(aki.progress)}%` });
 
                 await msg.edit({ embeds: [nextEmbed], components: [gerarBotoes()] });
             } catch (err) {
-                console.error("Erro no coletor:", err);
+                collector.stop();
             }
         });
 
+        collector.on('end', () => jogandoAkinator.delete(message.author.id));
+
     } catch (e) {
-        console.error("ERRO AKINATOR:", e);
-        message.reply("❌ Não consegui iniciar o gênio. Verifique se a conexão está estável.");
+        jogandoAkinator.delete(message.author.id);
+        message.reply("❌ Erro 403: O Akinator bloqueou a conexão temporariamente.");
     }
 }
 
-    // ==================== 📊 COMANDO STATS AKINATOR ====================
-    if (command === 'akiestats') {
-        // Trava de Manutenção Individual
-        if (comandosDesativados.akinator) {
-            return message.reply("🛠️ **Manutenção:** As estatísticas do Akinator estão indisponíveis no momento.");
-        }
+if (command === 'akiestats') {
+    if (comandosDesativados.akinator) return message.reply("🛠️ Manutenção ativa.");
 
-        const vitorias = userData.akinatorVitorias || 0;
-        const derrotas = userData.akinatorDerrotas || 0;
-        
-        const embedStats = new EmbedBuilder()
-            .setTitle(`📊 Stats Akinator - ${message.author.username}`)
-            .addFields(
-                { name: '🏆 Vitórias (Você ganhou)', value: `\`${vitorias}\``, inline: true },
-                { name: '🧞 Derrotas (Gênio acertou)', value: `\`${derrotas}\``, inline: true }
-            )
-            .setColor('#F1C40F')
-            .setThumbnail(message.author.displayAvatarURL());
+    // Busca direta do userData que já deve estar carregado no seu bot
+    const v = userData.akinatorVitorias || 0;
+    const d = userData.akinatorDerrotas || 0;
+    
+    const embedStats = new EmbedBuilder()
+        .setTitle(`🧞 Stats: ${message.author.username}`)
+        .addFields(
+            { name: '🏆 Suas Vitórias', value: `\`${v}\``, inline: true },
+            { name: '💀 Acertos do Gênio', value: `\`${d}\``, inline: true }
+        )
+        .setColor('#F1C40F')
+        .setThumbnail(message.author.displayAvatarURL());
 
-        return message.reply({ embeds: [embedStats] });
-    }
+    return message.reply({ embeds: [embedStats] });
+}
 
     // COMANDO MONEY
     if (command === 'money' || command === 'bal') {
@@ -577,6 +594,66 @@ if (command === 'trabalhar' || command === 'work') {
         `📊 Nível: \`${userData.workCount}\` | ⏳ Cooldown: \`${Math.ceil(cooldown/60000)}min\``
     );
 }
+
+// ==================== 🖥️ PAINEL DE CONTROLE (VERSÃO COMPLETA) ====================
+if (command === 'status' || command === 'devstats') {
+    if (!donos.includes(message.author.id)) return; 
+
+    try {
+        // 1. Cálculos de Tempo e Sistema
+        const agora = new Date();
+        const minutosRestantes = 60 - agora.getMinutes();
+        
+        // Cálculo de Uptime
+        let totalSeconds = (client.uptime / 1000);
+        let days = Math.floor(totalSeconds / 86400);
+        totalSeconds %= 86400;
+        let hours = Math.floor(totalSeconds / 3600);
+        totalSeconds %= 3600;
+        let minutes = Math.floor(totalSeconds / 60);
+        const uptimeString = `${days}d ${hours}h ${minutes}m`;
+
+        // Uso de Memória RAM
+        const usoMemoria = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+
+        // 2. Status de Conexão e Travas
+        const dbEstado = mongoose.connection.readyState === 1 ? "🟢 ONLINE" : "🔴 OFFLINE";
+        const modoStatus = manutencaoGlobal ? "⚠️ MANUTENÇÃO (🔴)" : "✅ ABERTO (🟢)";
+        const akinatorStatus = comandosDesativados.akinator ? "❌ EM MANUTENÇÃO" : "✅ OPERACIONAL";
+
+        // 3. Informações de Alcance (Contagem real do Banco de Dados)
+        const totalServidores = client.guilds.cache.size;
+        const totalUsuariosBanco = await User.countDocuments(); // Conta apenas quem está no banco
+
+        // 4. Montagem do Painel Expandido
+        const painel = 
+            `📊 **PAINEL DE CONTROLE AVANÇADO - OMNIBOT**\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🛠️ **Status Global:** \`${modoStatus}\`\n` +
+            `📡 **Latência:** \`${client.ws.ping}ms\`\n` +
+            `💾 **Banco de Dados:** \`${dbEstado}\`\n` +
+            `⏳ **Uptime:** \`${uptimeString}\`\n` +
+            `🧠 **Memória RAM:** \`${usoMemoria} MB\`\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🧞 **Módulo Akinator:** \`${akinatorStatus}\`\n` +
+            `💰 **Carro Forte:** \`${eventoAtivo ? "🚨 EM ANDAMENTO" : "💤 AGUARDANDO"}\`\n` +
+            `📺 **Bom Dia & Cia:** \`Próximo em ~${minutosRestantes} min\`\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🌍 **Servidores:** \`${totalServidores}\` | 👥 **Registrados:** \`${totalUsuariosBanco}\`\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `👤 **Desenvolvedor:** <@${message.author.id}>`;
+
+        return message.reply({ 
+            content: painel, 
+            allowedMentions: { parse: [] } 
+        });
+
+    } catch (e) {
+        console.error("Erro no Status Dev:", e);
+        message.reply("❌ Erro técnico ao gerar o relatório completo.");
+    }
+}
+
 if (command === 'setmoney') {
     // Substitua apenas os números, mantenha as aspas ''
     if (message.author.id !== '1203435676083822712') return message.reply("❌ Apenas o dono pode usar este comando.");
@@ -1840,6 +1917,68 @@ if (command === 'presentear' || command === 'gift' || command === 'dar') {
         return message.reply("❌ Ocorreu um erro ao entregar o presente.");
     }
 }
+// ==================== COMANDO DE SEXO (SISTEMA COM AFINIDADE PARA CASADOS) ====================
+
+if (command === 'sexo' || command === 'sex') {
+    try {
+
+        const target = message.mentions.users.first();
+        if (!target) return message.reply('❓ Você precisa mencionar alguém!');
+        if (target.id === message.author.id) return message.reply('Você não pode fazer isso consigo mesmo!');
+
+        let ganhoAfinidade = Math.floor(Math.random() * 19) + 1;
+        let mostrarAfinidade = false;
+
+        if (userData.marriedWith === target.id) {
+            mostrarAfinidade = true;
+            userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
+            await userData.save();
+            await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
+        }
+
+        const autorNome = message.member.displayName;
+        const alvoMember = message.guild.members.cache.get(target.id);
+        const alvoNome = alvoMember ? alvoMember.displayName : target.username;
+
+        const acoes = [
+            `🔥 **${autorNome}** fez sexo freneticamente com **${alvoNome}**!`,
+            `🔥 **${autorNome}** arrombou o cu de **${alvoNome}**!`,
+            `🔥 **${autorNome}** deixou o cu de **${alvoNome}** em chamas agora!`,
+            `🔥 **${autorNome}** penetrou o cu de **${alvoNome}**!`,
+            `🔥 **${autorNome}** comeu o cu de **${alvoNome}**!`,
+            `🔥 **${autorNome}** deixou o **${alvoNome}** molhadinho!`,
+            `🔥 **${autorNome}** não teve piedade e gozou no cu de **${alvoNome}**!`,
+            `🔥 **${autorNome}** comeu o cuzinho de **${alvoNome}**!`,
+            `🔥 **${autorNome}** e **${alvoNome}** fizeram sexo selvagem!`,
+            `🔥 **${autorNome}** fez sexo brutal com **${alvoNome}**!`,
+            `🔥 **${autorNome}** envolveu **${alvoNome}** em uma orgia absurda!`,
+            `🔥 **${autorNome}** e **${alvoNome}** perderam o controle e gozaram no cu um do outro!`,
+            `🔥 **${autorNome}** estourou as pregas de **${alvoNome}**!`,
+            `🔥 **${autorNome}** fez **${alvoNome}** gozar pelo cu!`,
+            `🔥 **${autorNome}** estourou completamente as pregas de **${alvoNome}**!`,
+            `🔥 **${autorNome}** deixou o cu de **${alvoNome}**em chamas!`,
+            `🔥 **${autorNome}** e **${alvoNome}** fizeram uma suruba imensa!`,
+            `🔥 **${autorNome}** foi direto ao ponto e gozou no cu de **${alvoNome}** !`,
+            `🔥 **${autorNome}** fez sexo com **${alvoNome}**!`,
+            `🔥 **${autorNome}** e **${alvoNome}** fizeram o maior sexo de toda a historia!`,
+            `🔥 **${autorNome}** desafiou os limites do cu de **${alvoNome}**!`,
+            `🔥 **${autorNome}** fez **${alvoNome}** ficar cadeirante!`
+        ];
+
+        const sorteio = acoes[Math.floor(Math.random() * acoes.length)];
+        let footer = mostrarAfinidade ? `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${userData.affinity}\`)` : "";
+
+        return message.channel.send({
+            content: `${sorteio}${footer}`,
+            allowedMentions: { parse: [] }
+        });
+
+    } catch (error) {
+        console.error(error);
+        message.reply("❌ Ocorreu um erro ao processar a ação!");
+    }
+}
+
 // ==================== 💋 COMANDO BEIJAR (SISTEMA COM AFINIDADE PARA CASADOS) ====================
 if (command === 'beijar' || command === 'kiss') {
     try {
