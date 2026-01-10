@@ -12,7 +12,7 @@ const FaccaoSchema = new mongoose.Schema({
     cargosIds: { type: [String], default: [] },
     canalRecrutamentoId: { type: String },
     
-    dataCriacao: { type: Number, default: Date.now() }
+    dataCriacao: { type: Number, default: () => Date.now() } // Ajustado para pegar a data no momento da criação
 });
 
 // ==================== 🚩 SCHEMA DE TERRITÓRIOS (AUXILIAR) ====================
@@ -36,6 +36,9 @@ const UserSchema = new mongoose.Schema({
     lastDaily: { type: Number, default: 0 },   
     lastInvest: { type: Number, default: 0 },
     cassinoGasto: { type: Number, default: 0 },
+
+    // --- 🚀 SISTEMA DE VOTOS (NOVO) ---
+    lastVote: { type: Number, default: 0 }, // Essencial para o comando !votar de 100k
 
     // --- INVENTÁRIO & CUSTOMIZAÇÃO ---
     inventory: { type: [String], default: [] },   
