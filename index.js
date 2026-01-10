@@ -3,11 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
+// No topo do seu arquivo, fora dos comandos, adicione:
+const jogandoAkinator = new Set(); 
+
 // 🧞 Configuração do Akinator (Versão Atualizada)
 const { Aki } = require('aki-api');
 
 const { Api } = require('@top-gg/sdk');
-const topggApi = new Api('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib3QiOiJ0cnVlIiwiaWQiOiIxNDUzODk0MzAyOTc4NjcwNjA0IiwiaWF0IjoiMTc2ODAxODMyMCJ9.-Am0Y80gEq5UwaaTjCAd7QZOQ7p3pwWg7P5BduoEyYkI'); 
+const topggApi = new Api('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib3QiOiJ0cnVlIiwiaWQiOiIxNDUzODk0MzAyOTc4NjcwNjA0IiwiaWF0IjoiMTc2ODAxODM1MiJ9.AZQzhLGnt_4ksDjRCHxRftbOEn_3ekohDuRC8knHM04');
 
 // 🎨 Configuração do Canvas
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
@@ -42,6 +45,39 @@ const donosID = ["1203435676083822712"];
 let eventoAtivo = false;
 let hpBanco = 0;
 let participantes = [];
+
+// --- ⚙️ FUNÇÕES DO EVENTO ---
+function iniciarAssalto(canal) {
+    const embed = new EmbedBuilder()
+        .setTitle("🚚 CARRO FORTE AVISTADO!")
+        .setDescription("Um comboio carregado de notas de 100 está passando!\n\n💥 Use `!interceptar` para atacar!")
+        .setColor("#FF0000");
+    canal.send({ embeds: [embed] });
+}
+
+async function finalizarAssalto(vitoria, channel) {
+    if (vitoria && participantes.length > 0) {
+        const premioTotal = 500000;
+        const danoTotalRealizado = participantes.reduce((acc, p) => acc + p.dano, 0);
+        let texto = "💰 **CARRO FORTE EXPLODIU! SAQUE DIVIDIDO:**\n\n";
+
+        for (const p of participantes) {
+            const porcentagem = p.dano / danoTotalRealizado;
+            const parte = Math.floor(premioTotal * porcentagem);
+
+            // SALVANDO NO MONGODB (Usando o model User que você já tem)
+            await User.findOneAndUpdate(
+                { userId: p.userId },
+                { $inc: { money: parte, procurado: 1 } }
+            );
+            texto += `👤 **${p.username}**: +R$ ${parte.toLocaleString()}\n`;
+        }
+        channel.send(texto);
+    }
+    eventoAtivo = false;
+    participantes = [];
+    hpBanco = 0;
+}
 
 // Sistemas desativados
 let comandosDesativados = {
@@ -212,11 +248,22 @@ if (command === 'setcomando' && donos.includes(message.author.id)) {
         }
     }
 
-    if (command === 'forcarbomdia' && donos.includes(message.author.id)) {
-        fraseAtivaBomDia = null;
-        roletaDisponivelGlobal = true;
-        return message.reply("✅ O Bom Dia foi resetado e entrará no ar no próximo sorteio do relógio (a cada hora)!");
-    } 
+if (command === 'forcarassalto') {
+    // Apenas você pode usar
+    if (message.author.id !== '1203435676083822712') return;
+
+    if (eventoAtivo) return message.reply("⚠️ Já existe um Carro Forte na pista!");
+
+    // --- CONFIGURAÇÃO COM 1500 HP ---
+    eventoAtivo = true;
+    hpBanco = 1500;      // Define a vida exatamente como você pediu
+    participantes = [];  // Limpa a lista para um novo assalto
+
+    // Avisa no canal que o carro apareceu
+    iniciarAssalto(message.channel);
+    
+    message.reply("✅ **SISTEMA:** Evento iniciado com **1500 HP**!");
+}
 
     // ==================== 📞 COMANDO !LIGAR ====================
     if (command === 'ligar') {
@@ -311,8 +358,29 @@ if (command === 'setcomando' && donos.includes(message.author.id)) {
         }
     }
 
-// No topo do seu arquivo, fora dos comandos, adicione:
-const jogandoAkinator = new Set();
+if (command === 'testarassalto') {
+    // Verifica se o ID de quem digitou é o seu ID
+    if (message.author.id !== '1203435676083822712') {
+        return message.reply("❌ **ERRO:** Apenas o meu desenvolvedor pode usar este comando de teste.");
+    }
+
+    // 1. Configura o cenário de teste
+    eventoAtivo = true;
+    hpBanco = 100; 
+    participantes = [];
+
+    // 2. Adiciona você como o ganhador do teste
+    participantes.push({ 
+        userId: message.author.id, 
+        username: message.author.username, 
+        dano: 100 
+    });
+
+    message.reply("🛠️ **SISTEMA:** Iniciando teste forçado... Explodindo blindado!");
+
+    // 3. Chama a função de pagamento que instalamos agora há pouco
+    await finalizarAssalto(true, message.channel);
+}
 
 if (command === 'akinator' || command === 'aki') {
     if (manutencaoGlobal && !donos.includes(message.author.id)) {
@@ -1216,15 +1284,21 @@ if (command === 'top') {
         return message.reply("❌ Erro ao processar o ranking. Tente novamente mais tarde.");
     }
 }
-// ==================== 🚀 COMANDO VOTAR (COM LEMBRETE DM) ====================
+
+// ==================== 🚀 COMANDO VOTAR (ATUALIZADO) ====================
 if (command === 'votar' || command === 'vote') {
     try {
-        const votou = await topggApi.hasVoted(message.author.id);
+        // Verifica o voto (se der erro de token, ele retorna 'false' em vez de travar o bot)
+        const votou = await topggApi.hasVoted(message.author.id).catch(err => {
+            console.error("Erro na API do Top.gg (Verifique o Token):", err.message);
+            return false; 
+        });
 
         if (votou) {
             const agora = Date.now();
             const dozeHoras = 12 * 60 * 60 * 1000;
 
+            // Verifica cooldown de 12 horas
             if (userData.lastVote && (agora - userData.lastVote < dozeHoras)) {
                 const restante = Number(dozeHoras - (agora - userData.lastVote));
                 const horas = Math.floor(restante / (1000 * 60 * 60));
@@ -1233,43 +1307,44 @@ if (command === 'votar' || command === 'vote') {
                 return message.reply(`⏳ Você já resgatou seu prêmio! Volte a votar em **${horas}h ${minutos}m**.`);
             }
 
-            // ENTREGA O DINHEIRO
+            // --- ENTREGA O DINHEIRO ---
             userData.money = (userData.money || 0) + 100000;
             userData.lastVote = agora;
+            
+            // Força o salvamento no MongoDB
             await userData.save();
 
             const embedSucesso = new EmbedBuilder()
                 .setColor('#2ECC71')
                 .setTitle('🚀 Voto Confirmado!')
-                .setDescription(`💰 **Recompensa:** \`100.000 moedas\` depositadas!\n\n🔔 **Lembrete:** Daqui a 12h vou te avisar no privado para você votar de novo!`)
+                .setDescription(`💰 **Recompensa:** \`100.000 moedas\` foram adicionadas à sua conta!\n\n🔔 **Lembrete:** Daqui a 12h vou te avisar no privado para votar de novo!`)
                 .setThumbnail(client.user.displayAvatarURL());
 
             message.reply({ embeds: [embedSucesso] });
 
-            // --- FUNÇÃO DO LEMBRETE AUTOMÁTICO ---
+            // --- LEMBRETE DM ---
             setTimeout(async () => {
                 try {
                     const usuario = await client.users.fetch(message.author.id);
                     if (usuario) {
-                        await usuario.send("🚀 **OmniBot: Hora de Votar!**\nJá passaram 12 horas desde seu último voto. Use `!votar` agora para ganhar mais **100.000 moedas**!\nLink: https://top.gg/bot/1453894302978670604/vote");
+                        await usuario.send("🚀 **OmniBot: Hora de Votar!**\nJá se passaram 12 horas. Use `!votar` para ganhar mais **100.000 moedas**!\nhttps://top.gg/bot/1453894302978670604/vote");
                     }
                 } catch (e) {
-                    console.log(`Não consegui mandar DM para ${message.author.tag}, talvez a DM esteja fechada.`);
+                    console.log(`Não consegui mandar DM para o usuário ${message.author.id}.`);
                 }
-            }, dozeHoras); 
-            // -------------------------------------
+            }, dozeHoras);
 
             return;
         }
 
-        // --- MENSAGEM PARA QUEM NÃO VOTOU AINDA ---
+        // --- SE NÃO VOTOU ---
         const embedLink = new EmbedBuilder()
             .setColor('#ff3366')
             .setTitle('🚀 Ganhe 100.000 Moedas agora!')
             .setDescription(
-                `Ainda não identifiquei seu voto!\n\n` +
-                `1️⃣ Vote no botão abaixo.\n` +
-                `2️⃣ Use \`!votar\` novamente para resgatar seus **100k**!`
+                `Ainda não identifiquei seu voto no Top.gg!\n\n` +
+                `1️⃣ Clique no botão abaixo para votar.\n` +
+                `2️⃣ Após votar, aguarde 1 minuto e use \`!votar\` aqui novamente.`
             );
 
         const botaoVoto = new ActionRowBuilder().addComponents(
@@ -1282,10 +1357,11 @@ if (command === 'votar' || command === 'vote') {
         return message.reply({ embeds: [embedLink], components: [botaoVoto] });
 
     } catch (e) {
-        console.error("Erro Top.gg:", e);
-        message.reply("❌ Erro ao conectar com o Top.gg.");
+        console.error("Erro Geral no Comando Votar:", e);
+        message.reply("❌ Ocorreu um erro interno ao processar seu voto.");
     }
 }
+
 // ==================== ❤️ COMANDO SHIP (COM EASTER EGG) ====================
 if (command === 'ship') {
     const users = message.mentions.users.map(u => u);
@@ -5536,7 +5612,6 @@ setInterval(() => {
     const horas = agora.getHours();
 
     if (minutos === 0) {
-        
         // --- 1. SORTEIO DO BOM DIA & CIA ---
         if (roletaDisponivelGlobal && !fraseAtivaBomDia) {
             if (Math.random() <= 0.10) { 
@@ -5552,13 +5627,7 @@ setInterval(() => {
                         .setDescription(`**O programa entrou no ar inesperadamente!**\n\n📢 **LIGUE JÁ:** \`!ligar ${fraseExibida}\``)
                         .setImage('https://media.giphy.com/media/l41lTjJp9k6yZ8z7q/giphy.gif');
 
-                    // Adicionado trava de menção
-                    canalBomDia.send({ 
-                        content: "@everyone", 
-                        embeds: [embedAviso],
-                        allowedMentions: { parse: [] } 
-                    });
-                    console.log(`[SORTEIO] Bom Dia & Cia iniciado sem ping.`);
+                    canalBomDia.send({ embeds: [embedAviso] });
                 }
             }
         }
@@ -5567,19 +5636,23 @@ setInterval(() => {
         if (!eventoAtivo && Math.random() <= 0.30) {
             const canalNoticias = client.channels.cache.get('1389693712770269196');
             if (canalNoticias) {
+                // RESETANDO VARIÁVEIS ANTES DE COMEÇAR
+                eventoAtivo = true;
+                hpBanco = 1500; // HP do carro
+                participantes = []; 
+                
                 iniciarAssalto(canalNoticias);
-                console.log(`[SORTEIO] Carro Forte iniciado sem ping.`);
+                console.log(`[SORTEIO] Carro Forte iniciado.`);
             }
         }
     }
 
-    // --- 3. RESET DA ROLETA (Meia-noite) ---
     if (horas === 0 && minutos === 0) {
         roletaDisponivelGlobal = true;
         fraseAtivaBomDia = null;
         console.log("✅ [SISTEMA] Variáveis resetadas.");
     }
-
 }, 60000);
+
 // ==================== 🚀 LOGIN ====================
 client.login(process.env.TOKEN);
