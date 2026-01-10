@@ -6,6 +6,9 @@ const path = require('path');
 // 🧞 Configuração do Akinator (Versão Atualizada)
 const { Aki } = require('aki-api');
 
+const { Api } = require('@top-gg/sdk');
+const topggApi = new Api('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib3QiOiJ0cnVlIiwiaWQiOiIxNDUzODk0MzAyOTc4NjcwNjA0IiwiaWF0IjoiMTc2ODAxODMyMCJ9.-Am0Y80gEq5UwaaTjCAd7QZOQ7p3pwWg7P5BduoEyYkI'); 
+
 // 🎨 Configuração do Canvas
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
@@ -441,59 +444,88 @@ if (command === 'akiestats') {
         return message.reply(`💰 **${alvo.username}** tem **${saldo} moedas**.`);
     }
 
-// ==================== 🎁 COMANDO DAILY (INTEGRADO) ====================
+// ==================== 🎁 COMANDO DAILY (SISTEMA DE SEGURANÇA) ====================
 if (command === 'daily') {
     try {
-        const tempoEspera = 24 * 60 * 60 * 1000; // 24 horas
         const agora = Date.now();
-        const inventory = userData.inventory || [];
+        const vinteQuatroHoras = 24 * 60 * 60 * 1000;
 
-        // 1. Verificação de Cooldown
-        if (agora - (userData.lastDaily || 0) < tempoEspera) {
-            const restando = tempoEspera - (agora - userData.lastDaily);
-            const horas = Math.floor(restando / 3600000);
-            const minutos = Math.floor((restando % 3600000) / 60000);
+        // 1. Verifica se ele REALMENTE já ganhou o prêmio (conferindo o tempo no banco)
+        if (userData.lastDaily && (agora - userData.lastDaily < vinteQuatroHoras)) {
+            const restante = Number(vinteQuatroHoras - (agora - userData.lastDaily));
+            const horas = Math.floor(restante / (1000 * 60 * 60));
+            const minutos = Math.floor((restante % (1000 * 60 * 60)) / (1000 * 60));
             
-            return message.reply(`❌ Já coletaste o teu bônus hoje! Volta em **${horas}h e ${minutos}min**.`);
+            return message.reply(`⏳ Você já resgatou seu prêmio diário! Volte em **${horas}h ${minutos}m**.`);
         }
 
-        // 2. Lógica de Ganhos
-        let ganho = Math.floor(Math.random() * 7001) + 3000; // Base: 3k a 10k
-        let extras = [];
+        // 2. Prepara os Botões
+        const botaoLink = new ButtonBuilder()
+            .setLabel('🔗 1. Visitar Site')
+            .setURL('https://sites.google.com/view/omnibot-recompensas')
+            .setStyle(ButtonStyle.Link);
 
-        // --- BÔNUS: MANSÃO (Dobra o valor) ---
-        if (inventory.includes('mansao')) {
-            ganho *= 2;
-            extras.push("🏡 **Bônus de Mansão (2x)**");
-        }
+        const botaoResgate = new ButtonBuilder()
+            .setCustomId('confirmar_daily')
+            .setLabel('💰 2. Resgatar Moedas')
+            .setStyle(ButtonStyle.Success);
 
-        // --- BÔNUS: RELÓGIO DE OURO (Bônus fixo de ostentação) ---
-        if (inventory.includes('relogio')) {
-            const bonusOuro = 2500;
-            ganho += bonusOuro;
-            extras.push("⌚ **Bônus Magnata (+2.5k)**");
-        }
+        const rowInicial = new ActionRowBuilder().addComponents(botaoLink);
+        const rowLiberada = new ActionRowBuilder().addComponents(botaoLink, botaoResgate);
 
-        // 3. Salvamento
-        userData.money += ganho;
-        userData.lastDaily = agora;
-        await userData.save();
+        const embedDaily = new EmbedBuilder()
+            .setColor('#F1C40F')
+            .setTitle('🎁 Daily Disponível!')
+            .setDescription(`1️⃣ Visite nosso site.\n2️⃣ Aguarde **30 segundos**.\n3️⃣ Clique no botão de resgate que aparecerá!\n\n💰 **Prêmio:** \`100.000 moedas\``)
+            .setFooter({ text: 'O botão aparecerá em 30 segundos...' });
 
-        // 4. Resposta Estilizada
-        let resposta = `🎁 **RECOMPENSA DIÁRIA** 🎁\n\n` +
-                       `Recebeste **${ganho.toLocaleString()} moedas** hoje!`;
+        const msg = await message.reply({ embeds: [embedDaily], components: [rowInicial] });
 
-        if (extras.length > 0) {
-            resposta += `\n\n✨ **Benefícios ativos:**\n${extras.join('\n')}`;
-        }
+        // 3. Libera o botão após 30 segundos
+        setTimeout(async () => {
+            try {
+                const embedPronto = EmbedBuilder.from(embedDaily)
+                    .setDescription(`✅ **Tempo de leitura concluído!**\nClique no botão verde para receber suas moedas.`)
+                    .setFooter({ text: 'Aguardando resgate...' });
 
-        resposta += `\n\n*Amanhã tem mais! Não te esqueças de voltar.*`;
+                await msg.edit({ embeds: [embedPronto], components: [rowLiberada] });
+            } catch (err) { 
+                // Se a mensagem for apagada antes dos 30s, o bot não faz nada e não dá erro.
+            }
+        }, 30000);
 
-        return message.reply(resposta);
+        // 4. Coletor (Fica ativo por 5 minutos para dar tempo do cara ler com calma)
+        const filter = i => i.customId === 'confirmar_daily' && i.user.id === message.author.id;
+        const collector = msg.createMessageComponentCollector({ filter, time: 300000 }); // 5 minutos
 
-    } catch (error) {
-        console.error("Erro no comando daily:", error);
-        message.reply("❌ Ocorreu um erro ao coletar o seu daily.");
+        collector.on('collect', async i => {
+            // SÓ SALVA NO BANCO AQUI, QUANDO ELE CLICA NO BOTÃO
+            userData.money = (userData.money || 0) + 100000;
+            userData.lastDaily = Date.now(); // Grava a hora exata do resgate
+            await userData.save();
+
+            await i.update({ 
+                content: `🚀 **Prêmio resgatado!** Você recebeu **100.000 moedas**.`, 
+                embeds: [], 
+                components: [] 
+            });
+            collector.stop();
+        });
+
+        collector.on('end', (collected, reason) => {
+            // Se o tempo acabar e ele NÃO clicou, avisamos que ele pode tentar de novo
+            if (reason === 'time' && collected.size === 0) {
+                msg.edit({ 
+                    content: '❌ **Tempo esgotado!** Você não clicou em resgatar. Pode usar `!daily` novamente para tentar de novo.', 
+                    embeds: [], 
+                    components: [] 
+                }).catch(() => null);
+            }
+        });
+
+    } catch (e) {
+        console.error(e);
+        message.reply("❌ Erro ao processar o Daily.");
     }
 }
 // ==================== 🔨 COMANDO TRABALHAR (VERSÃO 2.0 - INTEGRADA) ====================
@@ -1184,34 +1216,76 @@ if (command === 'top') {
         return message.reply("❌ Erro ao processar o ranking. Tente novamente mais tarde.");
     }
 }
-// ==================== 🚀 COMANDO VOTE (COMPLETO) ====================
-    if (command === 'votar' || command === 'vote') {
-        const embedVoto = new EmbedBuilder()
+// ==================== 🚀 COMANDO VOTAR (COM LEMBRETE DM) ====================
+if (command === 'votar' || command === 'vote') {
+    try {
+        const votou = await topggApi.hasVoted(message.author.id);
+
+        if (votou) {
+            const agora = Date.now();
+            const dozeHoras = 12 * 60 * 60 * 1000;
+
+            if (userData.lastVote && (agora - userData.lastVote < dozeHoras)) {
+                const restante = Number(dozeHoras - (agora - userData.lastVote));
+                const horas = Math.floor(restante / (1000 * 60 * 60));
+                const minutos = Math.floor((restante % (1000 * 60 * 60)) / (1000 * 60));
+                
+                return message.reply(`⏳ Você já resgatou seu prêmio! Volte a votar em **${horas}h ${minutos}m**.`);
+            }
+
+            // ENTREGA O DINHEIRO
+            userData.money = (userData.money || 0) + 100000;
+            userData.lastVote = agora;
+            await userData.save();
+
+            const embedSucesso = new EmbedBuilder()
+                .setColor('#2ECC71')
+                .setTitle('🚀 Voto Confirmado!')
+                .setDescription(`💰 **Recompensa:** \`100.000 moedas\` depositadas!\n\n🔔 **Lembrete:** Daqui a 12h vou te avisar no privado para você votar de novo!`)
+                .setThumbnail(client.user.displayAvatarURL());
+
+            message.reply({ embeds: [embedSucesso] });
+
+            // --- FUNÇÃO DO LEMBRETE AUTOMÁTICO ---
+            setTimeout(async () => {
+                try {
+                    const usuario = await client.users.fetch(message.author.id);
+                    if (usuario) {
+                        await usuario.send("🚀 **OmniBot: Hora de Votar!**\nJá passaram 12 horas desde seu último voto. Use `!votar` agora para ganhar mais **100.000 moedas**!\nLink: https://top.gg/bot/1453894302978670604/vote");
+                    }
+                } catch (e) {
+                    console.log(`Não consegui mandar DM para ${message.author.tag}, talvez a DM esteja fechada.`);
+                }
+            }, dozeHoras); 
+            // -------------------------------------
+
+            return;
+        }
+
+        // --- MENSAGEM PARA QUEM NÃO VOTOU AINDA ---
+        const embedLink = new EmbedBuilder()
             .setColor('#ff3366')
-            .setAuthor({ name: 'Top.gg - Sistema de Votos', iconURL: 'https://cdn.discordapp.com/emojis/1083437286161485824.png' })
-            .setTitle('🚀 Ajude o OmniBot e Ganhe Recompensas!')
-            .setThumbnail(client.user.displayAvatarURL())
+            .setTitle('🚀 Ganhe 100.000 Moedas agora!')
             .setDescription(
-                `Votar no bot ajuda a nossa comunidade a crescer e você ainda sai ganhando!\n\n` +
-                `💰 **Recompensa:** \`5.000 moedas\`\n` +
-                `⏰ **Intervalo:** A cada \`12 horas\``
-            )
-            .addFields(
-                { name: '🔗 Link Direto', value: '[CLIQUE AQUI PARA VOTAR](https://top.gg/bot/1453894302978670604/vote)' },
-                { name: '📢 Como funciona?', value: 'Após votar, o Top.gg nos avisa e eu envio seu dinheiro e um aviso no seu PV automaticamente!' }
-            )
-            .setFooter({ text: `Solicitado por ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
-            .setTimestamp();
+                `Ainda não identifiquei seu voto!\n\n` +
+                `1️⃣ Vote no botão abaixo.\n` +
+                `2️⃣ Use \`!votar\` novamente para resgatar seus **100k**!`
+            );
 
         const botaoVoto = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setLabel('Votar no Top.gg')
-                .setURL('https://top.gg/bot/ID_DO_SEU_BOT/vote')
+                .setURL('https://top.gg/bot/1453894302978670604/vote')
                 .setStyle(ButtonStyle.Link)
         );
 
-        return message.reply({ embeds: [embedVoto], components: [botaoVoto] });
+        return message.reply({ embeds: [embedLink], components: [botaoVoto] });
+
+    } catch (e) {
+        console.error("Erro Top.gg:", e);
+        message.reply("❌ Erro ao conectar com o Top.gg.");
     }
+}
 // ==================== ❤️ COMANDO SHIP (COM EASTER EGG) ====================
 if (command === 'ship') {
     const users = message.mentions.users.map(u => u);
