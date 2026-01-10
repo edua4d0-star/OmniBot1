@@ -15,6 +15,7 @@
   "type": "commonjs",
   "dependencies": {
     "@napi-rs/canvas": "^0.1.66",
+    "@top-gg/sdk": "^3.1.6",
     "aki-api": "^7.0.1",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
