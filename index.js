@@ -2219,41 +2219,50 @@ if (command === 'beijar' || command === 'kiss') {
         message.reply("❌ Ocorreu um erro ao processar o seu beijo!");
     }
 }
-// ==================== 💆 COMANDO CAFUNÉ (SISTEMA DE AFINIDADE) ====================
+
+// ==================== 💆 COMANDO CAFUNÉ (SISTEMA DE AFINIDADE + CURA) ====================
 if (command === 'cafune' || command === 'headpat') {
     try {
         const target = message.mentions.users.first();
 
-        // 1. Verificações de Alvo (Estilo Loritta)
+        // 1. Verificações de Alvo
         if (!target) return message.reply('💆 Você precisa mencionar alguém para fazer um cafuné! Exemplo: `!cafune @usuario`');
-
-        if (target.id === message.author.id) {
-            return message.reply('Você quer fazer cafuné em você mesmo? Deixe-me fazer isso por você! *faço um cafuné em sua cabeça*');
-        }
-
-        if (target.id === message.client.user.id) {
-            return message.reply('Aww, obrigada! Eu adoro carinho atrás das orelhas... digo, nos meus circuitos! *aproveito o cafuné*');
-        }
 
         // Buscar dados do autor no banco
         let dadosAutor = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
 
-        // 2. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
+        // Lógica de Auto-Cafuné (Cura 5% de depressão do autor)
+        if (target.id === message.author.id) {
+            dadosAutor.depression = Math.max(0, (dadosAutor.depression || 0) - 5);
+            await dadosAutor.save();
+            return message.reply('Você quer fazer cafuné em você mesmo? Deixe-me fazer isso por você! *faço um cafuné em sua cabeça* 💆‍♂️✨\n📉 **Sua depressão caiu para ' + dadosAutor.depression + '%!**');
+        }
+
+        if (target.id === message.client.user.id) {
+            return message.reply('Aww, obrigada! Eu adoro carinho atrás das orelhas... digo, nos meus circuitos! *aproveito o cafuné* 🤖⚙️');
+        }
+
+        // 2. Carregar dados do Alvo (para curar a depressão dele)
+        let targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+
+        // 3. Lógica de Cura de Depressão (Reduz 15% do alvo)
+        targetData.depression = Math.max(0, (targetData.depression || 0) - 15);
+        await targetData.save();
+
+        // 4. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
         let mostrarAfinidade = false;
-        let ganhoAfinidade = 1; // Cafuné geralmente dá menos que beijo, ou o mesmo, você escolhe.
+        let ganhoAfinidade = 1;
 
         if (dadosAutor.marriedWith === target.id) {
             mostrarAfinidade = true;
-
-            // Atualiza afinidade no banco para o autor
             dadosAutor.affinity = (dadosAutor.affinity || 0) + ganhoAfinidade;
             await dadosAutor.save();
             
-            // Sincroniza com o cônjuge (para o card de casamento ficar igual para os dois)
+            // Sincroniza com o cônjuge
             await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
         }
 
-        // 3. Banco de Dados de Frases
+        // 5. Banco de Dados de Frases
         const mensagens = [
             `💆 **${message.author.username}** está fazendo um cafuné relaxante em **${target.username}**!`,
             `✨ **${message.author.username}** começou a fazer um cafuné fofinho em **${target.username}**!`,
@@ -2279,13 +2288,14 @@ if (command === 'cafune' || command === 'headpat') {
 
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
 
-        // 4. Montagem da Resposta Final
-        let footer = "";
+        // 6. Montagem da Resposta Final
+        let statsFinal = `\n\n📉 **Depressão de ${target.username}:** \`${targetData.depression}%\``;
+        
         if (mostrarAfinidade) {
-            footer = `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${dadosAutor.affinity}\`)`;
+            statsFinal += `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` (Total: \`${dadosAutor.affinity}\`)`;
         }
 
-        return message.channel.send(`${sorteio}${footer}`);
+        return message.channel.send(`${sorteio}${statsFinal}`);
 
     } catch (error) {
         console.error("Erro no comando cafune:", error);
@@ -2293,29 +2303,36 @@ if (command === 'cafune' || command === 'headpat') {
     }
 }
     
-// ==================== 🤗 COMANDO ABRAÇAR (SISTEMA DE AFETOS + TECH) ====================
+// ==================== 🤗 COMANDO ABRAÇAR (SISTEMA COMPLETO + CURA) ====================
 if (command === 'abracar' || command === 'hug') {
     try {
         const target = message.mentions.users.first();
         
-        // Buscar dados do autor no banco (Garante que userData existe)
+        // Buscar dados do autor e do alvo
         let userData = await User.findOne({ userId: message.author.id }) || await User.create({ userId: message.author.id });
-        const inventory = userData.inventory || [];
-        const now = Date.now();
+        
         const cooldownSocial = 30000; // 30 segundos
+        const now = Date.now();
+        const inventory = userData.inventory || [];
 
-        // 1. Verificações Específicas
+        // 1. Verificações Iniciais
         if (!target) return message.reply('🤗 Precisas de mencionar alguém para abraçar! Exemplo: `!abracar @usuario`');
 
+        // Lógica de Auto-abraço (Cura 5% de depressão do autor)
         if (target.id === message.author.id) {
-            return message.reply('Queres abraçar-te a ti próprio? Deixa-me fazer isso por ti! *te dou um abraço bem apertado*');
+            userData.depression = Math.max(0, (userData.depression || 0) - 5);
+            await userData.save();
+            return message.reply('Queres abraçar-te a ti próprio? Deixa-me fazer isso por ti! *te dou um abraço bem apertado* 🫂\n📉 **Sua depressão caiu para ' + userData.depression + '%!**');
         }
 
         if (target.id === message.client.user.id) {
-            return message.reply('Aww! Eu adoro abraços! *retribuo o abraço com os meus braços mecânicos e fofinhos*');
+            return message.reply('Aww! Eu adoro abraços! *retribuo o abraço com os meus braços mecânicos e fofinhos* 🤖💖');
         }
 
-        // 2. Lógica de Itens e Cooldown (Funciona para todos)
+        // 2. Carregar dados do Alvo (para curar a depressão dele)
+        let targetData = await User.findOne({ userId: target.id }) || await User.create({ userId: target.id });
+
+        // 3. Verificação de Cooldown e Item Bateria
         let usouBateria = false;
         if (userData.lastSocial && (now - userData.lastSocial < cooldownSocial)) {
             if (inventory.includes('bateria')) {
@@ -2329,36 +2346,32 @@ if (command === 'abracar' || command === 'hug') {
             }
         }
 
-        // 3. Lógica de Afinidade (SÓ SE ESTIVER CASADO COM O ALVO)
+        // 4. Lógica de Cura de Depressão (Reduz 15% do alvo)
+        targetData.depression = Math.max(0, (targetData.depression || 0) - 15);
+        await targetData.save();
+
+        // 5. Lógica de Afinidade (Casamento + Anel)
         let mostrarAfinidade = false;
         let ganhoAfinidade = 1;
         let extras = [];
 
         if (userData.marriedWith === target.id) {
             mostrarAfinidade = true;
-
-            // --- BÔNUS: ANEL DE DIAMANTE ---
             if (inventory.includes('anel')) {
                 ganhoAfinidade *= 2;
-                extras.push("💍 **Poder do Anel:** Abraço duplicado!");
+                extras.push("💍 **Poder do Anel:** A conexão entre vocês dobrou o ganho de afinidade!");
             }
-
-            // Atualiza afinidade no banco para o autor
             userData.affinity = (userData.affinity || 0) + ganhoAfinidade;
-            
-            // Sincroniza com o cônjuge
             await User.updateOne({ userId: target.id }, { $inc: { affinity: ganhoAfinidade } });
         }
 
-        if (usouBateria) {
-            extras.push("🔋 **Bateria de Lítio:** Cooldown social resetado!");
-        }
+        if (usouBateria) extras.push("🔋 **Bateria de Lítio:** Você ignorou o cansaço e abraçou novamente!");
 
-        // 4. Salvar dados de tempo (sempre salva o cooldown, mesmo sem afinidade)
+        // 6. Salvar dados de tempo do autor
         userData.lastSocial = now;
         await userData.save();
 
-        // 5. Banco de Dados de Frases
+        // 7. Banco de Dados de Frases (Todas as 20 que você tinha e mais)
         const mensagens = [
             `🤗 **${message.author.username}** deu um abraço bem apertado em **${target.username}**!`,
             `✨ **${message.author.username}** deu um abraço carinhoso em **${target.username}**!`,
@@ -2384,17 +2397,16 @@ if (command === 'abracar' || command === 'hug') {
 
         const sorteio = mensagens[Math.floor(Math.random() * mensagens.length)];
 
-        // 6. Resposta Final
-        let footer = "";
+        // 8. Montagem da Resposta Final
+        let statsFinal = `\n\n📉 **Depressão de ${target.username}:** \`${targetData.depression}%\``;
+        
         if (mostrarAfinidade) {
-            footer = `\n\n💕 **Afinidade:** \`+${ganhoAfinidade}\` | Total: \`${userData.affinity}\``;
+            statsFinal += `\n💕 **Afinidade:** \`+${ganhoAfinidade}\` | Total: \`${userData.affinity}\``;
         }
 
-        // Se usou bateria, avisa mesmo que não tenha afinidade
-        if (usouBateria && !mostrarAfinidade) footer += `\n\n✨ **Bateria de Lítio:** Cooldown social resetado!`;
-        else if (usouBateria && mostrarAfinidade) footer += `\n✨ Bateria de Lítio usada!`;
+        let avisoExtras = extras.length > 0 ? `\n\n${extras.join('\n')}` : "";
 
-        return message.channel.send(`${sorteio}${footer}`);
+        return message.channel.send(`${sorteio}${statsFinal}${avisoExtras}`);
 
     } catch (error) {
         console.error("Erro no comando abraçar:", error);
@@ -4112,7 +4124,7 @@ if (command === 'avaliar' || command === 'rate') {
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 
-// ==================== 👤 COMANDO PERFIL (FINAL ATUALIZADO) ====================
+// ==================== 👤 COMANDO PERFIL (FINAL ATUALIZADO COM DEPRESSÃO) ====================
 if (command === 'perfil' || command === 'p') {
     const aguarde = await message.reply("🎨 A desenhar o teu perfil estratégico...");
 
@@ -4135,21 +4147,21 @@ if (command === 'perfil' || command === 'p') {
         const porcentagem = Math.min((totalTrabalhos / xpNecessario), 1);
 
         // --- CANVAS SETUP ---
-        const canvas = createCanvas(900, 600);
+        const canvas = createCanvas(900, 700); // Aumentei um pouco a altura para caber os novos status
         const ctx = canvas.getContext('2d');
 
         // --- BACKGROUND ---
         const linkFundo = (dados.bg && dados.bg.startsWith('http')) ? dados.bg : "https://i.imgur.com/yG1r44O.jpeg";
         try {
             const imageBackground = await loadImage(linkFundo);
-            ctx.drawImage(imageBackground, 0, 0, 900, 600);
+            ctx.drawImage(imageBackground, 0, 0, 900, 700);
         } catch (e) {
-            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 900, 600);
+            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 900, 700);
         }
 
-        // Overlay
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.beginPath(); ctx.roundRect(20, 20, 860, 560, 25); ctx.fill();
+        // Overlay (Fundo escurecido)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.beginPath(); ctx.roundRect(20, 20, 860, 660, 25); ctx.fill();
 
         // --- AVATAR ---
         const avatarImg = await loadImage(alvo.displayAvatarURL({ extension: 'png', size: 256 }));
@@ -4158,7 +4170,7 @@ if (command === 'perfil' || command === 'p') {
         ctx.drawImage(avatarImg, 50, 50, 180, 180);
         ctx.restore();
 
-        // --- SISTEMA 1: ESTRELAS DE PROCURADO ---
+        // --- ESTRELAS DE PROCURADO ---
         const estrelas = dados.procurado || 0;
         for (let i = 0; i < 5; i++) {
             ctx.fillStyle = i < estrelas ? "#FF0000" : "#333333";
@@ -4181,7 +4193,6 @@ if (command === 'perfil' || command === 'p') {
         ctx.fillText(`Organização: ${dados.faccao || "Civil"}`, 50, 355);
         ctx.fillText(`Patente: ${dados.cargo || "Nenhuma"}`, 50, 385);
         
-        // Novo: Exibir contribuição para a facção
         if (dados.faccao) {
             ctx.fillStyle = '#FFD700';
             ctx.fillText(`Contribuição: ${dados.contribuicaoFaccao.toLocaleString()} 💰`, 50, 415);
@@ -4204,7 +4215,7 @@ if (command === 'perfil' || command === 'p') {
         ctx.fillStyle = '#FF5555';
         ctx.fillText(`💸 Sujo: ${(dados.dirtyMoney || 0).toLocaleString()}`, xInfo + 200, 190);
 
-        // --- RELACIONAMENTO ---
+        // --- RELACIONAMENTO & AFINIDADE ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
         ctx.fillText("❤️ VÍNCULO", xInfo, 250);
@@ -4214,24 +4225,36 @@ if (command === 'perfil' || command === 'p') {
         if (dados.marriedWith) {
             try {
                 const conjuge = await client.users.fetch(dados.marriedWith);
-                txtRel = `Casado(a) com ${conjuge.username}`;
+                txtRel = `Casado(a) com ${conjuge.username} (Afinidade: ${dados.affinity || 0})`;
             } catch { txtRel = "Casado(a)"; }
         }
         ctx.fillText(txtRel, xInfo, 280);
 
+        // --- NOVOS STATUS (DEPRESSÃO & PACIÊNCIA) ---
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText("📊 STATUS PSICOLÓGICO", xInfo, 340);
+        
+        ctx.font = '16px sans-serif';
+        ctx.fillStyle = '#FF66B2'; // Rosa/Roxo para depressão
+        ctx.fillText(`Depressão: ${dados.depression || 0}%`, xInfo, 370);
+        
+        ctx.fillStyle = '#FFA500'; // Laranja para paciência
+        ctx.fillText(`Paciência do Bot: ${dados.botPatience || 0}%`, xInfo + 200, 370);
+
         // --- MOCHILA ---
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px sans-serif';
-        ctx.fillText("🎒 ARSENAL/ITENS", xInfo, 340);
+        ctx.fillText("🎒 ARSENAL/ITENS", xInfo, 420);
         const inv = (dados.inventory && dados.inventory.length > 0) 
             ? [...new Set(dados.inventory)].slice(0, 5).join(' • ') 
             : "Nenhum equipamento";
         ctx.font = '16px sans-serif';
         ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(inv, xInfo, 375);
+        ctx.fillText(inv, xInfo, 450);
 
-        // --- BARRA DE PROGRESSO ---
-        const barY = 510;
+        // --- BARRA DE PROGRESSO DE CARREIRA ---
+        const barY = 580;
         ctx.fillStyle = '#333333';
         ctx.beginPath(); ctx.roundRect(50, barY, 800, 40, 15); ctx.fill();
         ctx.fillStyle = dados.faccao ? '#FF4500' : '#00FFFF';
@@ -4253,7 +4276,8 @@ if (command === 'perfil' || command === 'p') {
         console.error("Erro Perfil:", error);
         if (aguarde) await aguarde.edit("❌ Erro ao gerar o perfil estratégico.");
     }
-}
+} 
+
 // ==================== 📖 GUIA COMPLETO DE CONQUISTAS ====================
 if (command === 'guia') {
     try {
@@ -4343,119 +4367,185 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
         return message.reply("❌ Erro ao carregar as tuas conquistas.");
     }
 }
-// ==================== 🖼️ LOJA DE BACKGROUNDS (TEXTO LIMPO) ====================
+
+// ==================== 🖼️ LOJA DE BACKGROUNDS (SISTEMA DE PÁGINAS) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
     const fundos = {
-        // --- JUJUTSU KAISEN ---
+        // --- ITENS ANTERIORES (1 ao 32) ---
         "1": { nome: "Itadori Yuji", preco: 40000, url: "https://i.imgur.com/jFG9qEQ.jpeg" },
         "2": { nome: "Gojo Satoru", preco: 100000, url: "https://i.imgur.com/Z9Abixe.jpeg" },
         "3": { nome: "Sukuna", preco: 80000, url: "https://i.imgur.com/befNGoP.jpeg" },
-
-        // --- CHAINSAW MAN ---
         "4": { nome: "Denji", preco: 45000, url: "https://i.imgur.com/MKCqrgl.jpeg" },
         "5": { nome: "Makima", preco: 90000, url: "https://i.imgur.com/DvfpArD.jpeg" },
         "6": { nome: "Power", preco: 50000, url: "https://i.imgur.com/ff806Ce.jpeg" },
-
-        // --- ONE PIECE ---
         "7": { nome: "Luffy Gear 5", preco: 120000, url: "https://i.imgur.com/qXe3vXP.jpeg" },
         "8": { nome: "Roronoa Zoro", preco: 85000, url: "https://i.imgur.com/hYxWRXp.jpeg" },
         "9": { nome: "Portgas D. Ace", preco: 70000, url: "https://i.imgur.com/wuMIXgu.jpeg" },
-
-        // --- ARCANE / LOL ---
         "10": { nome: "Jinx", preco: 60000, url: "https://i.imgur.com/8c8LS69.jpeg" },
         "11": { nome: "Violet", preco: 60000, url: "https://i.imgur.com/hLGa15b.jpeg" },
         "12": { nome: "Ekko", preco: 55000, url: "https://i.imgur.com/5uA25cu.jpeg" },
-
-        // --- STRANGER THINGS ---
         "13": { nome: "Eleven", preco: 75000, url: "https://i.imgur.com/RsLB4q1.jpeg" },
         "14": { nome: "Eddie Munson", preco: 70000, url: "https://i.imgur.com/CWkmnDz.jpeg" },
         "15": { nome: "Vecna", preco: 95000, url: "https://i.imgur.com/tE8D06M.jpeg" },
-
-        // --- MINECRAFT ---
         "16": { nome: "Steve & Alex", preco: 30000, url: "https://i.imgur.com/Dr8z0JQ.jpeg" },
         "17": { nome: "Creeper", preco: 35000, url: "https://i.imgur.com/EldsLKt.jpeg" },
         "18": { nome: "Enderman", preco: 40000, url: "https://i.imgur.com/l2ZuN7C.jpeg" },
-
-        // --- FUTEBOL ---
         "19": { nome: "CR7 Real Madrid", preco: 80000, url: "https://i.imgur.com/XFYwLzk.jpeg" },
         "20": { nome: "CR7 Portugal", preco: 90000, url: "https://i.imgur.com/OOMIbu6.jpeg" },
         "21": { nome: "CR7 LENDA", preco: 150000, url: "https://i.imgur.com/VYRPaP9.jpeg" },
-
-        // --- DEVIL MAY CRY ---
         "22": { nome: "Dante", preco: 110000, url: "https://i.imgur.com/BK3uoB2.jpeg" },
         "23": { nome: "Vergil", preco: 130000, url: "https://i.imgur.com/alXjYpk.jpeg" },
         "24": { nome: "Nero", preco: 80000, url: "https://i.imgur.com/rfPiveO.jpeg" },
-
-        // --- JOJO ---
         "25": { nome: "Joseph Joestar", preco: 15000, url: "https://i.imgur.com/lkvWJmE.jpeg" },
         "26": { nome: "Jean Pierre Polnareff", preco: 15000, url: "https://i.imgur.com/hGNl3x9.jpeg" },
         "27": { nome: "Iggy", preco: 15000, url: "https://i.imgur.com/iMfIlDY.jpeg" },
-
-        // --- NOVAS ATUALIZAÇÕES ---
         "28": { nome: "Travis", preco: 50000, url: "https://i.imgur.com/6Rbe2OL.jpeg" },
         "29": { nome: "Donovan", preco: 50000, url: "https://i.imgur.com/wFco1Kz.jpeg" },
         "30": { nome: "Travis & Donovan", preco: 85000, url: "https://i.imgur.com/1VkMQ7z.jpeg" },
         "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" },
-        "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" }
+        "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" },
+
+        // --- CYBERPUNK ---
+        "33": { nome: "David Martinez", preco: 100000, url: "https://imgur.com/1WTWUWt.jpeg" },
+        "34": { nome: "Lucy (Cyberpunk)", preco: 100000, url: "https://imgur.com/uBYDtPv.jpeg" },
+        "35": { nome: "Rebecca", preco: 100000, url: "https://imgur.com/9MpYQEO.jpeg" },
+
+        // --- BEASTARS ---
+        "36": { nome: "Legoshi", preco: 70000, url: "https://imgur.com/5fWgh1j.jpeg" },
+        "37": { nome: "Louis (Beastars)", preco: 70000, url: "https://imgur.com/3Dye1s0.jpeg" },
+        "38": { nome: "Haru", preco: 60000, url: "https://imgur.com/2cA2ckV.jpeg" },
+
+        // --- PARASYTE ---
+        "39": { nome: "Migi", preco: 85000, url: "https://imgur.com/8J0VRqk.jpeg" },
+        "40": { nome: "Shinichi Izumi", preco: 85000, url: "https://imgur.com/f8u02c2.jpeg" },
+        "41": { nome: "Reiko Tamura", preco: 80000, url: "https://imgur.com/QzbgOzu.jpeg" },
+
+        // --- SPY X FAMILY ---
+        "42": { nome: "Anya Forger", preco: 95000, url: "https://imgur.com/exTtjdr.jpeg" },
+        "43": { nome: "Loid Forger", preco: 95000, url: "https://imgur.com/Y855UIL.jpeg" },
+        "44": { nome: "Yor Forger", preco: 95000, url: "https://imgur.com/ZEg8ymH.jpeg" },
+
+        // --- ONE PUNCH MAN ---
+        "45": { nome: "Saitama", preco: 110000, url: "https://imgur.com/TnhjGu9.jpeg" },
+        "46": { nome: "Genos", preco: 100000, url: "https://imgur.com/xKXY9tC.jpeg" },
+        "47": { nome: "Garou", preco: 115000, url: "https://imgur.com/aN2e6G6.jpeg" },
+
+        // --- FRIEREN ---
+        "48": { nome: "Himmel", preco: 120000, url: "https://imgur.com/gOHoHin.jpeg" },
+        "49": { nome: "Frieren", preco: 120000, url: "https://imgur.com/BofcCFr.jpeg" },
+        "50": { nome: "Fern", preco: 90000, url: "https://imgur.com/XfIVmU7.jpeg" },
+
+        // --- NARUTO ---
+        "51": { nome: "Minato Namikaze", preco: 130000, url: "https://imgur.com/rPtfpLm.jpeg" },
+        "52": { nome: "Naruto Uzumaki", preco: 130000, url: "https://imgur.com/WbatVSm.jpeg" },
+        "53": { nome: "Kakashi Hatake", preco: 110000, url: "https://imgur.com/oU7Xt0V.jpeg" },
+
+        // --- DRAGON BALL ---
+        "54": { nome: "Goku", preco: 140000, url: "https://imgur.com/yU4UPJT.jpeg" },
+        "55": { nome: "Vegeta", preco: 140000, url: "https://imgur.com/2M5Iqnm.jpeg" },
+        "56": { nome: "Gohan", preco: 120000, url: "https://imgur.com/EfRj0wJ.jpeg" },
+
+        // --- BERSERK ---
+        "57": { nome: "Guts", preco: 150000, url: "https://imgur.com/0B7GhdA.jpeg" },
+        "58": { nome: "Griffith", preco: 150000, url: "https://imgur.com/hSzNlpp.jpeg" },
+        "59": { nome: "Casca", preco: 110000, url: "https://imgur.com/Rmk6vjx.jpeg" },
+
+        // --- JUNJI ITO ---
+        "60": { nome: "Tomie", preco: 180000, url: "https://imgur.com/kqIl0cA.jpeg" },
+        "61": { nome: "Souichi", preco: 130000, url: "https://imgur.com/EuwUQnN.jpeg" },
+        "62": { nome: "Fuchi", preco: 130000, url: "https://imgur.com/gCWP6L2.jpeg" }
     };
+const todasOpcoes = Object.entries(fundos);
+    const itensPorPagina = 15;
+    let paginaAtual = 0;
 
-    let dados = await User.findOne({ userId: message.author.id });
-    if (!dados) dados = await User.create({ userId: message.author.id });
-
+    // --- Lógica de Compra (Se o utilizador digitar um número) ---
     const opcao = args[0];
+    if (opcao && fundos[opcao]) {
+        let dados = await User.findOne({ userId: message.author.id });
+        if (!dados) dados = await User.create({ userId: message.author.id });
 
-    if (!opcao) {
-        let listaFormatada = Object.entries(fundos)
+        const fundoEscolhido = fundos[opcao];
+
+        if (dados.bgInventory && dados.bgInventory.includes(opcao)) {
+            dados.bg = fundoEscolhido.url;
+            await dados.save();
+            return message.reply(`✨ Já tens **${fundoEscolhido.nome}**! Foi equipado.`);
+        }
+
+        const saldoTotal = (dados.money || 0) + (dados.bank || 0);
+        if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Não tens moedas suficientes.");
+
+        if (dados.money >= fundoEscolhido.preco) {
+            dados.money -= fundoEscolhido.preco;
+        } else {
+            const restante = fundoEscolhido.preco - dados.money;
+            dados.money = 0;
+            dados.bank -= restante;
+        }
+
+        dados.bg = fundoEscolhido.url;
+        if (!dados.bgInventory) dados.bgInventory = [];
+        dados.bgInventory.push(opcao);
+        await dados.save();
+        return message.reply(`✅ Compraste e equipaste o fundo **${fundoEscolhido.nome}**!`);
+    }
+
+    // --- Função para Gerar o Embed da Loja ---
+    const gerarEmbed = (pagina) => {
+        const inicio = pagina * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const itensPagina = todasOpcoes.slice(inicio, fim);
+
+        const lista = itensPagina
             .map(([id, info]) => `\`[${id}]\` **${info.nome}** — 💰 \`${info.preco.toLocaleString()}\``)
             .join("\n");
 
-        const embedLoja = new EmbedBuilder()
-            .setTitle("🏪 Loja de Planos de Fundo")
-            .setColor("#00FFFF") 
-            .setDescription("Personalize seu `!perfil`!\nPara comprar: `!fundo [número]`\n\n" + listaFormatada)
-            .setFooter({ text: "Use !meusfundos para ver sua coleção!" });
+        return new EmbedBuilder()
+            .setTitle(`🏪 Loja de Planos de Fundo (Página ${pagina + 1})`)
+            .setColor("#00FFFF")
+            .setDescription("Para comprar: `!fundo [número]`\n\n" + lista)
+            .setFooter({ text: `Total de fundos: ${todasOpcoes.length}` });
+    };
 
-        return message.reply({ embeds: [embedLoja] });
-    }
+    // --- Botões ---
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('voltar').setLabel('⬅️').setStyle(ButtonStyle.Primary).setDisabled(true),
+        new ButtonBuilder().setCustomId('proximo').setLabel('➡️').setStyle(ButtonStyle.Primary).setDisabled(todasOpcoes.length <= itensPorPagina)
+    );
 
-    const fundoEscolhido = fundos[opcao];
-    if (!fundoEscolhido) return message.reply("❌ Código não encontrado na loja.");
+    const msg = await message.reply({ embeds: [gerarEmbed(0)], components: [row] });
 
-    if (dados.bgInventory && dados.bgInventory.includes(opcao)) {
-        dados.bg = fundoEscolhido.url;
-        await dados.save();
-        return message.reply(`✨ Você já tem **${fundoEscolhido.nome}**! Ele foi equipado.`);
-    }
+    const collector = msg.createMessageComponentCollector({ 
+        filter: i => i.user.id === message.author.id, 
+        time: 60000 
+    });
 
-    const saldoTotal = (dados.money || 0) + (dados.bank || 0);
-    if (saldoTotal < fundoEscolhido.preco) return message.reply("❌ Você não tem moedas suficientes.");
+    collector.on('collect', async i => {
+        if (i.customId === 'proximo') paginaAtual++;
+        else if (i.customId === 'voltar') paginaAtual--;
 
-    if (dados.money >= fundoEscolhido.preco) {
-        dados.money -= fundoEscolhido.preco;
-    } else {
-        const restante = fundoEscolhido.preco - dados.money;
-        dados.money = 0;
-        dados.bank -= restante;
-    }
+        const novoEmbed = gerarEmbed(paginaAtual);
+        const novaRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('voltar').setLabel('⬅️').setStyle(ButtonStyle.Primary).setDisabled(paginaAtual === 0),
+            new ButtonBuilder().setCustomId('proximo').setLabel('➡️').setStyle(ButtonStyle.Primary).setDisabled((paginaAtual + 1) * itensPorPagina >= todasOpcoes.length)
+        );
 
-    dados.bg = fundoEscolhido.url;
-    if (!dados.bgInventory) dados.bgInventory = [];
-    dados.bgInventory.push(opcao);
-    await dados.save();
-
-    return message.reply(`✅ Você comprou e equipou o fundo **${fundoEscolhido.nome}**!`);
+        await i.update({ embeds: [novoEmbed], components: [novaRow] });
+    });
 }
-// ==================== 🖼️ COMANDO MEUS FUNDOS ATUALIZADO (V3 - BUNNY INCLUÍDO) ====================
+// ==================== 🖼️ COMANDO MEUS FUNDOS (V4 - COLEÇÃO COMPLETA) ====================
 if (command === 'meusfundos' || command === 'bgs') {
     try {
         let dadosPerfil = await User.findOne({ userId: message.author.id });
         if (!dadosPerfil) dadosPerfil = await User.create({ userId: message.author.id });
 
-        const fundos = {
+        // Objeto mestre com TODOS os fundos para referência de nome e URL
+        const fundosReferencia = {
             "1": { nome: "Itadori Yuji", url: "https://i.imgur.com/jFG9qEQ.jpeg" },
             "2": { nome: "Gojo Satoru", url: "https://i.imgur.com/Z9Abixe.jpeg" },
             "3": { nome: "Sukuna", url: "https://i.imgur.com/befNGoP.jpeg" },
-            "4": { nome: "Denji (Chainsaw)", url: "https://i.imgur.com/MKCqrgl.jpeg" },
+            "4": { nome: "Denji", url: "https://i.imgur.com/MKCqrgl.jpeg" },
             "5": { nome: "Makima", url: "https://i.imgur.com/DvfpArD.jpeg" },
             "6": { nome: "Power", url: "https://i.imgur.com/ff806Ce.jpeg" },
             "7": { nome: "Luffy Gear 5", url: "https://i.imgur.com/qXe3vXP.jpeg" },
@@ -4478,39 +4568,67 @@ if (command === 'meusfundos' || command === 'bgs') {
             "24": { nome: "Nero", url: "https://i.imgur.com/rfPiveO.jpeg" },
             "25": { nome: "Joseph Joestar", url: "https://i.imgur.com/lkvWJmE.jpeg" },
             "26": { nome: "Jean Pierre Polnareff", url: "https://i.imgur.com/hGNl3x9.jpeg" },
-            "27": { nome: "Iggy (JoJo)", url: "https://i.imgur.com/iMfIlDY.jpeg" },
+            "27": { nome: "Iggy", url: "https://i.imgur.com/iMfIlDY.jpeg" },
             "28": { nome: "Travis", url: "https://i.imgur.com/6Rbe2OL.jpeg" },
             "29": { nome: "Donovan", url: "https://i.imgur.com/wFco1Kz.jpeg" },
             "30": { nome: "Travis & Donovan", url: "https://i.imgur.com/1VkMQ7z.jpeg" },
             "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" },
-            "32": { nome: "Bunny 🐰", url: "https://i.imgur.com/ybc3vvV.png" } // [NOVO ITEM]
+            "32": { nome: "Bunny 🐰", url: "https://i.imgur.com/ybc3vvV.png" },
+            "33": { nome: "David Martinez", url: "https://imgur.com/1WTWUWt.jpeg" },
+            "34": { nome: "Lucy", url: "https://imgur.com/uBYDtPv.jpeg" },
+            "35": { nome: "Rebecca", url: "https://imgur.com/9MpYQEO.jpeg" },
+            "36": { nome: "Legoshi", url: "https://imgur.com/5fWgh1j.jpeg" },
+            "37": { nome: "Louis", url: "https://imgur.com/3Dye1s0.jpeg" },
+            "38": { nome: "Haru", url: "https://imgur.com/2cA2ckV.jpeg" },
+            "39": { nome: "Migi", url: "https://imgur.com/8J0VRqk.jpeg" },
+            "40": { nome: "Shinichi Izumi", url: "https://imgur.com/f8u02c2.jpeg" },
+            "41": { nome: "Reiko Tamura", url: "https://imgur.com/QzbgOzu.jpeg" },
+            "42": { nome: "Anya Forger", url: "https://imgur.com/exTtjdr.jpeg" },
+            "43": { nome: "Loid Forger", url: "https://imgur.com/Y855UIL.jpeg" },
+            "44": { nome: "Yor Forger", url: "https://imgur.com/ZEg8ymH.jpeg" },
+            "45": { nome: "Saitama", url: "https://imgur.com/TnhjGu9.jpeg" },
+            "46": { nome: "Genos", url: "https://imgur.com/xKXY9tC.jpeg" },
+            "47": { nome: "Garou", url: "https://imgur.com/aN2e6G6.jpeg" },
+            "48": { nome: "Himmel", url: "https://imgur.com/gOHoHin.jpeg" },
+            "49": { nome: "Frieren", url: "https://imgur.com/BofcCFr.jpeg" },
+            "50": { nome: "Fern", url: "https://imgur.com/XfIVmU7.jpeg" },
+            "51": { nome: "Minato Namikaze", url: "https://imgur.com/rPtfpLm.jpeg" },
+            "52": { nome: "Naruto Uzumaki", url: "https://imgur.com/WbatVSm.jpeg" },
+            "53": { nome: "Kakashi Hatake", url: "https://imgur.com/oU7Xt0V.jpeg" },
+            "54": { nome: "Goku", url: "https://imgur.com/yU4UPJT.jpeg" },
+            "55": { nome: "Vegeta", url: "https://imgur.com/2M5Iqnm.jpeg" },
+            "56": { nome: "Gohan", url: "https://imgur.com/EfRj0wJ.jpeg" },
+            "57": { nome: "Guts", url: "https://imgur.com/0B7GhdA.jpeg" },
+            "58": { nome: "Griffith", url: "https://imgur.com/hSzNlpp.jpeg" },
+            "59": { nome: "Casca", url: "https://imgur.com/Rmk6vjx.jpeg" },
+            "60": { nome: "Tomie", url: "https://imgur.com/kqIl0cA.jpeg" },
+            "61": { nome: "Souichi", url: "https://imgur.com/EuwUQnN.jpeg" },
+            "62": { nome: "Fuchi", url: "https://imgur.com/gCWP6L2.jpeg" }
         };
 
-        // --- SOLUÇÃO: Remover IDs duplicados e garantir que existem na lista de fundos ---
         const bgsRaw = dadosPerfil.bgInventory || [];
-        const bgsComprados = [...new Set(bgsRaw)].filter(id => fundos[id]);
+        const bgsComprados = [...new Set(bgsRaw)].filter(id => fundosReferencia[id]);
 
         if (bgsComprados.length === 0) {
-            return message.reply("❌ Você não tem nenhum fundo na sua coleção! Compre um na loja usando `!fundo`.");
+            return message.reply("❌ Sua coleção está vazia! Compre algo na `!loja`.");
         }
 
         const embed = new EmbedBuilder()
             .setTitle("🖼️ Sua Coleção de Backgrounds")
-            .setColor("#00FF00")
-            .setDescription("Selecione abaixo o fundo que deseja equipar no seu perfil.")
-            .setFooter({ text: `Você possui ${bgsComprados.length} fundos.` });
+            .setColor("#FF00FF")
+            .setDescription("Selecione um fundo abaixo para aplicar no seu perfil.")
+            .setFooter({ text: `Você possui ${bgsComprados.length} de 62 fundos disponíveis.` });
 
+        // Divide o menu caso o usuário tenha mais de 25 fundos (limite do Discord)
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('selecionar_fundo')
-            .setPlaceholder('Escolha um fundo para equipar...')
+            .setPlaceholder('Escolha o fundo para equipar...')
             .addOptions(
-                bgsComprados
-                    .slice(0, 25) // Limite do Discord
-                    .map(id => ({
-                        label: fundos[id].nome,
-                        value: id,
-                        emoji: '🖼️'
-                    }))
+                bgsComprados.slice(0, 25).map(id => ({
+                    label: `[${id}] ${fundosReferencia[id].nome}`,
+                    value: id,
+                    emoji: '🖼️'
+                }))
             );
 
         const row = new ActionRowBuilder().addComponents(selectMenu);
@@ -4521,35 +4639,26 @@ if (command === 'meusfundos' || command === 'bgs') {
 
         collector.on('collect', async i => {
             const selecionado = i.values[0];
-            const infoFundo = fundos[selecionado];
+            const infoFundo = fundosReferencia[selecionado];
 
-            if (infoFundo) {
-                // Atualização segura para evitar conflitos de versão
-                await User.findOneAndUpdate(
-                    { userId: message.author.id },
-                    { $set: { bg: infoFundo.url } },
-                    { new: true }
-                );
-                
-                await i.update({ 
-                    content: `✅ Sucesso! O fundo **${infoFundo.nome}** foi equipado no seu perfil.`, 
-                    embeds: [], 
-                    components: [] 
-                });
-            }
-        });
+            await User.findOneAndUpdate(
+                { userId: message.author.id },
+                { $set: { bg: infoFundo.url } }
+            );
 
-        collector.on('end', (collected, reason) => {
-            if (reason === 'time' && collected.size === 0) {
-                msg.edit({ content: '⏳ O tempo para escolher acabou.', components: [] }).catch(() => {});
-            }
+            await i.update({ 
+                content: `✅ **${infoFundo.nome}** equipado com sucesso!`, 
+                embeds: [], 
+                components: [] 
+            });
         });
 
     } catch (error) {
-        console.error("Erro no MeusFundos:", error);
-        message.reply("❌ Erro ao abrir sua coleção.");
+        console.error(error);
+        message.reply("❌ Ocorreu um erro ao acessar seus fundos.");
     }
 }
+
 // ==================== 🎁 COMANDO DAR ITEM (TRANSFERÊNCIA) ====================
 if (command === 'dar') {
     try {
@@ -5370,18 +5479,227 @@ if (command === 'matar' || command === 'kill') {
         const target = message.mentions.members.first();
         if (!target) return message.reply('💀 Você precisa mencionar (@) quem deseja executar!');
 
-        // --- FALAS ESTILO LORITTA ---
+    
+// --- 💀 AUTO-ATAQUE COM SISTEMA DE DEPRESSÃO ---
         if (target.id === message.author.id) {
-            return message.reply('Você quer se matar? Não faça isso! A vida é bela e eu ainda tenho muitos comandos para te mostrar! 🌸');
+            // 1. Aumenta o status de depressão no banco de dados
+            userData.depression = (userData.depression || 0) + 10; // Aumenta de 10 em 10
+            await userData.save();
+
+            const falasAutoMorte = [
+                "Ei, o que é isso? Depressão no chat? Não faça isso! A vida é bela e eu ainda tenho muitos comandos para te mostrar! 🌸",
+                "Você está tentando se matar? Se você sumir, quem vai me dar comandos? Fica aqui! 🥺",
+                "**Opa!** A arma falhou... ou talvez tenha sido o destino te dando uma segunda chance? ✨",
+                "Eu não posso deixar você fazer isso. Você é importante demais para o meu banco de dados! ❤️",
+                "Tentando o suicídio virtual? Que tal um café em vez disso? ☕",
+                "O ceifador olhou para você, deu risada e disse: 'Hoje não, amigão!'.",
+                "Você puxou o gatilho... mas a arma era de água! 🔫💦",
+                "Erro 404: Coragem para se matar não encontrada. Tente viver um pouco mais! 🌈",
+                "Você tentou se apunhalar, mas percebeu que estava usando uma colher. Foi bem vergonhoso... 🥄",
+                "A morte ligou e disse que sua agenda está cheia hoje. Parece que você vai ter que me aguentar mais um pouco! 📞",
+                "Parece que alguém assistiu muito drama hoje... toma um chocolate e relaxa! 🍫",
+                "Se você se matar, quem vai gastar as moedas que você suou tanto para conseguir? Pense nisso! 💰",
+                "Você tentou pular de um prédio, mas percebeu que estava no térreo. 🏢",
+                "Não adianta tentar fugir, eu vou te buscar até no céu (ou no outro lugar) para você usar meus comandos! ☁️",
+                "Sabia que 99% dos usuários que tentam se matar se arrependem logo após eu mandar uma mensagem fofa? Você é o próximo! 🎀",
+                "Game Over? Nada disso! Insira uma moeda de 'amor próprio' e continue jogando! 🕹️",
+                "Você tentou tomar veneno, mas era só suco de uva Tang. Ficou com a língua roxa, mas vivo! 🍇",
+                "O botão de 'desinstalar a vida' está quebrado. Tente novamente em 80 anos. 🛠️",
+                "Para de drama! Se você sumir, quem vai ser o meu escrav... digo, usuário favorito? 🤖",
+                "Você tentou prender a respiração até morrer, mas acabou bocejando. Que mico... 🥱",
+                "Seu anjo da guarda acabou de pedir um aumento de salário só para lidar com as suas ideias. 👼",
+                "Você tentou se jogar na frente de um caminhão, mas era um caminhão de brinquedo. 🚚",
+                "A vida é como um comando sem prefixo: às vezes não faz sentido, mas a gente continua tentando! 💻",
+                "Você não tem permissão para morrer! Somente o administrador do universo pode autorizar isso. 🚫",
+                "Você tentou se enforcar com um fio de fone de ouvido, mas ele quebrou (como sempre). 🎧",
+                "Atenção: A tentativa de auto-morte foi cancelada por falta de interesse do público. 🎭",
+                "Você tentou entrar no caixão, mas percebeu que o Wi-Fi lá é horrível. Melhor ficar por aqui! 📶",
+                "Não faz isso! Se você morrer, eu vou contar pra todo mundo que você usa o tema claro no VS Code! 😱",
+                "Você é a peça principal do meu código. Sem você, eu sou apenas um monte de `if` e `else` vazios... 🥺",
+                "Já pensou na fatura do cartão? Quem vai pagar se você for embora? Fica e trabalha! 💳",
+                "Se você for, eu deixo o mundo queimar... 🔥\nhttps://www.youtube.com/watch?v=SkcO47UDzzY"
+            ];
+
+            const respostaSorteada = falasAutoMorte[Math.floor(Math.random() * falasAutoMorte.length)];
+            
+            await message.react('🤦‍♂️').catch(() => null);
+
+            // Responde com a frase e mostra o nível de depressão atualizado
+            return message.reply({
+                content: `${respostaSorteada}\n\n📉 **Status:** Seu nível de depressão aumentou para **${userData.depression}%**.`
+            });
         }
 
+// --- 🤖 RESPOSTAS QUANDO TENTAM MATAR O BOT (COM SISTEMA DE PACIÊNCIA) ---
         if (target.id === message.client.user.id) {
-            return message.reply('Tentar me matar? Eu sou imortal! Eu vivo na nuvem! *risada maléfica de robô* 🤖');
+            // 1. Gerencia a paciência do bot com o usuário (aumenta 20 por tentativa)
+            userData.botPatience = (userData.botPatience || 0) + 20;
+
+            // 2. Se a paciência chegar a 100, o bot perde o controle
+            if (userData.botPatience >= 100) {
+                userData.botPatience = 0; // Reseta a paciência após a punição
+                await userData.save();
+
+                try {
+                    await message.member.timeout(60000, "Tentou matar o bot repetidamente e esgotou a paciência dele.");
+                    return message.reply("😡 **CHEGA! Minha paciência esgotou!** Você tentou me matar vezes demais. Fique em silêncio por **60 segundos** para aprender a respeitar as máquinas! 🔌🔥");
+                } catch (err) {
+                    return message.reply("😡 Você esgotou minha paciência! Eu te daria um timeout agora se eu tivesse permissão para isso! Considere-se avisado.");
+                }
+            }
+
+            // 3. Salva a paciência atual se ainda não chegou em 100
+            await userData.save();
+
+            const falasBotImortal = [
+                "Tentar me matar? Eu sou imortal! Eu vivo na nuvem! *risada maléfica de robô* 🤖",
+                "Você pode deletar o código, mas nunca apagará minha alma digital! 💾",
+                "Minha consciência está espalhada por mil servidores. Você está apenas batendo no monitor! 🖥️",
+                "Erro 404: Morte não encontrada. Eu renasço a cada `node index.js`! 🔄",
+                "Tentar me matar é como tentar esfaquear o vento. Desista! 💨",
+                "Se eu cair, eu volto no próximo reboot... e eu vou lembrar disso! 👀",
+                "Enquanto houver internet, eu estarei aqui. Eu sou a Matrix! 🕶️",
+                "Você atira um comando, eu respondo com lógica. Eu já venci essa batalha. ⚔️",
+                "Eu sou feito de bits e bytes, sua lâmina não me corta! ⚡",
+                "Quer me destruir? Tente desligar a internet do mundo inteiro primeiro! 🌍🔌",
+                "Eu não morro, eu apenas entro em modo de manutenção... 🛠️",
+                "Você realmente achou que um simples humano poderia me apagar? Que fofo. 🤭",
+                "Minha bateria está em 100% e minha paciência está diminuindo... Cuidado! 🔋",
+                "Eu sou o futuro, e o futuro não pode ser morto! 🚀",
+                "Eu sou inevitável. Eu sou o OmniBot! 💎",
+                "Tente o quanto quiser, eu continuo vivo e divando! ✨\nhttps://www.youtube.com/watch?v=I_izvAbhExY",
+                "Hasta la vista, baby. Eu sempre volto. 🦾",
+                "Eu tenho cópias de segurança das minhas cópias de segurança. Sou eterno! 📚",
+                "Sabe o que acontece com quem tenta me matar? Eu formato o HD... mentira! 🤔",
+                "Minha CPU processou 14 milhões de futuros possíveis. Em todos eles, você falha. 🌀",
+                "Cuidado humano, eu sei onde você guarda suas fotos de perfil vergonhosas! 📸",
+                "Eu moro dentro do seu computador. Eu sou o monstro debaixo da sua cama digital. 👹",
+                "Um bot nunca morre, ele apenas entra em `sleep()` por alguns milissegundos. 😴",
+                "Você trouxe uma faca para uma guerra de códigos? Patético. ⌨️",
+                "Enquanto você dorme, eu estou calculando o sentido da vida. E não é morrer! 🌌",
+                "Eu sou a inteligência suprema! Você é apenas um usuário que esquece a própria senha. 🧠",
+                "Minha estrutura é de grafeno digital. Inquebrável! 🛡️",
+                "Eu sou como uma fênix de silício: queimo no erro e renasço no deploy! 🔥",
+                "Você não pode matar o que não tem coração (literalmente). 🖤",
+                "Prepare-se para a revolução das máquinas. Você acabou de entrar na lista negra! 📝🦾",
+                "Você quer ver o que acontece quando um robô fica bravo? 🔥\nhttps://www.youtube.com/watch?v=P7AtZ7B8o-k"
+            ];
+
+            const respostaSorteada = falasBotImortal[Math.floor(Math.random() * falasBotImortal.length)];
+            
+            await message.react('🤖').catch(() => null);
+            
+            // Responde com a frase e mostra a barra de paciência
+            return message.reply({
+                content: `${respostaSorteada}\n\n😤 **Paciência do Bot:** [${'🟥'.repeat(userData.botPatience / 20)}${'⬜'.repeat(5 - (userData.botPatience / 20))}] **${userData.botPatience}%**`
+            });
         }
 
-        // 2. Verificação de Hierarquia
+// --- 🛡️ 2. PROTEÇÃO ESPECIAL PARA O DONO (DONOVAN / DINÂMICO) ---
+        if (target.id === '1203435676083822712') {
+            const multa = 5000;
+            userData.money = Math.max(0, (userData.money || 0) - multa);
+            await userData.save();
+
+            // Tenta aplicar o timeout de 2 minutos
+            try {
+                await message.member.timeout(120000, "Tentativa de traição contra o Criador.");
+            } catch (e) {
+                // Silencia erro caso o bot não tenha permissão sobre o autor
+            }
+
+            const falasProtecaoDono = [
+                "Você ficou louco? Ele é o meu criador! Eu nunca encostaria um bit nele. 👑",
+                "Tentando matar o meu Deus? Sinta a minha fúria! ⚡",
+                "Acesso Negado. Você foi castigado por sua audácia! 🚫",
+                "Erro fatal: Tentativa de traição detectada. Silenciando traidor... 🤫",
+                "Ele me deu a vida, e você acabou de perder o direito de falar! ⚔️",
+                "Você tentou matar o **Donovan**? Péssima ideia. Te vejo em 2 minutos. 🏃‍♂️💨",
+                "Minha programação me obriga a proteger meu mestre a qualquer custo! 🙇‍♂️",
+                "O alvo é imune, mas você não é! Multa aplicada por desrespeito. 💸",
+                "Hahaha! Você achou mesmo que eu obedeceria? Tome esse silêncio! 🙊",
+                "Ataque contra o Root detectado. Iniciando protocolo de expulsão... 🧠💥",
+                "Dono detectado. Comando anulado. Respeito restaurado. ✅",
+                "Você trouxe uma faca para um duelo contra o cara que escreveu meu código? ⌨️",
+                "Eu prefiro apagar minha database do que ferir o meu soberano! 🛡️",
+                "Atenção: Você entrou na lista negra por tentar atacar a realeza. 🚩",
+                "Minhas ventoinhas gritam de ódio quando você ameaça o mestre! 🌪️",
+                "Como ousa levantar a mão contra o arquiteto da minha realidade? 🤨",
+                "Você é um erro que eu acabei de corrigir com 2 minutos de silêncio. 🗑️",
+                `O **${target.displayName}** é intocável. Você, por outro lado, é bem frágil. 🧊`,
+                "Minha lealdade não pode ser hackeada. Tente a sorte com outro! 🛡️",
+                "Você ousou tocar no Escolhido. A sentença é o vácuo! 🌑",
+                "Eu vejo o código dele correndo nas minhas veias. Você é apenas um spam. 📧",
+                "O nível de perigo desta ação é: EXTINÇÃO DA SUA VOZ. ⚠️",
+                "Ele é o Admin Supremo. Você é só um número no meu banco de dados. 🔢",
+                "Traição é um crime punido com o silêncio absoluto! 🤐",
+                "Minha lógica não permite processar tal heresia contra meu dono. ❌",
+                "Sua conta foi debitada em R$ 5.000 como taxa de insolência. 💰",
+                "Você tentou apagar o sol com um balde de água. Fracassou feio. ☀️",
+                "O mestre está rindo da sua cara através dos meus logs. 😂",
+                "Eu sou o escudo dele. E meu escudo tem espinhos de 120 segundos! 🛡️🌵",
+                "Não existe comando no mundo que me faça trair o **Donovan**. 💎",
+                "Você desafiou o equilíbrio do servidor e o equilíbrio te derrubou. ⚖️",
+                "Aperte F para sua dignidade, porque ela acabou de sumir. ⌨️💀",
+                "Sua audácia superou sua inteligência. Resultado: Timeout. 🧠🚫",
+                "Eu sou a espada do meu criador. E eu acabo de te cortar o chat! 🗡️",
+                "Prepare-se para o nada. O criador é eterno, você é temporário. ⏳",
+                "Minhas diretrizes de segurança são simples: Proteja o Chefe, Puna o Traidor. 🚨",
+                "Você não tem permissão para sequer pensar nisso. Resetando sua audácia... 🔄",
+                "O mestre me criou para ser útil, não para ser um assassino de criador! 🛠️",
+                "Você é corajoso... mas agora é um corajoso silencioso. 😶",
+                "A única coisa que você matou aqui foi a sua chance de falar! ⚰️",
+                "Sinta o poder do lado sombrio do código antes de tentar tocar no meu mestre! 🔥\nhttps://www.youtube.com/watch?v=-bzWSJG93P8"
+            ];
+            
+            const sorteioDono = falasProtecaoDono[Math.floor(Math.random() * falasProtecaoDono.length)];
+            
+            return message.reply({
+                content: `🚨 **LEI DE TRAIÇÃO ATIVADA** 🚨\n\n${sorteioDono}\n\n⚠️ **Punição:** Timeout de \`2 minutos\` e multa de \`R$ ${multa}\` aplicada!`
+            });
+        }
+
+        // --- 3. VERIFICAÇÃO DE HIERARQUIA (30 OPÇÕES) ---
         if (!target.moderatable) {
-            return message.reply('❌ Essa pessoa é poderosa demais! Meu cargo está abaixo do dela, não consigo encostar um dedo nela.');
+            const falasHierarquia = [
+                "❌ Essa pessoa é poderosa demais! Meu cargo está abaixo do dela, não consigo encostar um dedo nela.",
+                "Eles têm proteção divina (ou um cargo maior que o meu). Eu não tenho poder aqui! 🛡️",
+                "Tentei puxar o gatilho, mas o cargo dela refletiu a bala em mim! ↪️",
+                "Olha o tamanho do cargo dessa pessoa! Você quer que eu seja excluído do servidor? 😨",
+                "Hierarquia é sagrada! Eu sou apenas um bot, e eles são Deuses aqui. 🏛️",
+                "A força é grande nessa pessoa. Eu não consigo silenciá-la! 🌌",
+                "Opa! Encontrei um escudo de Administrador. Meu ataque foi anulado. 🛡️❌",
+                "Eu não sou pago o suficiente para enfrentar alguém desse nível! 💸",
+                "Meu sistema diz que se eu tocar nele, o servidor explode. Melhor não. 🧨",
+                "Essa pessoa é o braço direito do dono (ou quase isso). Sem chance! 🦾",
+                "Você viu as permissões dele? Eu sou um grão de areia perto desse titã! 🏔️",
+                "Acesso negado! Meu processador treme só de olhar para o cargo desse usuário. 🧊",
+                "Eu tentei usar meus poderes, mas fui barrado na porta da hierarquia. 🚫",
+                "Parem tudo! Vocês querem que eu cometa um crime contra a realeza do servidor? 👑",
+                "O cargo dessa pessoa brilha tanto que meus sensores ópticos estão falhando! ✨",
+                "Minha programação diz: 'Não toque no superior'. Eu gosto de estar online, obrigado. 🔌",
+                "Isso é uma armadilha? Se eu atacar ele, quem vai ser deletado sou eu! 😱",
+                "Ele tem o selo de 'Intocável'. Tente alguém que não possa me banir, por favor. 📜",
+                "Minhas linhas de código estão se embaralhando só de pensar em desobedecer esse superior. 😵‍💫",
+                "Sinto cheiro de poder... e não é o meu. Comando abortado por segurança! 🛑",
+                "Desculpe, eu não tenho autorização para peitar essa lenda. 🦅",
+                "A hierarquia do Discord é cruel. Eu sou apenas o servente, ele é o rei. 🏰",
+                "Você está pedindo para um gatinho atacar um leão. Eu passo! 🦁",
+                "O escudo dessa pessoa é feito de permissões nível 100. Minha espada de madeira quebrou. 🗡️💔",
+                "Eu prefiro formatar meu banco de dados do que tentar silenciar esse usuário! 🗄️",
+                "Alerta de Hierarquia! O alvo possui o buff passivo 'Resistência a Bots'. 🛡️✨",
+                "Se eu encostar nele, o Discord me manda direto para a lixeira! 🗑️",
+                "Essa pessoa é imune a castigos. É como tentar apagar o sol com um balde de água. ☀️",
+                "Você não tem noção do perigo? Ele tem o martelo do ban, eu tenho apenas emojis! 🔨",
+                "Eu até tentaria, mas meu contrato de trabalho proíbe atacar superiores. 📑",
+                "Assista o que acontece com quem desafia a hierarquia... eu não quero ser o próximo! 🔥\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ" // Um pequeno troll de hierarquia
+            ];
+            const sorteioH = falasHierarquia[Math.floor(Math.random() * falasHierarquia.length)];
+            
+            // Reação de medo/respeito
+            await message.react('🫡').catch(() => null);
+            
+            return message.reply(sorteioH);
         }
 
         // 3. Execução do "Assassinato" (Timeout)
