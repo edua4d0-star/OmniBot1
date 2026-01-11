@@ -4370,7 +4370,7 @@ if (command === 'conquistas' || command === 'achievements' || command === 'badge
 
 // ==================== 🖼️ LOJA DE BACKGROUNDS (SISTEMA DE PÁGINAS) ====================
 if (command === 'background' || command === 'fundo' || command === 'bg') {
-    const fundos = {
+const fundos = {
         // --- ITENS ANTERIORES (1 ao 32) ---
         "1": { nome: "Itadori Yuji", preco: 40000, url: "https://i.imgur.com/jFG9qEQ.jpeg" },
         "2": { nome: "Gojo Satoru", preco: 100000, url: "https://i.imgur.com/Z9Abixe.jpeg" },
@@ -4405,55 +4405,55 @@ if (command === 'background' || command === 'fundo' || command === 'bg') {
         "31": { nome: "Foquinha :3", preco: 200000, url: "https://i.imgur.com/QWn6PiK.png" },
         "32": { nome: "Bunny 🐰", preco: 150000, url: "https://i.imgur.com/ybc3vvV.png" },
 
-        // --- CYBERPUNK ---
-        "33": { nome: "David Martinez", preco: 100000, url: "https://imgur.com/1WTWUWt.jpeg" },
-        "34": { nome: "Lucy (Cyberpunk)", preco: 100000, url: "https://imgur.com/uBYDtPv.jpeg" },
-        "35": { nome: "Rebecca", preco: 100000, url: "https://imgur.com/9MpYQEO.jpeg" },
+// --- CYBERPUNK ---
+        "33": { nome: "David Martinez", preco: 100000, url: "https://i.imgur.com/9MpYQEO.jpeg" },
+        "34": { nome: "Lucy", preco: 100000, url: "https://i.imgur.com/uBYDtPv.jpeg" },
+        "35": { nome: "Rebecca", preco: 100000, url: "https://i.imgur.com/1WTWUWt.jpeg" },
 
         // --- BEASTARS ---
-        "36": { nome: "Legoshi", preco: 70000, url: "https://imgur.com/5fWgh1j.jpeg" },
-        "37": { nome: "Louis (Beastars)", preco: 70000, url: "https://imgur.com/3Dye1s0.jpeg" },
-        "38": { nome: "Haru", preco: 60000, url: "https://imgur.com/2cA2ckV.jpeg" },
+        "36": { nome: "Legoshi", preco: 70000, url: "https://i.imgur.com/2cA2ckV.jpeg" },
+        "37": { nome: "Louis", preco: 70000, url: "https://i.imgur.com/3Dye1s0.jpeg" },
+        "38": { nome: "Haru", preco: 60000, url: "https://i.imgur.com/5fWgh1j.jpeg" },
 
         // --- PARASYTE ---
-        "39": { nome: "Migi", preco: 85000, url: "https://imgur.com/8J0VRqk.jpeg" },
-        "40": { nome: "Shinichi Izumi", preco: 85000, url: "https://imgur.com/f8u02c2.jpeg" },
-        "41": { nome: "Reiko Tamura", preco: 80000, url: "https://imgur.com/QzbgOzu.jpeg" },
+        "39": { nome: "Migi", preco: 85000, url: "https://i.imgur.com/QzbgOzu.jpeg" },
+        "40": { nome: "Shinichi Izumi", preco: 85000, url: "https://i.imgur.com/f8u02c2.jpeg" },
+        "41": { nome: "Reiko Tamura", preco: 80000, url: "https://i.imgur.com/8J0VRqk.jpeg" },
 
         // --- SPY X FAMILY ---
-        "42": { nome: "Anya Forger", preco: 95000, url: "https://imgur.com/exTtjdr.jpeg" },
-        "43": { nome: "Loid Forger", preco: 95000, url: "https://imgur.com/Y855UIL.jpeg" },
-        "44": { nome: "Yor Forger", preco: 95000, url: "https://imgur.com/ZEg8ymH.jpeg" },
+        "42": { nome: "Anya Forger", preco: 95000, url: "https://i.imgur.com/ZEg8ymH.jpeg" },
+        "43": { nome: "Loid Forger", preco: 95000, url: "https://i.imgur.com/Y855UIL.jpeg" },
+        "44": { nome: "Yor Forger", preco: 95000, url: "https://i.imgur.com/exTtjdr.jpeg" },
 
         // --- ONE PUNCH MAN ---
-        "45": { nome: "Saitama", preco: 110000, url: "https://imgur.com/TnhjGu9.jpeg" },
-        "46": { nome: "Genos", preco: 100000, url: "https://imgur.com/xKXY9tC.jpeg" },
-        "47": { nome: "Garou", preco: 115000, url: "https://imgur.com/aN2e6G6.jpeg" },
+        "45": { nome: "Saitama", preco: 110000, url: "https://i.imgur.com/aN2e6G6.jpeg" },
+        "46": { nome: "Genos", preco: 100000, url: "https://i.imgur.com/xKXY9tC.jpeg" },
+        "47": { nome: "Garou", preco: 115000, url: "https://i.imgur.com/TnhjGu9.jpeg" },
 
         // --- FRIEREN ---
-        "48": { nome: "Himmel", preco: 120000, url: "https://imgur.com/gOHoHin.jpeg" },
-        "49": { nome: "Frieren", preco: 120000, url: "https://imgur.com/BofcCFr.jpeg" },
-        "50": { nome: "Fern", preco: 90000, url: "https://imgur.com/XfIVmU7.jpeg" },
+        "48": { nome: "Himmel", preco: 120000, url: "https://i.imgur.com/XfIVmU7.jpeg" },
+        "49": { nome: "Frieren", preco: 120000, url: "https://i.imgur.com/BofcCFr.jpeg" },
+        "50": { nome: "Fern", preco: 90000, url: "https://i.imgur.com/gOHoHin.jpeg" },
 
         // --- NARUTO ---
-        "51": { nome: "Minato Namikaze", preco: 130000, url: "https://imgur.com/rPtfpLm.jpeg" },
-        "52": { nome: "Naruto Uzumaki", preco: 130000, url: "https://imgur.com/WbatVSm.jpeg" },
-        "53": { nome: "Kakashi Hatake", preco: 110000, url: "https://imgur.com/oU7Xt0V.jpeg" },
+        "51": { nome: "Minato Namikaze", preco: 130000, url: "https://i.imgur.com/oU7Xt0V.jpeg" },
+        "52": { nome: "Naruto Uzumaki", preco: 130000, url: "https://i.imgur.com/WbatVSm.jpeg" },
+        "53": { nome: "Kakashi Hatake", preco: 110000, url: "https://i.imgur.com/rPtfpLm.jpeg" },
 
         // --- DRAGON BALL ---
-        "54": { nome: "Goku", preco: 140000, url: "https://imgur.com/yU4UPJT.jpeg" },
-        "55": { nome: "Vegeta", preco: 140000, url: "https://imgur.com/2M5Iqnm.jpeg" },
-        "56": { nome: "Gohan", preco: 120000, url: "https://imgur.com/EfRj0wJ.jpeg" },
+        "54": { nome: "Goku", preco: 140000, url: "https://i.imgur.com/EfRj0wJ.jpeg" },
+        "55": { nome: "Vegeta", preco: 140000, url: "https://i.imgur.com/2M5Iqnm.jpeg" },
+        "56": { nome: "Gohan", preco: 120000, url: "https://i.imgur.com/yU4UPJT.jpeg" },
 
         // --- BERSERK ---
-        "57": { nome: "Guts", preco: 150000, url: "https://imgur.com/0B7GhdA.jpeg" },
-        "58": { nome: "Griffith", preco: 150000, url: "https://imgur.com/hSzNlpp.jpeg" },
-        "59": { nome: "Casca", preco: 110000, url: "https://imgur.com/Rmk6vjx.jpeg" },
+        "57": { nome: "Guts", preco: 150000, url: "https://i.imgur.com/Rmk6vjx.jpeg" },
+        "58": { nome: "Griffith", preco: 150000, url: "https://i.imgur.com/hSzNlpp.jpeg" },
+        "59": { nome: "Casca", preco: 110000, url: "https://i.imgur.com/0B7GhdA.jpeg" },
 
         // --- JUNJI ITO ---
-        "60": { nome: "Tomie", preco: 180000, url: "https://imgur.com/kqIl0cA.jpeg" },
-        "61": { nome: "Souichi", preco: 130000, url: "https://imgur.com/EuwUQnN.jpeg" },
-        "62": { nome: "Fuchi", preco: 130000, url: "https://imgur.com/gCWP6L2.jpeg" }
+        "60": { nome: "Tomie", preco: 180000, url: "https://i.imgur.com/gCWP6L2.jpeg" },
+        "61": { nome: "Souichi", preco: 130000, url: "https://i.imgur.com/EuwUQnN.jpeg" },
+        "62": { nome: "Fuchi", preco: 130000, url: "https://i.imgur.com/kqIl0cA.jpeg" }
     };
 const todasOpcoes = Object.entries(fundos);
     const itensPorPagina = 15;
@@ -4574,36 +4574,46 @@ if (command === 'meusfundos' || command === 'bgs') {
             "30": { nome: "Travis & Donovan", url: "https://i.imgur.com/1VkMQ7z.jpeg" },
             "31": { nome: "Foquinha :3", url: "https://i.imgur.com/QWn6PiK.png" },
             "32": { nome: "Bunny 🐰", url: "https://i.imgur.com/ybc3vvV.png" },
-            "33": { nome: "David Martinez", url: "https://imgur.com/1WTWUWt.jpeg" },
-            "34": { nome: "Lucy", url: "https://imgur.com/uBYDtPv.jpeg" },
-            "35": { nome: "Rebecca", url: "https://imgur.com/9MpYQEO.jpeg" },
-            "36": { nome: "Legoshi", url: "https://imgur.com/5fWgh1j.jpeg" },
-            "37": { nome: "Louis", url: "https://imgur.com/3Dye1s0.jpeg" },
-            "38": { nome: "Haru", url: "https://imgur.com/2cA2ckV.jpeg" },
-            "39": { nome: "Migi", url: "https://imgur.com/8J0VRqk.jpeg" },
-            "40": { nome: "Shinichi Izumi", url: "https://imgur.com/f8u02c2.jpeg" },
-            "41": { nome: "Reiko Tamura", url: "https://imgur.com/QzbgOzu.jpeg" },
-            "42": { nome: "Anya Forger", url: "https://imgur.com/exTtjdr.jpeg" },
-            "43": { nome: "Loid Forger", url: "https://imgur.com/Y855UIL.jpeg" },
-            "44": { nome: "Yor Forger", url: "https://imgur.com/ZEg8ymH.jpeg" },
-            "45": { nome: "Saitama", url: "https://imgur.com/TnhjGu9.jpeg" },
-            "46": { nome: "Genos", url: "https://imgur.com/xKXY9tC.jpeg" },
-            "47": { nome: "Garou", url: "https://imgur.com/aN2e6G6.jpeg" },
-            "48": { nome: "Himmel", url: "https://imgur.com/gOHoHin.jpeg" },
-            "49": { nome: "Frieren", url: "https://imgur.com/BofcCFr.jpeg" },
-            "50": { nome: "Fern", url: "https://imgur.com/XfIVmU7.jpeg" },
-            "51": { nome: "Minato Namikaze", url: "https://imgur.com/rPtfpLm.jpeg" },
-            "52": { nome: "Naruto Uzumaki", url: "https://imgur.com/WbatVSm.jpeg" },
-            "53": { nome: "Kakashi Hatake", url: "https://imgur.com/oU7Xt0V.jpeg" },
-            "54": { nome: "Goku", url: "https://imgur.com/yU4UPJT.jpeg" },
-            "55": { nome: "Vegeta", url: "https://imgur.com/2M5Iqnm.jpeg" },
-            "56": { nome: "Gohan", url: "https://imgur.com/EfRj0wJ.jpeg" },
-            "57": { nome: "Guts", url: "https://imgur.com/0B7GhdA.jpeg" },
-            "58": { nome: "Griffith", url: "https://imgur.com/hSzNlpp.jpeg" },
-            "59": { nome: "Casca", url: "https://imgur.com/Rmk6vjx.jpeg" },
-            "60": { nome: "Tomie", url: "https://imgur.com/kqIl0cA.jpeg" },
-            "61": { nome: "Souichi", url: "https://imgur.com/EuwUQnN.jpeg" },
-            "62": { nome: "Fuchi", url: "https://imgur.com/gCWP6L2.jpeg" }
+             // --- NOVOS ITENS (33 ao 62) ---
+            "33": { nome: "David Martinez", url: "https://i.imgur.com/9MpYQEO.jpeg" },
+            "34": { nome: "Lucy", url: "https://i.imgur.com/uBYDtPv.jpeg" },
+            "35": { nome: "Rebecca", url: "https://i.imgur.com/1WTWUWt.jpeg" },
+
+            "36": { nome: "Legoshi", url: "https://i.imgur.com/2cA2ckV.jpeg" },
+            "37": { nome: "Louis", url: "https://i.imgur.com/3Dye1s0.jpeg" },
+            "38": { nome: "Haru", url: "https://i.imgur.com/5fWgh1j.jpeg" },
+
+            "39": { nome: "Migi", url: "https://i.imgur.com/QzbgOzu.jpeg" },
+            "40": { nome: "Shinichi Izumi", url: "https://i.imgur.com/f8u02c2.jpeg" },
+            "41": { nome: "Reiko Tamura", url: "https://i.imgur.com/8J0VRqk.jpeg" },
+
+            "42": { nome: "Anya Forger", url: "https://i.imgur.com/ZEg8ymH.jpeg" },
+            "43": { nome: "Loid Forger", url: "https://i.imgur.com/Y855UIL.jpeg" },
+            "44": { nome: "Yor Forger", url: "https://i.imgur.com/exTtjdr.jpeg" },
+
+            "45": { nome: "Saitama", url: "https://i.imgur.com/aN2e6G6.jpeg" },
+            "46": { nome: "Genos", url: "https://i.imgur.com/xKXY9tC.jpeg" },
+            "47": { nome: "Garou", url: "https://i.imgur.com/TnhjGu9.jpeg" },
+
+            "48": { nome: "Himmel", url: "https://i.imgur.com/XfIVmU7.jpeg" },
+            "49": { nome: "Frieren", url: "https://i.imgur.com/BofcCFr.jpeg" },
+            "50": { nome: "Fern", url: "https://i.imgur.com/gOHoHin.jpeg" },
+
+            "51": { nome: "Minato Namikaze", url: "https://i.imgur.com/oU7Xt0V.jpeg" },
+            "52": { nome: "Naruto Uzumaki", url: "https://i.imgur.com/WbatVSm.jpeg" },
+            "53": { nome: "Kakashi Hatake", url: "https://i.imgur.com/rPtfpLm.jpeg" },
+
+            "54": { nome: "Goku", url: "https://i.imgur.com/EfRj0wJ.jpeg" },
+            "55": { nome: "Vegeta", url: "https://i.imgur.com/2M5Iqnm.jpeg" },
+            "56": { nome: "Gohan", url: "https://i.imgur.com/yU4UPJT.jpeg" },
+
+            "57": { nome: "Guts", url: "https://i.imgur.com/Rmk6vjx.jpeg" },
+            "58": { nome: "Griffith", url: "https://i.imgur.com/hSzNlpp.jpeg" },
+            "59": { nome: "Casca", url: "https://i.imgur.com/0B7GhdA.jpeg" },
+
+            "60": { nome: "Tomie", url: "https://i.imgur.com/gCWP6L2.jpeg" },
+            "61": { nome: "Souichi", url: "https://i.imgur.com/EuwUQnN.jpeg" },
+            "62": { nome: "Fuchi", url: "https://i.imgur.com/kqIl0cA.jpeg" }
         };
 
         const bgsRaw = dadosPerfil.bgInventory || [];
