@@ -12,7 +12,7 @@ const FaccaoSchema = new mongoose.Schema({
     cargosIds: { type: [String], default: [] },
     canalRecrutamentoId: { type: String },
     
-    dataCriacao: { type: Number, default: () => Date.now() } // Ajustado para pegar a data no momento da criação
+    dataCriacao: { type: Number, default: () => Date.now() }
 });
 
 // ==================== 🚩 SCHEMA DE TERRITÓRIOS (AUXILIAR) ====================
@@ -37,8 +37,8 @@ const UserSchema = new mongoose.Schema({
     lastInvest: { type: Number, default: 0 },
     cassinoGasto: { type: Number, default: 0 },
 
-    // --- 🚀 SISTEMA DE VOTOS (NOVO) ---
-    lastVote: { type: Number, default: 0 }, // Essencial para o comando !votar de 100k
+    // --- 🚀 SISTEMA DE VOTOS ---
+    lastVote: { type: Number, default: 0 }, 
 
     // --- INVENTÁRIO & CUSTOMIZAÇÃO ---
     inventory: { type: [String], default: [] },   
@@ -70,6 +70,11 @@ const UserSchema = new mongoose.Schema({
     lastSocial: { type: Number, default: 0 },
     lastAssaltoDupla: { type: Number, default: 0 },
     lastGift: { type: Number, default: 0 },
+
+    // --- 🧠 SISTEMA PSICOLÓGICO & BOT (NOVO) ---
+    depression: { type: Number, default: 0 },      // Nível de depressão (0 a 100)
+    botPatience: { type: Number, default: 0 },     // Paciência do bot com o usuário (0 a 100)
+    mentalHealthUpdate: { type: Number, default: 0 }, // Para controlar quando a depressão sobe/desce por tempo
 
     // --- 🎯 MERCENÁRIO & CONTRATOS ---
     contract: { type: String, default: null }, 
