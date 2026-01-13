@@ -3,6 +3,26 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
+const fs = require('fs');
+
+// Função para ler as configurações com trava de segurança
+function getConfig() {
+    // Se o arquivo não existir, ele cria um agora mesmo para não dar erro
+    if (!fs.existsSync('./config.json')) {
+        fs.writeFileSync('./config.json', JSON.stringify({}, null, 2));
+    }
+    try {
+        return JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+    } catch (err) {
+        return {}; // Retorna vazio se o arquivo estiver corrompido
+    }
+}
+
+// Função para salvar as configurações
+function saveConfig(config) {
+    fs.writeFileSync('./config.json', JSON.stringify(config, null, 2));
+}
+
 // No topo do seu arquivo, fora dos comandos, adicione:
 const jogandoAkinator = new Set(); 
 
@@ -116,7 +136,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado ao MongoDB!"))
     .catch(err => console.error("❌ Erro MongoDB:", err));
 
-// ==================== 🤖 CONFIGURAÇÃO BOT ====================
+// 1. Sua configuração que você acabou de mostrar
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -129,6 +149,36 @@ const client = new Client({
         PresenceManager: 0,
         GuildMemberManager: 50, 
     }),
+});
+
+// 3. O EVENTO DE ENTRADA (Cole aqui!)
+client.on('guildMemberAdd', async (member) => {
+    const config = getConfig();
+    const serverConfig = config[member.guild.id];
+
+    if (!serverConfig) return;
+
+    // Lógica do Welcome
+    if (serverConfig.welcomeChannel) {
+        const canal = member.guild.channels.cache.get(serverConfig.welcomeChannel);
+        if (canal) {
+            const embed = new EmbedBuilder()
+                .setTitle("👋 Bem-vindo(a)!")
+                .setDescription(`Olá ${member}, seja bem-vindo ao **${member.guild.name}**!\nAgora somos **${member.guild.memberCount}** membros.`)
+                .setColor("#00FF7F")
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
+            
+            canal.send({ embeds: [embed] }).catch(() => {});
+        }
+    }
+
+    // Lógica do Autorole
+    if (serverConfig.autorole) {
+        const cargo = member.guild.roles.cache.get(serverConfig.autorole);
+        if (cargo) {
+            member.roles.add(cargo).catch(err => console.log("Erro no autorole: " + err));
+        }
+    }
 });
 
 const lojaItens = {
@@ -214,6 +264,12 @@ client.on('messageCreate', async (message) => {
 
 
     // ==================== 🛠️ ADMINISTRAÇÃO & CONTROLE ====================
+
+if (command === 'testwelcome') {
+    // Simula a entrada de você mesmo para testar o embed
+    client.emit('guildMemberAdd', message.member);
+    message.reply("✅ Simulei sua entrada para testar o sistema de Boas-Vindas!");
+}
 
 // --- MODO MANUTENÇÃO GLOBAL ---
 if (command === 'setmanutencao' && donos.includes(message.author.id)) {
@@ -381,6 +437,75 @@ if (command === 'testarassalto') {
     // 3. Chama a função de pagamento que instalamos agora há pouco
     await finalizarAssalto(true, message.channel);
 }
+
+// !autorole @Cargo
+if (command === 'autorole') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return message.reply("❌ Apenas Admins!");
+    const role = message.mentions.roles.first();
+    if (!role) return message.reply("Mencione o cargo!");
+
+    const config = getConfig();
+    if (!config[message.guild.id]) config[message.guild.id] = {};
+    
+    config[message.guild.id].autorole = role.id;
+    saveConfig(config);
+
+    message.reply(`✅ Autorole configurado para o cargo: **${role.name}**`);
+}
+
+// !welcome #canal
+if (command === 'welcome') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return message.reply("❌ Apenas Admins!");
+    const channel = message.mentions.channels.first();
+    if (!channel) return message.reply("Mencione o canal!");
+
+    const config = getConfig();
+    if (!config[message.guild.id]) config[message.guild.id] = {};
+
+    config[message.guild.id].welcomeChannel = channel.id;
+    saveConfig(config);
+
+    message.reply(`✅ Canal de boas-vindas configurado em: ${channel}`);
+}
+
+// !lock - Tranca o canal
+if (command === 'lock') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return message.reply("❌ Sem permissão!");
+    message.channel.permissionOverwrites.edit(message.guild.id, { SendMessages: false });
+    message.reply("🔒 **Este canal foi trancado!** Ninguém pode enviar mensagens.");
+}
+
+// !unlock - Destranca o canal
+if (command === 'unlock') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return message.reply("❌ Sem permissão!");
+    message.channel.permissionOverwrites.edit(message.guild.id, { SendMessages: true });
+    message.reply("🔓 **Este canal foi destrancado!**");
+}
+
+// !slowmode [segundos] - Ex: !slowmode 10
+if (command === 'slowmode') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return message.reply("❌ Sem permissão!");
+    const tempo = args[0];
+    if (!tempo || isNaN(tempo)) return message.reply("Use: `!slowmode [segundos]`");
+    message.channel.setRateLimitPerUser(tempo);
+    message.reply(`⏳ Modo lento definido para **${tempo}s**.`);
+}
+
+// !nick @membro [Novo Nome]
+if (command === 'nick') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageNicknames)) return message.reply("❌ Sem permissão!");
+    const membro = message.mentions.members.first();
+    const novoNick = args.slice(1).join(' ');
+    if (!membro || !novoNick) return message.reply("Use: `!nick @membro Novo Nome` ");
+    
+    try {
+        await membro.setNickname(novoNick);
+        message.reply(`✅ O apelido de ${membro.user.username} foi alterado para **${novoNick}**.`);
+    } catch (e) {
+        message.reply("❌ Não consigo alterar o nome desse membro (pode ser um cargo superior ao meu).");
+    }
+}
+
 
 if (command === 'akinator' || command === 'aki') {
     if (manutencaoGlobal && !donos.includes(message.author.id)) {
@@ -693,6 +818,22 @@ if (command === 'trabalhar' || command === 'work') {
         `${bonusTexto}\n` +
         `📊 Nível: \`${userData.workCount}\` | ⏳ Cooldown: \`${Math.ceil(cooldown/60000)}min\``
     );
+}
+
+if (command === 'serverinfo') {
+    const { guild } = message;
+    const embed = new EmbedBuilder()
+        .setTitle(`📊 Informações do Servidor: ${guild.name}`)
+        .setThumbnail(guild.iconURL({ dynamic: true }))
+        .setColor("#5865F2")
+        .addFields(
+            { name: "👑 Dono", value: `<@${guild.ownerId}>`, inline: true },
+            { name: "👥 Membros", value: `${guild.memberCount}`, inline: true },
+            { name: "📅 Criado em", value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`, inline: true },
+            { name: "🚀 Impulsos (Boosts)", value: `${guild.premiumSubscriptionCount || 0} (Nível ${guild.premiumTier})`, inline: true },
+            { name: "🆔 ID do Servidor", value: `\`${guild.id}\``, inline: false }
+        );
+    message.channel.send({ embeds: [embed] });
 }
 
 // ==================== 🖥️ PAINEL DE CONTROLE (VERSÃO COMPLETA) ====================
@@ -1036,6 +1177,55 @@ if (command === 'roleta' || command === 'bet') {
         return message.reply({ embeds: [embedDerrota] });
     }
 }
+
+if (command === 'sorteio') {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageEvents)) return message.reply("❌ Sem permissão!");
+    
+    const premio = args.join(' ');
+    if (!premio) return message.reply("Diga qual é o prêmio! Ex: `!sorteio 500k de Sonhos` ");
+
+    const botao = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('join_giveaway')
+            .setLabel('Participar')
+            .setEmoji('🎉')
+            .setStyle(ButtonStyle.Primary)
+    );
+
+    const embedSorteio = new EmbedBuilder()
+        .setTitle("🎉 SORTEIO INICIADO! 🎉")
+        .setDescription(`O prêmio é: **${premio}**\n\nClique no botão abaixo para entrar!\nSorteando em **30 segundos**...`)
+        .setColor("Gold")
+        .setFooter({ text: "Boa sorte!" });
+
+    const msg = await message.channel.send({ embeds: [embedSorteio], components: [botao] });
+
+    const participantes = new Set();
+    const coletor = msg.createMessageComponentCollector({ time: 30000 }); // 30 segundos de teste
+
+    coletor.on('collect', i => {
+        if (participantes.has(i.user.id)) return i.reply({ content: "Você já está na lista!", ephemeral: true });
+        participantes.add(i.user.id);
+        i.reply({ content: "Você entrou no sorteio!", ephemeral: true });
+    });
+
+    coletor.on('end', () => {
+        const arrayParticipantes = Array.from(participantes);
+        
+        if (arrayParticipantes.length === 0) {
+            return message.channel.send("😔 Sorteio encerrado: Ninguém participou.");
+        }
+
+        const ganhador = arrayParticipantes[Math.floor(Math.random() * arrayParticipantes.length)];
+        
+        message.channel.send(`🎊 PARABÉNS <@${ganhador}>! Você ganhou: **${premio}**!`);
+        
+        embedSorteio.setDescription(`Sorteio Finalizado!\nPrêmio: **${premio}**\nGanhador: <@${ganhador}>`)
+                    .setColor("Grey");
+        msg.edit({ embeds: [embedSorteio], components: [] });
+    });
+}
+
 // ==================== 🃏 JOGO DE BLACKJACK (21) ====================
 if (command === 'blackjack' || command === 'bj') {
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
@@ -2074,7 +2264,18 @@ if (command === 'sexo' || command === 'sex') {
 
         const target = message.mentions.users.first();
         if (!target) return message.reply('❓ Você precisa mencionar alguém!');
-        if (target.id === message.author.id) return message.reply('Você não pode fazer isso consigo mesmo!');
+
+        if (target.id === message.author.id) {
+    const respostas = [
+        `🔥 **${autorNome}** fez fio terra e gozou dentro do poprio cu!`,
+        `🔥 **${autorNome}** gozou no seu proprio cu!`
+    ];
+
+    // Escolhe uma frase aleatória da lista
+    const respostaAleatoria = respostas[Math.floor(Math.random() * respostas.length)];
+    
+    return message.reply(respostaAleatoria);
+}
 
         let ganhoAfinidade = Math.floor(Math.random() * 19) + 1;
         let mostrarAfinidade = false;
@@ -3950,6 +4151,57 @@ if (command === 'crime') {
         message.reply("❌ Erro técnico ao processar o crime.");
     }
 }
+
+// ==================== 📜 COMANDO SETREGRAS (ESTILIZADOR) ====================
+if (command === 'setregras') {
+    // 1. Verificação de Permissão
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+        return message.reply("❌ Você não tem permissão para usar este comando.");
+    }
+
+    const input = args.join(' ');
+
+    // 2. Se a pessoa não digitar nada, mostra como deve ficar o texto (EXEMPLO)
+    if (!input) {
+        return message.reply({
+            content: "📖 **Como usar o comando:**\n`!setregras Título Aqui. Regra 1. Regra 2. Regra 3.`\n\n**O que eu faço:**\n- Deixo a primeira frase **gigante**.\n- Coloco emojis 🔹 em cada frase separada por ponto.\n- Deixo tudo organizado em um post elegante."
+        });
+    }
+
+    // Deleta a mensagem do autor para o chat ficar limpo
+    if (message.deletable) message.delete().catch(() => {});
+
+    // 3. Lógica "Inteligente" de Código para Organizar
+    // Separa o título (primeira frase) do resto do corpo
+    const partes = input.split(/[.\n:]/); 
+    const titulo = partes[0].trim().toUpperCase();
+    
+    // Pega o restante do texto e separa por pontos para criar a lista
+    const resto = input.substring(partes[0].length + 1).trim();
+    const linhas = resto.split(/[.\n]/).map(l => l.trim()).filter(l => l.length > 0);
+    
+    // Monta a lista com emojis
+    const textoFormatado = linhas.map(linha => `🔹 ${linha}`).join('\n');
+
+    // 4. Envio do Post Final
+    const embedRegras = new EmbedBuilder()
+        .setColor("#2b2d31") // Cor Dark elegante
+        .setThumbnail(message.guild.iconURL({ dynamic: true }))
+        .setDescription(
+            `# 📜 ${titulo}\n` + // Título Gigante
+            `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `${textoFormatado}\n\n` + // Regras organizadas
+            `━━━━━━━━━━━━━━━━━━━━━━━`
+        )
+        .setFooter({ 
+            text: `Postado por ${message.author.username} • ${message.guild.name}`, 
+            iconURL: message.author.displayAvatarURL() 
+        });
+
+    return message.channel.send({ embeds: [embedRegras] });
+}
+
+
 // ==================== 📢 COMANDO ANÚNCIO (SILENCIOSO) ====================
 if (command === 'anuncio' || command === 'broadcast') {
     // 1. Verificação de Permissão
@@ -5755,7 +6007,7 @@ if (command === 'matar' || command === 'kill') {
         message.reply('❌ Ocorreu um erro técnico na execução! Verifique se meu cargo está no topo da lista de cargos do servidor.');
     }
 }
-// ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO FINALIZADA) ====================
+// ==================== 📖 COMANDO AJUDA OMNIBOT (VERSÃO ULTRA COMPLETA) ====================
 if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
 
     const embedAjuda = new EmbedBuilder()
@@ -5808,65 +6060,64 @@ if (command === 'ajuda' || command === 'help' || command === 'ayuda') {
                 '`!divorciar`: Terminar relação | `!ship`: Compatibilidade.' 
             },
             { 
-                name: '🎮 Jogos & Minigames', 
+                name: '🎮 JOGOS & MINIGAMES', 
                 value: 
-                `👤 \`!akinator\`: O gênio tentará ler sua mente para adivinhar o personagem!${comandosDesativados.akinator ? " **(🛠️ Em Manutenção)**" : ""}\n` +
-                `📊 \`!akiestats\`: Veja seu placar de vitórias e derrotas contra o Akinator.${comandosDesativados.akinator ? " **(🛠️ Em Manutenção)**" : ""}`
+                '👤 `!akinator`: O gênio tenta adivinhar o personagem.\n' +
+                '📊 `!akiestats`: Seu placar de vitórias contra o gênio.'
             },
             { 
                 name: '🎰 CASSINO & SORTE', 
                 value: 
-                '📞`!ligar 4002-8922 [frase]`: Ligue para o Bom Dia & Cia (Custa 72 moedas).\n' +
-                '🎰 `!roleta [valor]`: Aposte e dobre seu dinheiro (45% chance).\n' +
-                '🃏 `!blackjack [valor]`: Tente chegar aos 21 e ganhe moedas.\n' +
-                '📈 `!investir <valor>`: Bolsa de valores.\n' +
+                '📞 `!ligar 4002-8922`: Ligue para o Bom Dia & Cia (72 moedas).\n' +
+                '🎰 `!roleta [valor]`: Aposte e dobre seu dinheiro.\n' +
+                '🃏 `!blackjack [valor]`: Tente chegar aos 21.\n' +
                 '🎲 `!cassino @user [valor]`: Cara ou Coroa PvP.\n' +
-                '🎲 `!dado [1 ou 2] [valor]`: Apostar contra a banca.' 
+                '🎲 `!dado [1 ou 2] [valor]`: Apostar contra a banca.\n' +
+                '🎉 `!sorteio [prêmio]`: Iniciar sorteio com botões.' 
             },
             { 
                 name: '🌑 FACÇÃO & SUBMUNDO', 
                 value: 
-                '`!fundar`: Criar base e cargos (2M).\n' +
+                '`!fundar`: Criar base | `!deletarfaccao`: Apagar a estrutura.\n' +
                 '`!retirarcofre`: Retirar dinheiro do cofre (Dono).\n' +
-                '`!deletarfaccao`: Apagar a estrutura da facção.\n' +
-                '`!mafias`: Ver ranking das maiores máfias.\n' +
-                '`!entrar`: Virar Membro da Facção.\n' +
-                '`!traficar`: Rota de lucro ilegal.\n' +
-                '`!missao`: Operações especiais.\n' +
-                '`!interceptar`: Unir forças para derrubar o Carro Forte (Evento Global).\n' +
-                '`!contribuir`: Doar dinheiro para o cofre da facção.\n' +
-                '`!sacar`: Líder retira fundos do cofre.\n' +
-                '`!expulsar`: Remover um membro e retirar acessos.\n' +
-                '`!assaltodupla`: Golpe em casal.\n' +
-                '`!suborno` - Paga para limpar a tua ficha criminal e evitar ser preso.\n' +
-                '`!contrato`: Aceitar alvo | `!concluir`: Prêmio.\n' +
-                '`!crime`: Assalto | `!roubar @user`: Furtar (10%).' +
-                '`!promover`: Subir patente.\n' +
-                '`!lavar`: Converter dinheiro sujo (Taxa 25%).\n' +
-                '`!infiltrar`: Espiar facção rival.'
+                '`!contribuir`: Doar moedas | `!sacar`: Líder retira fundos.\n' +
+                '`!entrar`: Virar membro | `!expulsar`: Remover membro.\n' +
+                '`!traficar`: Rota de lucro | `!missao`: Operações especiais.\n' +
+                '`!interceptar`: Evento Carro Forte Global.\n' +
+                '`!assaltodupla`: Golpe em casal | `!suborno`: Limpar ficha.\n' +
+                '`!contrato`: Aceitar alvo | `!concluir`: Receber prêmio.\n' +
+                '`!crime`: Assalto | `!roubar @user`: Furtar (10%).\n' +
+                '`!promover`: Subir patente | `!infiltrar`: Espiar rivais.\n' +
+                '`!lavar`: Converter dinheiro sujo | `!mafias`: Ranking.'
             },
             { 
-                name: '👤 PERFIL & PROGRESSO', 
+                name: '👤 PERFIL & SOCIAL', 
                 value: 
                 '`!perfil` ou `!p`: Card completo de status.\n' +
                 '`!guia`: Lista de todos os troféus.\n' +
                 '`!conquistas`: Ver teus marcos e medalhas.\n' +
-                '`!avaliar [algo]`: Opinião do bot.\n' +
-                '`!beijar`, `!abracar`, `!cafune`, `!tapa`, `!atacar`: Social.\n' +
-                '`!dominio`: Relatório estratégico da facção.\n' +
-                '`!faccoes`: Ranking de todas as organizações da cidade.\n' +
-                '`!banca`: Aposta de dinheiro sujo exclusiva no QG.'
+                '`!beijar`, `!abracar`, `!cafune`, `!tapa`, `!atacar`: Ações.\n' +
+                '`!avaliar [algo]`: Opinião do bot | `!dominio`: Relatório.'
+            },
+            { 
+                name: '⚙️ CONFIGURAÇÃO & GESTÃO', 
+                value: 
+                '`!welcome #canal`: Configura boas-vindas automáticas.\n' +
+                '`!autorole @cargo`: Configura cargo de entrada.\n' +
+                '`!serverinfo`: Informações técnicas do servidor.\n' +
+                '`!nick @user [nome]`: Alterar apelido de um membro.'
             },
             { 
                 name: '🛡️ MODERAÇÃO & STAFF', 
                 value: 
-                '`!matar @user`: Timeout | `!clear`: Limpar chat.\n' +
-                '`!kick`/`!ban`: Expulsar | `!anuncio`: Oficial.\n' +
-                '`!stats`: Dados técnicos | `!info`: Créditos.\n' +
-                '`!resetar @user`: Reset total de dados (Dono).' 
+                '`!setregras [texto]`: Formata regras com estilo elegante.\n' +
+                '`!lock` / `!unlock`: Trancar ou abrir o canal atual.\n' +
+                '`!slowmode [seg]`: Define o modo lento do chat.\n' +
+                '`!clear [qtd]`: Limpar mensagens | `!matar @user`: Timeout.\n' +
+                '`!kick`/`!ban`: Expulsar/Banir | `!resetar @user`: Full Reset.' 
             }
         )
-        .setFooter({ text: '💡 Dica: Use !meusfundos para trocar a aparência do seu perfil!' })
+        .setFooter({ text: 'OmniBot v2.0 • Sistema de Gestão e RPG' })
         .setTimestamp();
 
     return message.reply({ embeds: [embedAjuda] });
